@@ -5,6 +5,7 @@ import os.path
 import json
 import math
 from time import *
+import calendar
 
 
 class Parser:
@@ -46,7 +47,7 @@ class Parser:
         for name, pid in players.items():
             match_count[name] = len([k for k, v in match_summary.items() if name in v['players']])
             win_count[name] = len([k for k, v in match_summary.items() if name in v['players'] and v['win']])
-            win_perc[name] = win_count[name] / match_count[name]
+            win_perc[name] = win_count[name] / match_count[name] if match_count[name] > 0 else 0
 
         print('')
         sorted_wins = sorted(win_perc.items(), key=lambda kv: kv[1])
@@ -100,7 +101,7 @@ class Parser:
         print('Average %s per match:' % text)
 
         for name, pid in players.items():
-            averages[name] = totals[name]/matches_played[name]
+            averages[name] = totals[name]/matches_played[name] if matches_played[name] > 0 else 0
 
         sorted_average = sorted(averages.items(), key=lambda kv: kv[1])
         if reverse:
@@ -137,7 +138,7 @@ class Parser:
         print('')
 
     @staticmethod
-    def get_matches_for_year(year, players, min_party_size=2):
+    def get_matches_for_year(year, players, min_party_size=2, last_days=0):
         matches = dict()
         total_matches = {n: 0 for n, pid in players.items()}
         for name, pid in players.items():
@@ -145,8 +146,8 @@ class Parser:
             obj = json.loads(content)            
             total_matches[name] = 0
             for o in obj:
-                y = gmtime(int(o['start_time'])).tm_year
-                if y == year:
+                y = gmtime(int(o['start_time'])).tm_year                
+                if (last_days > 0 and (calendar.timegm(gmtime()) - int(o['start_time'])) < last_days * 86400) or (last_days == 0 and y == year):
                     total_matches[name] += 1
                     if not o['match_id'] in matches:
                         matches[o['match_id']] = []
@@ -161,7 +162,7 @@ class Parser:
         
         for name, match_count in sorted_matches:
             matches_with_pnk = len([i for i, v in matches.items() if len(v) >= min_party_size and name in v])
-            perc_with_pnk = matches_with_pnk / match_count
+            perc_with_pnk = matches_with_pnk / match_count if match_count > 0 else 0
             print('%s played %i matches -- %i matches (%.2f %%) played with PnK' 
                 % (name, match_count, matches_with_pnk, 100 * perc_with_pnk))
 

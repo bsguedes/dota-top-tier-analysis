@@ -27,7 +27,7 @@ players = {
 
 if __name__ == '__main__':
     Downloader.download_player_data(players)
-    unique_matches = Parser.get_matches_for_year(2018, players)
+    unique_matches = Parser.get_matches_for_year(2018, players, last_days=60, min_party_size=5)
     Downloader.download_matches(unique_matches)
     
     Parser.identify_heroes(players, unique_matches)
