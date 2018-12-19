@@ -1,3 +1,5 @@
+# coding=utf-8
+
 from code import *
 
 players = {
@@ -27,6 +29,9 @@ if __name__ == '__main__':
     Downloader.download_player_data(players)
     unique_matches = Parser.get_matches_for_year(2018, players)
     Downloader.download_matches(unique_matches)
+    
+    Parser.identify_teams(players, unique_matches)
+
     Parser.pnk_counters(players, unique_matches, 'hero_damage', text='hero damage')
     Parser.pnk_counters(players, unique_matches, 'total_gold', text='total gold')
     Parser.pnk_counters(players, unique_matches, 'kills')
@@ -34,3 +39,4 @@ if __name__ == '__main__':
     Parser.pnk_counters(players, unique_matches, 'assists')
     Parser.pnk_counters(players, unique_matches, 'obs_placed', text='observer wards placed')
     Parser.pnk_counters(players, unique_matches, 'sen_placed', text='sentry wards placed')
+
