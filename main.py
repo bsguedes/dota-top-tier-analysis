@@ -33,6 +33,8 @@ if __name__ == '__main__':
     Parser.identify_heroes(players, unique_matches)
     Parser.identify_teams(players, unique_matches)
     
+    Parser.pnk_counters(players, unique_matches, 'hero_healing', text='hero healing')
+    Parser.pnk_counters(players, unique_matches, 'rune_pickups', text='runes picked up')
     Parser.pnk_counters(players, unique_matches, 'pings')
     Parser.pnk_counters(players, unique_matches, 'creeps_stacked', text='creeps stacked')
     Parser.pnk_counters(players, unique_matches, 'stuns', text='stun duration dealt')
