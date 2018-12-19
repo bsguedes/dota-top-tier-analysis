@@ -1,0 +1,9 @@
+# Created by .ignore support plugin (hsz.mobi)
+.idea/dota-top-tier-analysis.iml
+.idea/misc.xml
+.idea/modules.xml
+.idea/preferred-vcs.xml
+.idea/workspace.xml
+__pycache__/
+matches/
+players/
