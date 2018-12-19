@@ -30,10 +30,15 @@ if __name__ == '__main__':
     unique_matches = Parser.get_matches_for_year(2018, players)
     Downloader.download_matches(unique_matches)
     
+    Parser.identify_heroes(players, unique_matches)
     Parser.identify_teams(players, unique_matches)
-
+    
+    Parser.pnk_counters(players, unique_matches, 'pings')
+    Parser.pnk_counters(players, unique_matches, 'creeps_stacked', text='creeps stacked')
+    Parser.pnk_counters(players, unique_matches, 'stuns', text='stun duration dealt')
     Parser.pnk_counters(players, unique_matches, 'hero_damage', text='hero damage')
     Parser.pnk_counters(players, unique_matches, 'total_gold', text='total gold')
+    Parser.pnk_counters(players, unique_matches, 'gold_per_min', text='gpm')
     Parser.pnk_counters(players, unique_matches, 'kills')
     Parser.pnk_counters(players, unique_matches, 'deaths', reverse=False)
     Parser.pnk_counters(players, unique_matches, 'assists')

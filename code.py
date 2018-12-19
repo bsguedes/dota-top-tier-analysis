@@ -3,24 +3,40 @@
 import requests
 import os.path
 import json
+import math
 from time import *
 
 
 class Parser:
     @staticmethod
-    def identify_teams(players, matches, min_matches=10):
+    def identify_heroes(players, matches):
         account_ids = [v for k, v in players.items()]
-        match_summary = {k: {'isRadiant': False, 'players': [], 'win': False} for k, v in matches.items()}
+        match_summary = {k: {'pnk_heroes': [], 'enemy_heroes': [], 'players': []} for k, v in matches.items()}
         for match_id, match_players in matches.items():
             content = open('matches/%i.json' % match_id, 'r', encoding='utf-8').read()
             obj = json.loads(content)
             for p in obj['players']:
                 if p['account_id'] in account_ids:
-                    if p['isRadiant']:
-                       match_summary[match_id] = {'isRadiant': True, 'players': match_players, 'win': p['win'] > 0}
-                    else:
-                       match_summary[match_id] = {'isRadiant': False, 'players': match_players, 'win': p['win'] > 0} 
+                    match_summary[match_id]['pnk_heroes'].append(p['hero_id'])                    
+                    match_summary[match_id]['players'].append(p['account_id'])
+                    match_summary[match_id]['win'] = p['win'] > 0
+                    match_summary[match_id]['is_radiant'] = p['isRadiant']        
+            for p in obj['players']:
+                if p['isRadiant'] != match_summary[match_id]['is_radiant']:
+                    match_summary[match_id]['enemy_heroes'].append(p['hero_id'])        
+
+    @staticmethod
+    def identify_teams(players, matches, min_matches=10):
+        account_ids = [v for k, v in players.items()]
+        match_summary = {k: {'players': [], 'win': False} for k, v in matches.items()}
+        for match_id, match_players in matches.items():
+            content = open('matches/%i.json' % match_id, 'r', encoding='utf-8').read()
+            obj = json.loads(content)
+            for p in obj['players']:
+                if p['account_id'] in account_ids:
+                    match_summary[match_id] = {'players': match_players, 'win': p['win'] > 0}
                     break
+
         print('')
         print ('PnK winrate: %.2f %%' % (100 * len([x for x,y in match_summary.items() if y['win']]) / len(matches)))
 
@@ -38,7 +54,7 @@ class Parser:
 
         count = 0
         total_players = len([k for k, v in match_count.items() if v > min_matches])
-        tier_size = int(total_players / 3)
+        tier_size = math.ceil(total_players / 3)
         for name, value in sorted_wins:
             if match_count[name] > min_matches:
                 if count % tier_size == 0:               
@@ -49,9 +65,8 @@ class Parser:
                       % (name, win_count[name], match_count[name], 100 * win_perc[name]))
         
 
-
     @staticmethod
-    def pnk_counters(players, matches, parameter, reverse=True, min_matches=10, text=None):
+    def pnk_counters(players, matches, parameter, reverse=True, min_matches=10, text=None, accumulate=False):
         text = parameter if text is None else text
 
         account_ids = [v for k, v in players.items()]
@@ -67,16 +82,21 @@ class Parser:
             content = open('matches/%i.json' % match_id, 'r', encoding='utf-8').read()
             obj = json.loads(content)
             for p in obj['players']:
-                if p['account_id'] in account_ids and p[parameter] is not None:
+                if p['account_id'] in account_ids and parameter in p and p[parameter] is not None:
                     if not inv_p[p['account_id']] in totals:
                         totals[inv_p[p['account_id']]] = 0
                         matches_played[inv_p[p['account_id']]] = 0
-                    totals[inv_p[p['account_id']]] += p[parameter]
-                    if p[parameter] > maximum_value[p['account_id']]:
-                        maximum_value[p['account_id']] = p[parameter]
+                    if accumulate:
+                        value = sum([v for k, v in p[parameter].items()])
+                    else:
+                        value = p[parameter]
+                    totals[inv_p[p['account_id']]] += value
+                    if value > maximum_value[p['account_id']]:
+                        maximum_value[p['account_id']] = value
                         maximum_match[p['account_id']] = match_id
                     matches_played[inv_p[p['account_id']]] += 1
 
+        print('')
         print('Average %s per match:' % text)
 
         for name, pid in players.items():
@@ -88,7 +108,7 @@ class Parser:
 
         count = 0
         total_players = len([k for k, v in matches_played.items() if v > min_matches])
-        tier_size = int(total_players / 3)
+        tier_size = math.ceil(total_players / 3)
         for name, value in sorted_average:
             if matches_played[name] > min_matches:
                 if count % tier_size == 0:               
@@ -97,8 +117,8 @@ class Parser:
                 count += 1
                 print('%s has %i %s in %i matches (avg %.2f)'
                       % (name, totals[name], text, matches_played[name], averages[name]))
+        
         print('')
-
         print('Maximum %s in a single match:' % text)
 
         sorted_maximum = sorted(maximum_value.items(), key=lambda kv: kv[1])
@@ -117,7 +137,7 @@ class Parser:
         print('')
 
     @staticmethod
-    def get_matches_for_year(year, players):
+    def get_matches_for_year(year, players, min_party_size=2):
         matches = dict()
         total_matches = {n: 0 for n, pid in players.items()}
         for name, pid in players.items():
@@ -134,17 +154,18 @@ class Parser:
         for i in range(0, 5):
             print('Matches played by party of size %i: %s'
                   % (i+1, len({k: v for k, v in matches.items() if len(v) == i+1})))
+        
         print('')                    
         sorted_matches = sorted(total_matches.items(), key=lambda kv: kv[1])
         sorted_matches.reverse()
         
         for name, match_count in sorted_matches:
-            matches_with_pnk = len([i for i, v in matches.items() if len(v) >= 2 and name in v])
+            matches_with_pnk = len([i for i, v in matches.items() if len(v) >= min_party_size and name in v])
             perc_with_pnk = matches_with_pnk / match_count
             print('%s played %i matches -- %i matches (%.2f %%) played with PnK' 
                 % (name, match_count, matches_with_pnk, 100 * perc_with_pnk))
 
-        return {k: v for k, v in matches.items() if len(v) >= 2}
+        return {k: v for k, v in matches.items() if len(v) >= min_party_size}
 
 
 class Downloader:
