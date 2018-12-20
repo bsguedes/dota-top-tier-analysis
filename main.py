@@ -1,6 +1,11 @@
 # coding=utf-8
 
 from code import *
+from tier import Tier
+
+MIN_PARTY_SIZE = 4
+MIN_MATCHES = 50
+YEAR = 2018
 
 players = {
     'Zé': 25185394,
@@ -24,26 +29,42 @@ players = {
     'Fallenzão': 396690444
 }
 
+categories = [
+    Category('win', text='wins', has_max=False),
+    Category('hero_healing', text='hero healing'),
+    Category('rune_pickups', text='runes picked up'),
+    Category('pings'),
+    Category('creeps_stacked', text='creeps stacked'),
+    Category('stuns', text='stun duration dealt'),
+    Category('hero_damage', text='hero damage'),
+    Category('total_gold', text='total gold'),
+    Category('gold_per_min', text='gpm'),
+    Category('kills'),
+    Category('deaths', reverse=False),
+    Category('assists'),
+    Category('obs_placed', text='observer wards placed'),
+    Category('sen_placed', text='sentry wards placed')
+]
 
 if __name__ == '__main__':
     Downloader.download_player_data(players)
-    unique_matches = Parser.get_matches_for_year(2018, players, last_days=60, min_party_size=4)
+    unique_matches = Parser.get_matches_for_year(YEAR, players, min_party_size=MIN_PARTY_SIZE)
     Downloader.download_matches(unique_matches)
     
     Parser.identify_heroes(players, unique_matches)
     Parser.identify_teams(players, unique_matches)
-    
-    Parser.pnk_counters(players, unique_matches, 'hero_healing', text='hero healing')
-    Parser.pnk_counters(players, unique_matches, 'rune_pickups', text='runes picked up')
-    Parser.pnk_counters(players, unique_matches, 'pings')
-    Parser.pnk_counters(players, unique_matches, 'creeps_stacked', text='creeps stacked')
-    Parser.pnk_counters(players, unique_matches, 'stuns', text='stun duration dealt')
-    Parser.pnk_counters(players, unique_matches, 'hero_damage', text='hero damage')
-    Parser.pnk_counters(players, unique_matches, 'total_gold', text='total gold')
-    Parser.pnk_counters(players, unique_matches, 'gold_per_min', text='gpm')
-    Parser.pnk_counters(players, unique_matches, 'kills')
-    Parser.pnk_counters(players, unique_matches, 'deaths', reverse=False)
-    Parser.pnk_counters(players, unique_matches, 'assists')
-    Parser.pnk_counters(players, unique_matches, 'obs_placed', text='observer wards placed')
-    Parser.pnk_counters(players, unique_matches, 'sen_placed', text='sentry wards placed')
 
+    tiers = []
+    for c in categories:
+        res_avg, res_max = Parser.pnk_counters(players, unique_matches, c.parameter, text=c.text,
+                                               reverse=c.reverse, min_matches=MIN_MATCHES, has_max=c.has_max)
+        cat_name = c.text if c.text is not None else c.parameter
+        tier_avg = Tier(res_avg, 'Average %s in PnK matches' % cat_name)
+        tiers.append(tier_avg)
+        tier_avg.print()
+        if c.has_max:
+            tier_max = Tier(res_max, 'Maximum %s in a single match' % cat_name)
+            tier_max.print()
+            tiers.append(tier_max)
+
+    Tier.show_results(players, tiers)

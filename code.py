@@ -4,8 +4,9 @@ import requests
 import os.path
 import json
 import math
-from time import *
 import calendar
+from time import *
+from tier import TierItem
 
 
 class Parser:
@@ -27,7 +28,7 @@ class Parser:
                     match_summary[match_id]['enemy_heroes'].append(p['hero_id'])        
 
     @staticmethod
-    def identify_teams(players, matches, min_matches=10):
+    def identify_teams(players, matches):
         account_ids = [v for k, v in players.items()]
         match_summary = {k: {'players': [], 'win': False} for k, v in matches.items()}
         for match_id, match_players in matches.items():
@@ -39,35 +40,11 @@ class Parser:
                     break
 
         print('')
-        print ('PnK winrate: %.2f %%' % (100 * len([x for x,y in match_summary.items() if y['win']]) / len(matches)))
-
-        match_count = {k: 0 for k, v in players.items()}
-        win_count = {k: 0 for k, v in players.items()}
-        win_perc = {k: 0 for k, v in players.items()}
-        for name, pid in players.items():
-            match_count[name] = len([k for k, v in match_summary.items() if name in v['players']])
-            win_count[name] = len([k for k, v in match_summary.items() if name in v['players'] and v['win']])
-            win_perc[name] = win_count[name] / match_count[name] if match_count[name] > 0 else 0
-
-        print('')
-        sorted_wins = sorted(win_perc.items(), key=lambda kv: kv[1])
-        sorted_wins.reverse()
-
-        count = 0
-        total_players = len([k for k, v in match_count.items() if v > min_matches])
-        tier_size = math.ceil(total_players / 3)
-        for name, value in sorted_wins:
-            if match_count[name] > min_matches:
-                if count % tier_size == 0:               
-                    print('')     
-                    print('Tier %i:' % (count / tier_size + 1))
-                count += 1
-                print('%s has won %i matches with PnK from %i total (win rate %.2f %%)'
-                      % (name, win_count[name], match_count[name], 100 * win_perc[name]))
-        
+        print('PnK Win Rate: %.2f %%' % (100 * len([x for x, y in match_summary.items() if y['win']]) / len(matches)))
 
     @staticmethod
-    def pnk_counters(players, matches, parameter, reverse=True, min_matches=10, text=None, accumulate=False):
+    def pnk_counters(players, matches, parameter, reverse=True, min_matches=10,
+                     text=None, accumulate=False, has_max=True):
         text = parameter if text is None else text
 
         account_ids = [v for k, v in players.items()]
@@ -97,9 +74,6 @@ class Parser:
                         maximum_match[p['account_id']] = match_id
                     matches_played[inv_p[p['account_id']]] += 1
 
-        print('')
-        print('Average %s per match:' % text)
-
         for name, pid in players.items():
             averages[name] = totals[name]/matches_played[name] if matches_played[name] > 0 else 0
 
@@ -107,35 +81,28 @@ class Parser:
         if reverse:
             sorted_average.reverse()
 
-        count = 0
-        total_players = len([k for k, v in matches_played.items() if v > min_matches])
-        tier_size = math.ceil(total_players / 3)
+        results_avg = []
         for name, value in sorted_average:
             if matches_played[name] > min_matches:
-                if count % tier_size == 0:               
-                    print('')     
-                    print('Tier %i:' % (count / tier_size + 1))
-                count += 1
-                print('%s has %i %s in %i matches (avg %.2f)'
-                      % (name, totals[name], text, matches_played[name], averages[name]))
-        
-        print('')
-        print('Maximum %s in a single match:' % text)
+                txt = '%s has %i %s in %i matches (avg %.2f)' \
+                        % (name, totals[name], text, matches_played[name], averages[name])
+                results_avg.append(TierItem(name, averages[name], txt))
+
+        if not has_max:
+            return results_avg, None
 
         sorted_maximum = sorted(maximum_value.items(), key=lambda kv: kv[1])
         if reverse:
             sorted_maximum.reverse()
 
-        count = 0    
+        results_max = []
         for pid, value in sorted_maximum:
             if matches_played[inv_p[pid]] > min_matches:
-                if count % tier_size == 0:               
-                    print('')     
-                    print('Tier %i:' % (count / tier_size + 1))
-                count += 1
-                print('%s: %i %s (match id: %i)'
-                      % (inv_p[pid], maximum_value[pid], text, maximum_match[pid]))
-        print('')
+                txt = '%s: %i %s (match id: %i)' \
+                       % (inv_p[pid], maximum_value[pid], text, maximum_match[pid])
+                results_max.append(TierItem(inv_p[pid], maximum_value[pid], txt))
+
+        return results_avg, results_max
 
     @staticmethod
     def get_matches_for_year(year, players, min_party_size=2, last_days=0):
@@ -147,7 +114,8 @@ class Parser:
             total_matches[name] = 0
             for o in obj:
                 y = gmtime(int(o['start_time'])).tm_year                
-                if (last_days > 0 and (calendar.timegm(gmtime()) - int(o['start_time'])) < last_days * 86400) or (last_days == 0 and y == year):
+                if (last_days > 0 and (calendar.timegm(gmtime()) - int(o['start_time'])) < last_days * 86400) \
+                        or (last_days == 0 and y == year):
                     total_matches[name] += 1
                     if not o['match_id'] in matches:
                         matches[o['match_id']] = []
@@ -162,11 +130,19 @@ class Parser:
         
         for name, match_count in sorted_matches:
             matches_with_pnk = len([i for i, v in matches.items() if len(v) >= min_party_size and name in v])
-            perc_with_pnk = matches_with_pnk / match_count if match_count > 0 else 0
+            percentage_with_pnk = matches_with_pnk / match_count if match_count > 0 else 0
             print('%s played %i matches -- %i matches (%.2f %%) played with PnK' 
-                % (name, match_count, matches_with_pnk, 100 * perc_with_pnk))
+                  % (name, match_count, matches_with_pnk, 100 * percentage_with_pnk))
 
         return {k: v for k, v in matches.items() if len(v) >= min_party_size}
+
+
+class Category:
+    def __init__(self, param, text=None, reverse=True, has_max=True):
+        self.parameter = param
+        self.text = text
+        self.reverse = reverse
+        self.has_max = has_max
 
 
 class Downloader:
@@ -175,12 +151,15 @@ class Downloader:
         for name, pid in players.items():
             file_name = 'players/%s_matches.json' % name
             if override or not os.path.isfile(file_name):
+                print('Downloading %s data' % name)
                 url = 'https://api.opendota.com/api/players/%s/matches' % pid
                 r = requests.get(url, allow_redirects=True)
                 open(file_name, 'wb').write(r.content)
 
     @staticmethod
     def download_matches(unique_matches, override=False):
+        print('')
+        print('Found %s matches' % len(unique_matches))
         for match_id in unique_matches:
             file_name = 'matches/%s.json' % match_id
             if override or not os.path.isfile(file_name):
