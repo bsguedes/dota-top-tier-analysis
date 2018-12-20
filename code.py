@@ -32,7 +32,9 @@ class Parser:
                     match_summary[match_id]['is_radiant'] = p['isRadiant']
                     gold_adv = [] if obj['radiant_gold_adv'] is None else obj['radiant_gold_adv']                  
                     gold_adv = gold_adv if p['isRadiant'] else -1 * gold_adv
-                    match_summary[match_id]['comeback_throw'] = -1 * min(gold_adv + [0]) if p['win'] > 0 else max(gold_adv + [0])
+                    obj['comeback'] = -1 * min(gold_adv + [0]) if 'comeback' not in obj else obj['comeback']
+                    obj['throw'] = max(gold_adv + [0]) if 'throw' not in obj else obj['throw']
+                    match_summary[match_id]['comeback_throw'] = obj['comeback'] if p['win'] > 0 else obj['throw']
             for p in obj['players']:
                 if p['isRadiant'] != match_summary[match_id]['is_radiant']:
                     match_summary[match_id]['enemy_heroes'].append(p['hero_id'])   
@@ -81,19 +83,19 @@ class Parser:
                   % (heroes[k], v))
 
         print('')
-        players_heroes = { i: { h: 0 for h, n in heroes.items() } for p, i in players.items() }
+        players_heroes = {i: {h: 0 for h, n in heroes.items()} for p, i in players.items()}
         for mid, v in match_summary.items():            
             for ally_hero, player in zip(v['pnk_heroes'], v['players']):
                 players_heroes[player][ally_hero] += 1        
         for p, i in players.items():
             pl = players_heroes[players[p]]
             m = max(pl.items(), key=operator.itemgetter(1))
-            print("%s most played hero: %s (%i of %i matches)" 
-                % (p, [heroes[x] for x in ([y for y in heroes.keys() if pl[y] == m[1]])], m[1], sum(pl.values())))
+            print("%s most played hero: %s (%i of %i matches)"
+                  % (p, [heroes[x] for x in ([y for y in heroes.keys() if pl[y] == m[1]])], m[1], sum(pl.values())))
 
         print('')
-        couples_win = {b: {x: 0 for w,x in players.items()} for a,b in players.items()}
-        couples_matches = {b: {x: 0 for w,x in players.items()} for a,b in players.items()}
+        couples_win = {b: {x: 0 for w, x in players.items()} for a, b in players.items()}
+        couples_matches = {b: {x: 0 for w, x in players.items()} for a, b in players.items()}
         for mid, v in match_summary.items():
             for p1, pid1 in players.items():
                 for p2, pid2 in players.items():
@@ -101,12 +103,17 @@ class Parser:
                         couples_matches[pid1][pid2] += 1
                         if v['win']:
                             couples_win[pid1][pid2] += 1
-        couples = {(inv_p[x[0]], inv_p[x[1]]): 0 if couples_matches[x[0]][x[1]] == 0 else couples_win[x[0]][x[1]] / couples_matches[x[0]][x[1]] for x in list(itertools.combinations(players.values(), 2))}
+        couples = {
+            (inv_p[x[0]], inv_p[x[1]]):
+                0 if couples_matches[x[0]][x[1]] == 0 else couples_win[x[0]][x[1]] / couples_matches[x[0]][x[1]]
+                for x in list(itertools.combinations(players.values(), 2))
+        }
         s = sorted(couples.items(), key=lambda e: e[1], reverse=True)
         for k, v in s:
             if couples_matches[players[k[0]]][players[k[1]]] >= min_couple_matches:
                 print('%.2f %% win rate for %s (%i wins in %i matches)'
-                        % (100 * v, k, couples_win[players[k[0]]][players[k[1]]], couples_matches[players[k[0]]][players[k[1]]]))        
+                      % (100 * v, k, couples_win[players[k[0]]][players[k[1]]],
+                         couples_matches[players[k[0]]][players[k[1]]]))
 
     @staticmethod
     def identify_teams(players, matches):
@@ -166,7 +173,8 @@ class Parser:
         for name, value in sorted_average:
             if matches_played[name] >= min_matches:
                 txt = '%s has %i %s in %i matches (avg %.2f)' \
-                        % (name, totals[name], text, matches_played[name], averages[name] if tf is None else tf(averages[name]))
+                        % (name, totals[name], text, matches_played[name],
+                           averages[name] if tf is None else tf(averages[name]))
                 results_avg.append(TierItem(name, averages[name], txt))
 
         if not has_max:
@@ -180,7 +188,8 @@ class Parser:
         for pid, value in sorted_maximum:
             if matches_played[inv_p[pid]] >= min_matches:
                 txt = '%s: %i %s (match id: %i)' \
-                       % (inv_p[pid], maximum_value[pid] if tf is None else tf(maximum_value[pid]), text, maximum_match[pid])
+                       % (inv_p[pid], maximum_value[pid] if tf is None else tf(maximum_value[pid]),
+                          text, maximum_match[pid])
                 results_max.append(TierItem(inv_p[pid], maximum_value[pid], txt))
 
         return results_avg, results_max
@@ -195,8 +204,8 @@ class Parser:
             total_matches[name] = 0
             for o in obj:
                 y = gmtime(int(o['start_time'])).tm_year                
-                if ((last_days > 0 and (calendar.timegm(gmtime()) - int(o['start_time'])) < last_days * 86400) \
-                        or (last_days == 0 and y == year) and (not ranked_only or o['lobby_type'] in [5,6,7])):
+                if ((last_days > 0 and (calendar.timegm(gmtime()) - int(o['start_time'])) < last_days * 86400)
+                        or (last_days == 0 and y == year) and (not ranked_only or o['lobby_type'] in [5, 6, 7])):
                     total_matches[name] += 1
                     if not o['match_id'] in matches:
                         matches[o['match_id']] = []
