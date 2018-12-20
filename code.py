@@ -6,13 +6,14 @@ import json
 import math
 import calendar
 import operator
+import itertools
 from time import *
 from tier import TierItem
 
 
 class Parser:
     @staticmethod
-    def identify_heroes(players, matches):
+    def identify_heroes(players, matches, min_couple_matches=10):
         hs = open('data/heroes.json', 'r', encoding='utf-8').read()
         hs_json = json.loads(hs)
         heroes = {h['id']: h['localized_name'] for h in hs_json}
@@ -77,6 +78,24 @@ class Parser:
             print("%s most played hero: %s (%i of %i matches)" 
                 % (p, [heroes[x] for x in ([y for y in heroes.keys() if pl[y] == m[1]])], m[1], sum(pl.values())))
 
+        print('')
+        couples_win = {b: {x: 0 for w,x in players.items()} for a,b in players.items()}
+        couples_matches = {b: {x: 0 for w,x in players.items()} for a,b in players.items()}
+        for mid, v in match_summary.items():
+            for p1, pid1 in players.items():
+                for p2, pid2 in players.items():
+                    if pid1 in v['players'] and pid2 in v['players'] and pid1 != pid2:
+                        couples_matches[pid1][pid2] += 1
+                        if v['win']:
+                            couples_win[pid1][pid2] += 1
+        couples = {(inv_p[x[0]], inv_p[x[1]]): 0 if couples_matches[x[0]][x[1]] == 0 else couples_win[x[0]][x[1]] / couples_matches[x[0]][x[1]] for x in list(itertools.combinations(players.values(), 2))}
+        s = sorted(couples.items(), key=lambda e: e[1], reverse=True)
+        for k, v in s:
+            if couples_matches[players[k[0]]][players[k[1]]] >= min_couple_matches:
+                print('%.2f %% win rate for %s (%i wins in %i matches)'
+                        % (100 * v, k, couples_win[players[k[0]]][players[k[1]]], couples_matches[players[k[0]]][players[k[1]]]))
+
+
 
     @staticmethod
     def identify_teams(players, matches):
@@ -134,7 +153,7 @@ class Parser:
 
         results_avg = []
         for name, value in sorted_average:
-            if matches_played[name] > min_matches:
+            if matches_played[name] >= min_matches:
                 txt = '%s has %i %s in %i matches (avg %.2f)' \
                         % (name, totals[name], text, matches_played[name], averages[name] if tf is None else tf(averages[name]))
                 results_avg.append(TierItem(name, averages[name], txt))
@@ -148,9 +167,9 @@ class Parser:
 
         results_max = []
         for pid, value in sorted_maximum:
-            if matches_played[inv_p[pid]] > min_matches:
+            if matches_played[inv_p[pid]] >= min_matches:
                 txt = '%s: %i %s (match id: %i)' \
-                       % (inv_p[pid], maximum_value[pid], text, maximum_match[pid])
+                       % (inv_p[pid], maximum_value[pid] if tf is None else tf(maximum_value[pid]), text, maximum_match[pid])
                 results_max.append(TierItem(inv_p[pid], maximum_value[pid], txt))
 
         return results_avg, results_max

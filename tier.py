@@ -32,7 +32,7 @@ class Tier:
                 self.scores_array[j].set_tier(i+1)
                 count += 1
             if i < self.NUMBER_OF_TIERS - 1:
-                while self.scores_array[count].score == tiers[i][-1].score:
+                while count < len(self.scores_array) and self.scores_array[count].score == tiers[i][-1].score:
                     tiers[i].append(self.scores_array[count])
                     self.scores_array[count].set_tier(i + 1)
                     count += 1
@@ -69,3 +69,7 @@ class Transforms:
     @staticmethod
     def percentage(number):
         return number * 100
+
+    @staticmethod
+    def sec_to_min(number):
+        return number / 60

@@ -5,6 +5,7 @@ from tier import *
 
 MIN_PARTY_SIZE = 4
 MIN_MATCHES = 50
+MIN_COUPLE_MATCHES = 10
 YEAR = 2018
 
 players = {
@@ -31,6 +32,12 @@ players = {
 
 categories = [
     Category('win', text='wins', has_max=False, apply_transform=Transforms.percentage),
+    Category('lane_role', text='lane role', has_max=False),
+    Category('actions_per_min', text='actions per minute'),
+    Category('purchase_tpscroll', text='TPs purchased', has_max=False),
+    Category('duration', text='duration in minutes', apply_transform=Transforms.sec_to_min),
+    Category('last_hits', text='last hits'),
+    Category('denies'),
     Category('hero_healing', text='hero healing'),
     Category('rune_pickups', text='runes picked up'),
     Category('pings'),
@@ -51,7 +58,7 @@ if __name__ == '__main__':
     unique_matches = Parser.get_matches_for_year(YEAR, players, min_party_size=MIN_PARTY_SIZE, ranked_only=False)
     Downloader.download_matches(unique_matches)
     
-    Parser.identify_heroes(players, unique_matches)
+    Parser.identify_heroes(players, unique_matches, min_couple_matches=MIN_COUPLE_MATCHES)
     Parser.identify_teams(players, unique_matches)
 
     tiers = []
