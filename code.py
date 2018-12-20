@@ -42,6 +42,18 @@ class Parser:
             print('%.2f %% PnK win rate versus %s (%i matches)'
                   % (100 * v, k, win_rate_versus_heroes[inv_h[k]]['matches']))
 
+        win_rate_with_heroes = {k: {'matches': 0, 'wins': 0} for k, v in heroes.items()}
+        for mid, v in match_summary.items():
+            for ally_hero in v['pnk_heroes']:
+                win_rate_with_heroes[ally_hero]['matches'] += 1
+                if v['win']:
+                    win_rate_with_heroes[ally_hero]['wins'] += 1
+        avg = {v: win_rate_with_heroes[k]['wins'] / win_rate_with_heroes[k]['matches'] for k, v in heroes.items()}
+        s = sorted(avg.items(), key=lambda e: e[1], reverse=True)
+        for k, v in s:
+            print('%.2f %% PnK win rate playing %s (%i matches)'
+                  % (100 * v, k, win_rate_with_heroes[inv_h[k]]['matches']))
+
     @staticmethod
     def identify_teams(players, matches):
         account_ids = [v for k, v in players.items()]
