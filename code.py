@@ -12,6 +12,10 @@ from tier import TierItem
 class Parser:
     @staticmethod
     def identify_heroes(players, matches):
+        hs = open('data/heroes.json', 'r', encoding='utf-8').read()
+        hs_json = json.loads(hs)
+        heroes = {h['id']: h['localized_name'] for h in hs_json}
+        inv_h = {h['localized_name']: h['id'] for h in hs_json}
         account_ids = [v for k, v in players.items()]
         match_summary = {k: {'pnk_heroes': [], 'enemy_heroes': [], 'players': []} for k, v in matches.items()}
         for match_id, match_players in matches.items():
@@ -25,7 +29,18 @@ class Parser:
                     match_summary[match_id]['is_radiant'] = p['isRadiant']        
             for p in obj['players']:
                 if p['isRadiant'] != match_summary[match_id]['is_radiant']:
-                    match_summary[match_id]['enemy_heroes'].append(p['hero_id'])        
+                    match_summary[match_id]['enemy_heroes'].append(p['hero_id'])
+        win_rate_versus_heroes = {k: {'matches': 0, 'wins': 0} for k, v in heroes.items()}
+        for mid, v in match_summary.items():
+            for enemy_hero in v['enemy_heroes']:
+                win_rate_versus_heroes[enemy_hero]['matches'] += 1
+                if v['win']:
+                    win_rate_versus_heroes[enemy_hero]['wins'] += 1
+        avg = {v: win_rate_versus_heroes[k]['wins'] / win_rate_versus_heroes[k]['matches'] for k, v in heroes.items()}
+        s = sorted(avg.items(), key=lambda e: e[1], reverse=True)
+        for k, v in s:
+            print('%.2f %% PnK win rate versus %s (%i matches)'
+                  % (100 * v, k, win_rate_versus_heroes[inv_h[k]]['matches']))
 
     @staticmethod
     def identify_teams(players, matches):

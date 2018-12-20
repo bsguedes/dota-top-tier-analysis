@@ -60,5 +60,6 @@ class Tier:
             medals[name] = (medals[name][0], medals[name][1], medals[name][2])
 
         print('')
-        s = sorted(medals.items(), key=lambda e: e[0], reverse=True)
-        print(s)
+        s = sorted(medals.items(), key=lambda e: e[1], reverse=True)
+        for k, v in s:
+            print('%s;%i;%i;%i' % (k, v[0], v[1], v[2]))

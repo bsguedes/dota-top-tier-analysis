@@ -31,19 +31,19 @@ players = {
 
 categories = [
     Category('win', text='wins', has_max=False),
-    Category('hero_healing', text='hero healing'),
-    Category('rune_pickups', text='runes picked up'),
-    Category('pings'),
-    Category('creeps_stacked', text='creeps stacked'),
-    Category('stuns', text='stun duration dealt'),
-    Category('hero_damage', text='hero damage'),
-    Category('total_gold', text='total gold'),
-    Category('gold_per_min', text='gpm'),
-    Category('kills'),
-    Category('deaths', reverse=False),
-    Category('assists'),
-    Category('obs_placed', text='observer wards placed'),
-    Category('sen_placed', text='sentry wards placed')
+    #Category('hero_healing', text='hero healing'),
+    #Category('rune_pickups', text='runes picked up'),
+    #Category('pings'),
+    #Category('creeps_stacked', text='creeps stacked'),
+    #Category('stuns', text='stun duration dealt'),
+    #Category('hero_damage', text='hero damage'),
+    #Category('total_gold', text='total gold'),
+    #Category('gold_per_min', text='gpm'),
+    #Category('kills'),
+    #Category('deaths', reverse=False),
+    #Category('assists'),
+    #Category('obs_placed', text='observer wards placed'),
+    #Category('sen_placed', text='sentry wards placed')
 ]
 
 if __name__ == '__main__':
