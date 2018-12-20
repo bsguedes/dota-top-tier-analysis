@@ -5,6 +5,7 @@ import os.path
 import json
 import math
 import calendar
+import operator
 from time import *
 from tier import TierItem
 
@@ -16,6 +17,7 @@ class Parser:
         hs_json = json.loads(hs)
         heroes = {h['id']: h['localized_name'] for h in hs_json}
         inv_h = {h['localized_name']: h['id'] for h in hs_json}
+        inv_p = {v: k for k, v in players.items()}
         account_ids = [v for k, v in players.items()]
         match_summary = {k: {'pnk_heroes': [], 'enemy_heroes': [], 'players': []} for k, v in matches.items()}
         for match_id, match_players in matches.items():
@@ -23,13 +25,15 @@ class Parser:
             obj = json.loads(content)
             for p in obj['players']:
                 if p['account_id'] in account_ids:
-                    match_summary[match_id]['pnk_heroes'].append(p['hero_id'])                    
+                    match_summary[match_id]['pnk_heroes'].append(p['hero_id'])                     
                     match_summary[match_id]['players'].append(p['account_id'])
                     match_summary[match_id]['win'] = p['win'] > 0
                     match_summary[match_id]['is_radiant'] = p['isRadiant']        
             for p in obj['players']:
                 if p['isRadiant'] != match_summary[match_id]['is_radiant']:
                     match_summary[match_id]['enemy_heroes'].append(p['hero_id'])
+        
+        print('')
         win_rate_versus_heroes = {k: {'matches': 0, 'wins': 0} for k, v in heroes.items()}
         for mid, v in match_summary.items():
             for enemy_hero in v['enemy_heroes']:
@@ -42,6 +46,7 @@ class Parser:
             print('%.2f %% PnK win rate versus %s (%i matches)'
                   % (100 * v, k, win_rate_versus_heroes[inv_h[k]]['matches']))
 
+        print('')
         win_rate_with_heroes = {k: {'matches': 0, 'wins': 0} for k, v in heroes.items()}
         for mid, v in match_summary.items():
             for ally_hero in v['pnk_heroes']:
@@ -53,6 +58,24 @@ class Parser:
         for k, v in s:
             print('%.2f %% PnK win rate playing %s (%i matches)'
                   % (100 * v, k, win_rate_with_heroes[inv_h[k]]['matches']))
+
+        print('')
+        matches = {h: v['matches'] for h, v in win_rate_with_heroes.items()}
+        s = sorted(matches.items(), key=lambda e: e[1], reverse=True)
+        for k, v in s:
+            print('PnK played %s for a total of %i matches'
+                  % (heroes[k], v))
+
+        print('')
+        players_heroes = { i: { h: 0 for h, n in heroes.items() } for p, i in players.items() }
+        for mid, v in match_summary.items():            
+            for ally_hero, player in zip(v['pnk_heroes'], v['players']):
+                players_heroes[player][ally_hero] += 1        
+        for p, i in players.items():
+            pl = players_heroes[players[p]]
+            m = max(pl.items(), key=operator.itemgetter(1))
+            print("%s most played hero: %s (%i of %i matches)" % (p, heroes[m[0]], m[1], sum(pl.values())))
+
 
     @staticmethod
     def identify_teams(players, matches):
