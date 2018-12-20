@@ -4,9 +4,9 @@ from code import *
 from tier import *
 
 MIN_PARTY_SIZE = 4
-MIN_MATCHES = 50
+MIN_MATCHES = 10
 MIN_COUPLE_MATCHES = 10
-YEAR = 2018
+YEARS = [2018]
 
 players = {
     'Zé': 25185394,
@@ -55,7 +55,7 @@ categories = [
 
 if __name__ == '__main__':
     Downloader.download_player_data(players)
-    unique_matches = Parser.get_matches_for_year(YEAR, players, min_party_size=MIN_PARTY_SIZE, ranked_only=False)
+    unique_matches = Parser.get_matches(YEARS, players, min_party_size=MIN_PARTY_SIZE, ranked_only=False)
     Downloader.download_matches(unique_matches)
     
     Parser.identify_heroes(players, unique_matches, min_couple_matches=MIN_COUPLE_MATCHES)

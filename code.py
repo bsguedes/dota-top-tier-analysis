@@ -50,33 +50,35 @@ class Parser:
                   % (v, k, [x for x, y in players.items() if y in match_summary[k]['players']]))
 
         print('')
-        win_rate_versus_heroes = {k: {'matches': 0, 'wins': 0} for k, v in heroes.items()}
+        wr_versus = {k: {'matches': 0, 'wins': 0} for k, v in heroes.items()}
         for mid, v in match_summary.items():
             for enemy_hero in v['enemy_heroes']:
-                win_rate_versus_heroes[enemy_hero]['matches'] += 1
+                wr_versus[enemy_hero]['matches'] += 1
                 if v['win']:
-                    win_rate_versus_heroes[enemy_hero]['wins'] += 1
-        avg = {v: win_rate_versus_heroes[k]['wins'] / win_rate_versus_heroes[k]['matches'] for k, v in heroes.items()}
+                    wr_versus[enemy_hero]['wins'] += 1
+        avg = {v: 0 if wr_versus[k]['matches'] == 0 else wr_versus[k]['wins'] / wr_versus[k]['matches']
+               for k, v in heroes.items()}
         s = sorted(avg.items(), key=lambda e: e[1], reverse=True)
         for k, v in s:
             print('%.2f %% PnK win rate versus %s (%i matches)'
-                  % (100 * v, k, win_rate_versus_heroes[inv_h[k]]['matches']))
+                  % (100 * v, k, wr_versus[inv_h[k]]['matches']))
 
         print('')
-        wrwh = {k: {'matches': 0, 'wins': 0} for k, v in heroes.items()}
+        wr_with = {k: {'matches': 0, 'wins': 0} for k, v in heroes.items()}
         for mid, v in match_summary.items():
             for ally_hero in v['pnk_heroes']:
-                wrwh[ally_hero]['matches'] += 1
+                wr_with[ally_hero]['matches'] += 1
                 if v['win']:
-                    wrwh[ally_hero]['wins'] += 1
-        avg = {v: 0 if wrwh[k]['matches'] == 0 else wrwh[k]['wins'] / wrwh[k]['matches'] for k, v in heroes.items()}
+                    wr_with[ally_hero]['wins'] += 1
+        avg = {v: 0 if wr_with[k]['matches'] == 0 else wr_with[k]['wins'] / wr_with[k]['matches']
+               for k, v in heroes.items()}
         s = sorted(avg.items(), key=lambda e: e[1], reverse=True)
         for k, v in s:
             print('%.2f %% PnK win rate playing %s (%i matches)'
-                  % (100 * v, k, wrwh[inv_h[k]]['matches']))
+                  % (100 * v, k, wr_with[inv_h[k]]['matches']))
 
         print('')
-        matches = {h: v['matches'] for h, v in wrwh.items()}
+        matches = {h: v['matches'] for h, v in wr_with.items()}
         s = sorted(matches.items(), key=lambda e: e[1], reverse=True)
         for k, v in s:
             print('PnK played %s for a total of %i matches'
@@ -195,7 +197,7 @@ class Parser:
         return results_avg, results_max
 
     @staticmethod
-    def get_matches_for_year(year, players, min_party_size=2, last_days=0, ranked_only=False):
+    def get_matches(years, players, min_party_size=2, last_days=None, ranked_only=False):
         matches = dict()
         total_matches = {n: 0 for n, pid in players.items()}
         for name, pid in players.items():
@@ -204,8 +206,8 @@ class Parser:
             total_matches[name] = 0
             for o in obj:
                 y = gmtime(int(o['start_time'])).tm_year                
-                if ((last_days > 0 and (calendar.timegm(gmtime()) - int(o['start_time'])) < last_days * 86400)
-                        or (last_days == 0 and y == year) and (not ranked_only or o['lobby_type'] in [5, 6, 7])):
+                if ((last_days is not None and (calendar.timegm(gmtime()) - int(o['start_time'])) < last_days * 86400)
+                        or (last_days is None and y in years) and (not ranked_only or o['lobby_type'] in [5, 6, 7])):
                     total_matches[name] += 1
                     if not o['match_id'] in matches:
                         matches[o['match_id']] = []
