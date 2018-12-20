@@ -29,11 +29,24 @@ class Parser:
                     match_summary[match_id]['pnk_heroes'].append(p['hero_id'])                     
                     match_summary[match_id]['players'].append(p['account_id'])
                     match_summary[match_id]['win'] = p['win'] > 0
-                    match_summary[match_id]['is_radiant'] = p['isRadiant']        
+                    match_summary[match_id]['is_radiant'] = p['isRadiant']
+                    gold_adv = [] if obj['radiant_gold_adv'] is None else obj['radiant_gold_adv']                  
+                    gold_adv = gold_adv if p['isRadiant'] else -1 * gold_adv
+                    match_summary[match_id]['comeback_throw'] = -1 * min(gold_adv + [0]) if p['win'] > 0 else max(gold_adv + [0])
             for p in obj['players']:
                 if p['isRadiant'] != match_summary[match_id]['is_radiant']:
-                    match_summary[match_id]['enemy_heroes'].append(p['hero_id'])
-        
+                    match_summary[match_id]['enemy_heroes'].append(p['hero_id'])   
+
+        print('')
+        list_comebacks = {m: v['comeback_throw'] for m, v in match_summary.items() if v['win'] > 0}
+        list_throws = {m: v['comeback_throw'] for m, v in match_summary.items() if v['win'] == 0}        
+        for k, v in sorted(list_comebacks.items(), key=lambda e: e[1], reverse=True)[:10]:            
+            print('PnK came back from %s gold disadvantage in match id %i with team: %s'
+                  % (v, k, [x for x, y in players.items() if y in match_summary[k]['players']]))            
+        for k, v in sorted(list_throws.items(), key=lambda e: e[1], reverse=True)[:10]:            
+            print('PnK threw a %s gold advantage in match id %i with team: %s'
+                  % (v, k, [x for x, y in players.items() if y in match_summary[k]['players']]))
+
         print('')
         win_rate_versus_heroes = {k: {'matches': 0, 'wins': 0} for k, v in heroes.items()}
         for mid, v in match_summary.items():
@@ -93,9 +106,7 @@ class Parser:
         for k, v in s:
             if couples_matches[players[k[0]]][players[k[1]]] >= min_couple_matches:
                 print('%.2f %% win rate for %s (%i wins in %i matches)'
-                        % (100 * v, k, couples_win[players[k[0]]][players[k[1]]], couples_matches[players[k[0]]][players[k[1]]]))
-
-
+                        % (100 * v, k, couples_win[players[k[0]]][players[k[1]]], couples_matches[players[k[0]]][players[k[1]]]))        
 
     @staticmethod
     def identify_teams(players, matches):
