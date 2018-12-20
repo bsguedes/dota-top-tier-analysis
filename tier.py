@@ -6,10 +6,6 @@ class TierItem:
         self.name = name
         self.score = score
         self.text = text
-        self.tier = 0
-
-    def set_tier(self, tier):
-        self.tier = tier
 
 
 class Tier:
@@ -29,13 +25,16 @@ class Tier:
             tiers[i] = list()
             for j in range(count, min(int((i + 1) * self.tier_size), self.player_count)):
                 tiers[i].append(self.scores_array[j])
-                self.scores_array[j].set_tier(i+1)
                 count += 1
             if i < self.NUMBER_OF_TIERS - 1:
-                while count < len(self.scores_array) and self.scores_array[count].score == tiers[i][-1].score:
+                while count < len(self.scores_array) and len(tiers[i]) > 0 \
+                        and self.scores_array[count].score == tiers[i][-1].score:
                     tiers[i].append(self.scores_array[count])
-                    self.scores_array[count].set_tier(i + 1)
                     count += 1
+        for i in range(1, self.NUMBER_OF_TIERS):
+            if len(tiers[i-1]) == 0:
+                tiers[i-1] = tiers[i]
+                tiers[i] = list()
         return tiers
 
     def print(self):

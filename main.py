@@ -34,7 +34,7 @@ categories = [
     Category('win', text='wins', has_max=False, apply_transform=Transforms.percentage),
     Category('lane_role', text='lane role', has_max=False),
     Category('actions_per_min', text='actions per minute'),
-    Category('purchase_tpscroll', text='TPs purchased', has_max=False),
+    Category('purchase_tpscroll', text='TPs purchased'),
     Category('duration', text='duration in minutes', apply_transform=Transforms.sec_to_min),
     Category('last_hits', text='last hits'),
     Category('denies'),
