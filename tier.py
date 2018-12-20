@@ -63,3 +63,9 @@ class Tier:
         s = sorted(medals.items(), key=lambda e: e[1], reverse=True)
         for k, v in s:
             print('%s;%i;%i;%i' % (k, v[0], v[1], v[2]))
+
+
+class Transforms:
+    @staticmethod
+    def percentage(number):
+        return number * 100

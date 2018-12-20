@@ -47,20 +47,20 @@ class Parser:
                   % (100 * v, k, win_rate_versus_heroes[inv_h[k]]['matches']))
 
         print('')
-        win_rate_with_heroes = {k: {'matches': 0, 'wins': 0} for k, v in heroes.items()}
+        wrwh = {k: {'matches': 0, 'wins': 0} for k, v in heroes.items()}
         for mid, v in match_summary.items():
             for ally_hero in v['pnk_heroes']:
-                win_rate_with_heroes[ally_hero]['matches'] += 1
+                wrwh[ally_hero]['matches'] += 1
                 if v['win']:
-                    win_rate_with_heroes[ally_hero]['wins'] += 1
-        avg = {v: win_rate_with_heroes[k]['wins'] / win_rate_with_heroes[k]['matches'] for k, v in heroes.items()}
+                    wrwh[ally_hero]['wins'] += 1
+        avg = {v: 0 if wrwh[k]['matches'] == 0 else wrwh[k]['wins'] / wrwh[k]['matches'] for k, v in heroes.items()}
         s = sorted(avg.items(), key=lambda e: e[1], reverse=True)
         for k, v in s:
             print('%.2f %% PnK win rate playing %s (%i matches)'
-                  % (100 * v, k, win_rate_with_heroes[inv_h[k]]['matches']))
+                  % (100 * v, k, wrwh[inv_h[k]]['matches']))
 
         print('')
-        matches = {h: v['matches'] for h, v in win_rate_with_heroes.items()}
+        matches = {h: v['matches'] for h, v in wrwh.items()}
         s = sorted(matches.items(), key=lambda e: e[1], reverse=True)
         for k, v in s:
             print('PnK played %s for a total of %i matches'
@@ -74,7 +74,8 @@ class Parser:
         for p, i in players.items():
             pl = players_heroes[players[p]]
             m = max(pl.items(), key=operator.itemgetter(1))
-            print("%s most played hero: %s (%i of %i matches)" % (p, heroes[m[0]], m[1], sum(pl.values())))
+            print("%s most played hero: %s (%i of %i matches)" 
+                % (p, [heroes[x] for x in ([y for y in heroes.keys() if pl[y] == m[1]])], m[1], sum(pl.values())))
 
 
     @staticmethod
@@ -94,7 +95,7 @@ class Parser:
 
     @staticmethod
     def pnk_counters(players, matches, parameter, reverse=True, min_matches=10,
-                     text=None, accumulate=False, has_max=True):
+                     text=None, accumulate=False, has_max=True, tf=None):
         text = parameter if text is None else text
 
         account_ids = [v for k, v in players.items()]
@@ -135,7 +136,7 @@ class Parser:
         for name, value in sorted_average:
             if matches_played[name] > min_matches:
                 txt = '%s has %i %s in %i matches (avg %.2f)' \
-                        % (name, totals[name], text, matches_played[name], averages[name])
+                        % (name, totals[name], text, matches_played[name], averages[name] if tf is None else tf(averages[name]))
                 results_avg.append(TierItem(name, averages[name], txt))
 
         if not has_max:
@@ -155,7 +156,7 @@ class Parser:
         return results_avg, results_max
 
     @staticmethod
-    def get_matches_for_year(year, players, min_party_size=2, last_days=0):
+    def get_matches_for_year(year, players, min_party_size=2, last_days=0, ranked_only=False):
         matches = dict()
         total_matches = {n: 0 for n, pid in players.items()}
         for name, pid in players.items():
@@ -164,8 +165,8 @@ class Parser:
             total_matches[name] = 0
             for o in obj:
                 y = gmtime(int(o['start_time'])).tm_year                
-                if (last_days > 0 and (calendar.timegm(gmtime()) - int(o['start_time'])) < last_days * 86400) \
-                        or (last_days == 0 and y == year):
+                if ((last_days > 0 and (calendar.timegm(gmtime()) - int(o['start_time'])) < last_days * 86400) \
+                        or (last_days == 0 and y == year) and (not ranked_only or o['lobby_type'] in [5,6,7])):
                     total_matches[name] += 1
                     if not o['match_id'] in matches:
                         matches[o['match_id']] = []
@@ -188,11 +189,12 @@ class Parser:
 
 
 class Category:
-    def __init__(self, param, text=None, reverse=True, has_max=True):
+    def __init__(self, param, text=None, reverse=True, has_max=True, apply_transform=None):
         self.parameter = param
         self.text = text
         self.reverse = reverse
         self.has_max = has_max
+        self.transform = apply_transform
 
 
 class Downloader:

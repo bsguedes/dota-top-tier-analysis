@@ -1,7 +1,7 @@
 # coding=utf-8
 
 from code import *
-from tier import Tier
+from tier import *
 
 MIN_PARTY_SIZE = 4
 MIN_MATCHES = 50
@@ -30,7 +30,7 @@ players = {
 }
 
 categories = [
-    Category('win', text='wins', has_max=False),
+    Category('win', text='wins', has_max=False, apply_transform=Transforms.percentage),
     Category('hero_healing', text='hero healing'),
     Category('rune_pickups', text='runes picked up'),
     Category('pings'),
@@ -48,7 +48,7 @@ categories = [
 
 if __name__ == '__main__':
     Downloader.download_player_data(players)
-    unique_matches = Parser.get_matches_for_year(YEAR, players, min_party_size=MIN_PARTY_SIZE)
+    unique_matches = Parser.get_matches_for_year(YEAR, players, min_party_size=MIN_PARTY_SIZE, ranked_only=False)
     Downloader.download_matches(unique_matches)
     
     Parser.identify_heroes(players, unique_matches)
@@ -56,7 +56,7 @@ if __name__ == '__main__':
 
     tiers = []
     for c in categories:
-        res_avg, res_max = Parser.pnk_counters(players, unique_matches, c.parameter, text=c.text,
+        res_avg, res_max = Parser.pnk_counters(players, unique_matches, c.parameter, text=c.text, tf=c.transform,
                                                reverse=c.reverse, min_matches=MIN_MATCHES, has_max=c.has_max)
         cat_name = c.text if c.text is not None else c.parameter
         tier_avg = Tier(res_avg, 'Average %s in PnK matches' % cat_name)
