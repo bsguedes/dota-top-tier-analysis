@@ -1,7 +1,5 @@
 # coding=utf-8
 
-import requests
-import os.path
 import json
 import math
 import calendar
@@ -9,9 +7,10 @@ import operator
 import itertools
 from time import *
 from tier import TierItem
+from roles import Roles
 
 
-class Parser:
+class Parser:    
     @staticmethod
     def identify_heroes(players, matches, min_couple_matches=10):
         hs = open('data/heroes.json', 'r', encoding='utf-8').read()
@@ -34,10 +33,22 @@ class Parser:
                     gold_adv = gold_adv if p['isRadiant'] else -1 * gold_adv
                     obj['comeback'] = -1 * min(gold_adv + [0]) if 'comeback' not in obj else obj['comeback']
                     obj['throw'] = max(gold_adv + [0]) if 'throw' not in obj else obj['throw']
-                    match_summary[match_id]['comeback_throw'] = obj['comeback'] if p['win'] > 0 else obj['throw']
+                    match_summary[match_id]['comeback_throw'] = obj['comeback'] if p['win'] > 0 else obj['throw']   
+            if 'lane_role' in obj['players'][0]:
+                match_summary[match_id]['roles'] = Roles.evaluate_roles(match_summary[match_id], obj, match_id)
             for p in obj['players']:
                 if p['isRadiant'] != match_summary[match_id]['is_radiant']:
                     match_summary[match_id]['enemy_heroes'].append(p['hero_id'])   
+
+        print('')
+        print('Compositions')
+        comp = dict()
+        for mid, v in match_summary.items():
+            if 'roles' in v:
+                if v['roles'] not in comp:
+                    comp[v['roles']] = 0
+                comp[v['roles']] += 1
+        print(comp)
 
         print('')
         list_comebacks = {m: v['comeback_throw'] for m, v in match_summary.items() if v['win'] > 0}
@@ -133,7 +144,7 @@ class Parser:
         print('PnK Win Rate: %.2f %%' % (100 * len([x for x, y in match_summary.items() if y['win']]) / len(matches)))
 
     @staticmethod
-    def pnk_counters(players, matches, parameter, reverse=True, min_matches=10, 
+    def pnk_counters(players, matches, parameter, reverse=True, min_matches=10, has_avg=True, 
                      text=None, accumulate=False, has_max=True, tf=None, rule=None):
         text = parameter if text is None else text
 
@@ -160,6 +171,8 @@ class Parser:
                         value = 0 if "10" not in p[parameter] else p[parameter]["10"]
                     elif rule == 'ward_kill':
                         value = p['observer_kills'] + p['sentry_kills']
+                    elif rule == 'max_hit':
+                        value = p[parameter]['value']
                     elif accumulate:
                         value = sum([v for k, v in p[parameter].items()])
                     else:
@@ -173,19 +186,20 @@ class Parser:
         for name, pid in players.items():
             averages[name] = totals[name]/matches_played[name] if matches_played[name] > 0 else 0
 
-        sorted_average = sorted(averages.items(), key=lambda kv: kv[1])
-        if reverse:
-            sorted_average.reverse()
+        if has_avg:
+            sorted_average = sorted(averages.items(), key=lambda kv: kv[1])
+            if reverse:
+                sorted_average.reverse()
 
-        results_avg = []
-        for name, value in sorted_average:
-            if matches_played[name] >= min_matches:
-                txt = '%s has %i %s in %i matches (avg %.2f)' \
-                        % (name, totals[name], text, matches_played[name],
-                           averages[name] if tf is None else tf(averages[name]))
-                results_avg.append(TierItem(name, averages[name], txt))
+            results_avg = []
+            for name, value in sorted_average:
+                if matches_played[name] >= min_matches:
+                    txt = '%s has %i %s in %i matches (avg %.2f)' \
+                            % (name, totals[name], text, matches_played[name],
+                               averages[name] if tf is None else tf(averages[name]))
+                    results_avg.append(TierItem(name, averages[name], txt))
 
-        if not has_max:
+        if has_avg and not has_max:
             return results_avg, None
 
         sorted_maximum = sorted(maximum_value.items(), key=lambda kv: kv[1])
@@ -199,6 +213,9 @@ class Parser:
                        % (inv_p[pid], maximum_value[pid] if tf is None else tf(maximum_value[pid]),
                           text, maximum_match[pid])
                 results_max.append(TierItem(inv_p[pid], maximum_value[pid], txt))
+
+        if not has_avg:
+            return None, results_max
 
         return results_avg, results_max
 
@@ -236,34 +253,12 @@ class Parser:
 
 
 class Category:
-    def __init__(self, param, text=None, reverse=True, 
+    def __init__(self, param, text=None, reverse=True, has_avg=True,
         has_max=True, apply_transform=None, rule=None):
         self.parameter = param
         self.text = text
         self.reverse = reverse
+        self.has_avg = has_avg
         self.has_max = has_max
         self.rule = rule
         self.transform = apply_transform
-
-
-class Downloader:
-    @staticmethod
-    def download_player_data(players, override=False):
-        for name, pid in players.items():
-            file_name = 'players/%s_matches.json' % name
-            if override or not os.path.isfile(file_name):
-                print('Downloading %s data' % name)
-                url = 'https://api.opendota.com/api/players/%s/matches' % pid
-                r = requests.get(url, allow_redirects=True)
-                open(file_name, 'wb').write(r.content)
-
-    @staticmethod
-    def download_matches(unique_matches, override=False):
-        print('')
-        print('Found %s matches' % len(unique_matches))
-        for match_id in unique_matches:
-            file_name = 'matches/%s.json' % match_id
-            if override or not os.path.isfile(file_name):
-                url = 'https://api.opendota.com/api/matches/%i' % match_id
-                r = requests.get(url, allow_redirects=True)
-                open(file_name, 'wb').write(r.content)

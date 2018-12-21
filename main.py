@@ -1,7 +1,9 @@
 # coding=utf-8
 
-from code import *
 from tier import *
+from code import Parser
+from code import Category
+from downloader import Downloader
 
 MIN_PARTY_SIZE = 4
 MIN_MATCHES = 10
@@ -32,7 +34,7 @@ players = {
 
 categories = [
     Category('win', text='wins', has_max=False, apply_transform=Transforms.percentage),    
-    Category('observer_kills', text='wards removed', rule='ward_kill'),
+    Category('observer_kills', text='wards removed', rule='ward_kill'),    
     Category('kda', text='KLA', rule='kla'),
     Category('xp_per_min', text='xpm'),
     Category('buyback_count', text='buybacks'),
@@ -71,11 +73,12 @@ if __name__ == '__main__':
     for c in categories:
         res_avg, res_max = Parser.pnk_counters(players, unique_matches, c.parameter, text=c.text, 
                                                tf=c.transform, reverse=c.reverse, min_matches=MIN_MATCHES, 
-                                               has_max=c.has_max, rule=c.rule)
+                                               has_max=c.has_max, rule=c.rule, has_avg=c.has_avg)
         cat_name = c.text if c.text is not None else c.parameter
-        tier_avg = Tier(res_avg, 'Average %s in PnK matches' % cat_name)
-        tiers.append(tier_avg)
-        tier_avg.print()
+        if c.has_avg:            
+            tier_avg = Tier(res_avg, 'Average %s in PnK matches' % cat_name)
+            tier_avg.print()
+            tiers.append(tier_avg)        
         if c.has_max:
             tier_max = Tier(res_max, 'Maximum %s in a single match' % cat_name)
             tier_max.print()
