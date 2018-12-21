@@ -31,8 +31,14 @@ players = {
 }
 
 categories = [
-    Category('win', text='wins', has_max=False, apply_transform=Transforms.percentage),
-    Category('lane_role', text='lane role', has_max=False),
+    Category('win', text='wins', has_max=False, apply_transform=Transforms.percentage),    
+    Category('observer_kills', text='wards removed', rule='ward_kill'),
+    Category('kda', text='KLA', rule='kla'),
+    Category('xp_per_min', text='xpm'),
+    Category('buyback_count', text='buybacks'),
+    Category('kill_streaks', text='beyond godlike streaks', rule='beyond_godlike', has_max=False),
+    Category('lane_efficiency_pct', text='lane efficiency at 10min'),
+    Category('tower_damage', text='tower damage'),    
     Category('actions_per_min', text='actions per minute'),
     Category('purchase_tpscroll', text='TPs purchased'),
     Category('duration', text='duration in minutes', apply_transform=Transforms.sec_to_min),
@@ -63,8 +69,9 @@ if __name__ == '__main__':
 
     tiers = []
     for c in categories:
-        res_avg, res_max = Parser.pnk_counters(players, unique_matches, c.parameter, text=c.text, tf=c.transform,
-                                               reverse=c.reverse, min_matches=MIN_MATCHES, has_max=c.has_max)
+        res_avg, res_max = Parser.pnk_counters(players, unique_matches, c.parameter, text=c.text, 
+                                               tf=c.transform, reverse=c.reverse, min_matches=MIN_MATCHES, 
+                                               has_max=c.has_max, rule=c.rule)
         cat_name = c.text if c.text is not None else c.parameter
         tier_avg = Tier(res_avg, 'Average %s in PnK matches' % cat_name)
         tiers.append(tier_avg)

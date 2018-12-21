@@ -133,8 +133,8 @@ class Parser:
         print('PnK Win Rate: %.2f %%' % (100 * len([x for x, y in match_summary.items() if y['win']]) / len(matches)))
 
     @staticmethod
-    def pnk_counters(players, matches, parameter, reverse=True, min_matches=10,
-                     text=None, accumulate=False, has_max=True, tf=None):
+    def pnk_counters(players, matches, parameter, reverse=True, min_matches=10, 
+                     text=None, accumulate=False, has_max=True, tf=None, rule=None):
         text = parameter if text is None else text
 
         account_ids = [v for k, v in players.items()]
@@ -149,12 +149,18 @@ class Parser:
         for match_id, match_players in matches.items():
             content = open('matches/%i.json' % match_id, 'r', encoding='utf-8').read()
             obj = json.loads(content)
-            for p in obj['players']:
-                if p['account_id'] in account_ids and parameter in p and p[parameter] is not None:
+            for p in obj['players']:                
+                if p['account_id'] in account_ids and (parameter in p and p[parameter] is not None):
                     if not inv_p[p['account_id']] in totals:
                         totals[inv_p[p['account_id']]] = 0
                         matches_played[inv_p[p['account_id']]] = 0
-                    if accumulate:
+                    if rule == 'kla':
+                        value = (p['kills'] + p['assists']) / (p['deaths'] + 1)
+                    elif rule == 'beyond_godlike':
+                        value = 0 if "10" not in p[parameter] else p[parameter]["10"]
+                    elif rule == 'ward_kill':
+                        value = p['observer_kills'] + p['sentry_kills']
+                    elif accumulate:
                         value = sum([v for k, v in p[parameter].items()])
                     else:
                         value = p[parameter]
@@ -230,11 +236,13 @@ class Parser:
 
 
 class Category:
-    def __init__(self, param, text=None, reverse=True, has_max=True, apply_transform=None):
+    def __init__(self, param, text=None, reverse=True, 
+        has_max=True, apply_transform=None, rule=None):
         self.parameter = param
         self.text = text
         self.reverse = reverse
         self.has_max = has_max
+        self.rule = rule
         self.transform = apply_transform
 
 
