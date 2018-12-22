@@ -7,25 +7,25 @@ import itertools
 from time import *
 from tier import TierItem
 from roles import Roles
+from constants import Constants
 
 
 class Parser:    
     @staticmethod
-    def identify_heroes(players, matches, min_couple_matches=10):
-        roles = {1: "hard carry", 2: "mid", 3: "offlane", 4: "support", 5: "hard support"}
+    def identify_heroes(team_name, players, matches, min_couple_matches=10):
         hs = open('data/heroes.json', 'r', encoding='utf-8').read()
         hs_json = json.loads(hs)
         heroes = {h['id']: h['localized_name'] for h in hs_json}
         inv_h = {h['localized_name']: h['id'] for h in hs_json}
         inv_p = {v: k for k, v in players.items()}
         account_ids = [v for k, v in players.items()]
-        match_summary = {k: {'pnk_heroes': [], 'enemy_heroes': [], 'players': []} for k, v in matches.items()}
+        match_summary = {k: {'our_heroes': [], 'enemy_heroes': [], 'players': []} for k, v in matches.items()}
         for match_id, match_players in matches.items():
             content = open('matches/%i.json' % match_id, 'r', encoding='utf-8').read()
             obj = json.loads(content)
             for p in obj['players']:
                 if p['account_id'] in account_ids:
-                    match_summary[match_id]['pnk_heroes'].append(p['hero_id'])                     
+                    match_summary[match_id]['our_heroes'].append(p['hero_id'])
                     match_summary[match_id]['players'].append(p['account_id'])
                     match_summary[match_id]['win'] = p['win'] > 0
                     match_summary[match_id]['is_radiant'] = p['isRadiant']
@@ -35,7 +35,7 @@ class Parser:
                     obj['throw'] = max(gold_adv + [0]) if 'throw' not in obj else obj['throw']
                     match_summary[match_id]['comeback_throw'] = obj['comeback'] if p['win'] > 0 else obj['throw']   
             if 'lane_role' in obj['players'][0]:
-                match_summary[match_id]['roles'] = Roles.evaluate_roles(match_summary[match_id], obj['players'], roles)
+                match_summary[match_id]['roles'] = Roles.evaluate_roles(match_summary[match_id], obj['players'])
             for p in obj['players']:
                 if p['isRadiant'] != match_summary[match_id]['is_radiant']:
                     match_summary[match_id]['enemy_heroes'].append(p['hero_id'])
@@ -44,11 +44,11 @@ class Parser:
         list_comebacks = {m: v['comeback_throw'] for m, v in match_summary.items() if v['win'] > 0}
         list_throws = {m: v['comeback_throw'] for m, v in match_summary.items() if v['win'] == 0}        
         for k, v in sorted(list_comebacks.items(), key=lambda e: e[1], reverse=True)[:10]:            
-            print('PnK came back from %s gold disadvantage in match id %i with team: %s'
-                  % (v, k, [x for x, y in players.items() if y in match_summary[k]['players']]))            
+            print('%s came back from %s gold disadvantage in match id %i with team: %s'
+                  % (team_name, v, k, [x for x, y in players.items() if y in match_summary[k]['players']]))
         for k, v in sorted(list_throws.items(), key=lambda e: e[1], reverse=True)[:10]:            
-            print('PnK threw a %s gold advantage in match id %i with team: %s'
-                  % (v, k, [x for x, y in players.items() if y in match_summary[k]['players']]))
+            print('%s threw a %s gold advantage in match id %i with team: %s'
+                  % (team_name, v, k, [x for x, y in players.items() if y in match_summary[k]['players']]))
 
         print('')
         wr_versus = {k: {'matches': 0, 'wins': 0} for k, v in heroes.items()}
@@ -61,13 +61,13 @@ class Parser:
                for k, v in heroes.items()}
         s = sorted(avg.items(), key=lambda e: e[1], reverse=True)
         for k, v in s:
-            print('%.2f %% PnK win rate versus %s (%i matches)'
-                  % (100 * v, k, wr_versus[inv_h[k]]['matches']))
+            print('%.2f %% %s win rate versus %s (%i matches)'
+                  % (100 * v, team_name, k, wr_versus[inv_h[k]]['matches']))
 
         print('')
         wr_with = {k: {'matches': 0, 'wins': 0} for k, v in heroes.items()}
         for mid, v in match_summary.items():
-            for ally_hero in v['pnk_heroes']:
+            for ally_hero in v['our_heroes']:
                 wr_with[ally_hero]['matches'] += 1
                 if v['win']:
                     wr_with[ally_hero]['wins'] += 1
@@ -75,22 +75,22 @@ class Parser:
                for k, v in heroes.items()}
         s = sorted(avg.items(), key=lambda e: e[1], reverse=True)
         for k, v in s:
-            print('%.2f %% PnK win rate playing %s (%i matches)'
-                  % (100 * v, k, wr_with[inv_h[k]]['matches']))
+            print('%.2f %% %s win rate playing %s (%i matches)'
+                  % (100 * v, team_name, k, wr_with[inv_h[k]]['matches']))
 
         print('')
         matches = {h: v['matches'] for h, v in wr_with.items()}
         s = sorted(matches.items(), key=lambda e: e[1], reverse=True)
         for k, v in s:
-            print('PnK played %s for a total of %i matches'
-                  % (heroes[k], v))
+            print('%s played %s for a total of %i matches'
+                  % (team_name, heroes[k], v))
 
         print('')
         player_hero_in_match = dict()
         players_heroes = {i: {h: 0 for h, n in heroes.items()} for p, i in players.items()}
         for mid, v in match_summary.items():
             player_hero_in_match[mid] = dict()
-            for ally_hero, player in zip(v['pnk_heroes'], v['players']):
+            for ally_hero, player in zip(v['our_heroes'], v['players']):
                 player_hero_in_match[mid][player] = ally_hero
                 players_heroes[player][ally_hero] += 1        
         for p, i in players.items():
@@ -117,16 +117,30 @@ class Parser:
             print('Composition: %s win rate: %.2f %% (%i matches)' % (k, v * 100, comp_matches[k]))
 
         print('')
-        player_positions = {y: {r: 0 for i, r in roles.items()} for x, y in players.items()}
+        player_positions = {y: {r: 0 for i, r in Constants.roles().items()} for x, y in players.items()}
+        player_win_pos = {y: {r: 0 for i, r in Constants.roles().items()} for x, y in players.items()}
         for mid, v in match_summary.items():
             if 'roles' in v:
                 positions = v['roles']['positions']
                 for pid, pos in positions.items():
                     player_positions[pid][pos] += 1
+                    if v['win']:
+                        player_win_pos[pid][pos] += 1
         for pid, v in player_positions.items():
             pp = player_positions[pid]
-            pp = {a: '%i (%.2f %%)' % (b, 100 * b / sum(pp.values())) for a, b in pp.items()}
+            e = sum(pp.values())
+            pp = {a: '%i (%.2f %%)' % (b, 0 if e == 0 else 100 * b / e) for a, b in pp.items()}
             print('%s positions: %s' % (inv_p[pid], pp))
+
+        tier_dict = dict()
+        for pos_id, pos_name in Constants.roles().items():
+            avg = {k: player_win_pos[v][pos_name] / player_positions[v][pos_name] for k, v in players.items()
+                   if player_positions[v][pos_name] >= min_couple_matches}
+            s = sorted(avg.items(), key=lambda e: e[1], reverse=True)
+            tier_dict[pos_name] = list()
+            for k, v in s:
+                tier_dict[pos_name].append(TierItem(k, v * 100, '%s: %s\'s win rate: %.2f %% (%i matches)'
+                                                    % (pos_name, k, v * 100, player_positions[players[k]][pos_name])))
 
         print('')
         couples_win = {b: {x: 0 for w, x in players.items()} for a, b in players.items()}
@@ -150,8 +164,10 @@ class Parser:
                       % (100 * v, k, couples_win[players[k[0]]][players[k[1]]],
                          couples_matches[players[k[0]]][players[k[1]]]))
 
+        return tier_dict
+
     @staticmethod
-    def identify_teams(players, matches):
+    def identify_teams(team_name, players, matches):
         account_ids = [v for k, v in players.items()]
         match_summary = {k: {'players': [], 'win': False} for k, v in matches.items()}
         for match_id, match_players in matches.items():
@@ -163,10 +179,11 @@ class Parser:
                     break
 
         print('')
-        print('PnK Win Rate: %.2f %%' % (100 * len([x for x, y in match_summary.items() if y['win']]) / len(matches)))
+        print('%s Win Rate: %.2f %%'
+              % (team_name, 100 * len([x for x, y in match_summary.items() if y['win']]) / len(matches)))
 
     @staticmethod
-    def pnk_counters(players, matches, parameter, reverse=True, min_matches=10, has_avg=True, 
+    def stat_counter(players, matches, parameter, reverse=True, min_matches=10, has_avg=True,
                      text=None, has_max=True, tf=None, rule=None):
         text = parameter if text is None else text
 
@@ -197,6 +214,21 @@ class Parser:
                         value = p[parameter]['value']
                     elif rule == 'accumulate':
                         value = sum([v for k, v in p[parameter].items()])
+                    elif parameter == 'purchase':
+                        if rule == 'support_gold':
+                            pch = dict()
+                            costs = Constants.item_cost()
+                            l = ['ward_observer', 'ward_sentry', 'dust', 'smoke_of_deceit', 'ward_dispenser', 'gem']
+                            for i in l:
+                                pch[i] = p[parameter][i] if i in p[parameter] and p[parameter][i] is not None else 0
+                            obs_gold = max(pch['ward_observer'], pch['ward_dispenser']) * costs['ward_observer']
+                            sen_gold = max(pch['ward_sentry'], pch['ward_dispenser']) * costs['ward_sentry']
+                            value = obs_gold + sen_gold + costs['dust'] * pch['dust'] + costs['gem'] * pch['gem']
+                            value = value + costs['smoke_of_deceit'] * pch['smoke_of_deceit']
+                        else:
+                            value = (p[parameter][rule]
+                                     if rule in p[parameter] and p[parameter][rule] is not None else 0)
+                            value = value / 2 if rule == 'dust' else value
                     else:
                         value = p[parameter]
                     totals[inv_p[p['account_id']]] += value
@@ -240,7 +272,7 @@ class Parser:
         return results_avg, results_max
 
     @staticmethod
-    def get_matches(years, players, min_party_size=2, last_days=None, ranked_only=False):
+    def get_matches(team_name, years, players, min_party_size=2, last_days=None, ranked_only=False):
         matches = dict()
         total_matches = {n: 0 for n, pid in players.items()}
         for name, pid in players.items():
@@ -264,17 +296,18 @@ class Parser:
         sorted_matches.reverse()
         
         for name, match_count in sorted_matches:
-            matches_with_pnk = len([i for i, v in matches.items() if len(v) >= min_party_size and name in v])
-            percentage_with_pnk = matches_with_pnk / match_count if match_count > 0 else 0
-            print('%s played %i matches -- %i matches (%.2f %%) played with PnK' 
-                  % (name, match_count, matches_with_pnk, 100 * percentage_with_pnk))
+            matches_with_team = len([i for i, v in matches.items() if len(v) >= min_party_size and name in v])
+            percentage_with_team = matches_with_team / match_count if match_count > 0 else 0
+            print('%s played %i matches -- %i matches (%.2f %%) played with %s'
+                  % (name, match_count, matches_with_team, 100 * percentage_with_team, team_name))
 
         return {k: v for k, v in matches.items() if len(v) >= min_party_size}
 
 
 class Category:
-    def __init__(self, param, text=None, reverse=True, has_avg=True,
+    def __init__(self, weight, param, text=None, reverse=True, has_avg=True,
                  has_max=True, apply_transform=None, rule=None):
+        self.weight = weight
         self.parameter = param
         self.text = text
         self.reverse = reverse

@@ -11,11 +11,13 @@ class TierItem:
 class Tier:
     NUMBER_OF_TIERS = 3
 
-    def __init__(self, sorted_scores, message):
+    def __init__(self, weight, sorted_scores, message, is_max=False):
+        self.weight = weight
         self.scores_array = sorted_scores
         self.player_count = len(self.scores_array)
         self.tier_size = math.ceil(self.player_count / self.NUMBER_OF_TIERS)
         self.message = message
+        self.is_max = False
         self.tiers = self.get_tiers()
 
     def get_tiers(self):
@@ -45,6 +47,22 @@ class Tier:
             print('Tier %i:' % (i + 1))
             for item in self.tiers[i]:
                 print(item.text)
+
+    @staticmethod
+    def show_results_weights(players, tier_list):
+        points = {k: 0 for k, v in players.items()}
+        for table in tier_list:
+            level = 0
+            for tier_level, tier_items in table.tiers.items():
+                for ti in tier_items:
+                    p = (3 - level) * table.weight
+                    points[ti.name] += p if not table.is_max else p / 3
+                level += 1
+
+        print('')
+        s = sorted(points.items(), key=lambda e: e[1], reverse=True)
+        for k, v in s:
+            print('%s;%i' % (k, v))
 
     @staticmethod
     def show_results(players, tier_list):
