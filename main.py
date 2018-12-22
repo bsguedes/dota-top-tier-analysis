@@ -7,7 +7,7 @@ from downloader import Downloader
 
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
-MIN_PARTY_SIZE = 2
+MIN_PARTY_SIZE = 4
 MIN_MATCHES = 10
 MIN_COUPLE_MATCHES = 10
 YEARS = [2018]
@@ -88,7 +88,7 @@ categories = [
 
 if __name__ == '__main__':
     players = player_list[TEAM_NAME]
-    Downloader.download_player_data(players)
+    Downloader.download_player_data(players, override=False)
     unique_matches = Parser.get_matches(TEAM_NAME, YEARS, players, min_party_size=MIN_PARTY_SIZE, ranked_only=False)
     Downloader.download_matches(unique_matches)
     
