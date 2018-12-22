@@ -1,7 +1,6 @@
 # coding=utf-8
 
 import json
-import math
 import calendar
 import operator
 import itertools
@@ -13,6 +12,7 @@ from roles import Roles
 class Parser:    
     @staticmethod
     def identify_heroes(players, matches, min_couple_matches=10):
+        roles = {1: "hard carry", 2: "mid", 3: "offlane", 4: "support", 5: "hard support"}
         hs = open('data/heroes.json', 'r', encoding='utf-8').read()
         hs_json = json.loads(hs)
         heroes = {h['id']: h['localized_name'] for h in hs_json}
@@ -35,20 +35,10 @@ class Parser:
                     obj['throw'] = max(gold_adv + [0]) if 'throw' not in obj else obj['throw']
                     match_summary[match_id]['comeback_throw'] = obj['comeback'] if p['win'] > 0 else obj['throw']   
             if 'lane_role' in obj['players'][0]:
-                match_summary[match_id]['roles'] = Roles.evaluate_roles(match_summary[match_id], obj, match_id)
+                match_summary[match_id]['roles'] = Roles.evaluate_roles(match_summary[match_id], obj['players'], roles)
             for p in obj['players']:
                 if p['isRadiant'] != match_summary[match_id]['is_radiant']:
-                    match_summary[match_id]['enemy_heroes'].append(p['hero_id'])   
-
-        print('')
-        print('Compositions')
-        comp = dict()
-        for mid, v in match_summary.items():
-            if 'roles' in v:
-                if v['roles'] not in comp:
-                    comp[v['roles']] = 0
-                comp[v['roles']] += 1
-        print(comp)
+                    match_summary[match_id]['enemy_heroes'].append(p['hero_id'])
 
         print('')
         list_comebacks = {m: v['comeback_throw'] for m, v in match_summary.items() if v['win'] > 0}
@@ -96,15 +86,47 @@ class Parser:
                   % (heroes[k], v))
 
         print('')
+        player_hero_in_match = dict()
         players_heroes = {i: {h: 0 for h, n in heroes.items()} for p, i in players.items()}
-        for mid, v in match_summary.items():            
+        for mid, v in match_summary.items():
+            player_hero_in_match[mid] = dict()
             for ally_hero, player in zip(v['pnk_heroes'], v['players']):
+                player_hero_in_match[mid][player] = ally_hero
                 players_heroes[player][ally_hero] += 1        
         for p, i in players.items():
             pl = players_heroes[players[p]]
             m = max(pl.items(), key=operator.itemgetter(1))
             print("%s most played hero: %s (%i of %i matches)"
                   % (p, [heroes[x] for x in ([y for y in heroes.keys() if pl[y] == m[1]])], m[1], sum(pl.values())))
+
+        print('')
+        comp_matches = dict()
+        comp_wins = dict()
+        for mid, v in match_summary.items():
+            if 'roles' in v:
+                composition = v['roles']['composition']
+                if composition not in comp_matches:
+                    comp_matches[composition] = 0
+                    comp_wins[composition] = 0
+                comp_matches[composition] += 1
+                if v['win']:
+                    comp_wins[composition] += 1
+        avg = {k: comp_wins[k] / comp_matches[k] for k, v in comp_matches.items()}
+        s = sorted(avg.items(), key=lambda e: e[1], reverse=True)
+        for k, v in s:
+            print('Composition: %s win rate: %.2f %% (%i matches)' % (k, v * 100, comp_matches[k]))
+
+        print('')
+        player_positions = {y: {r: 0 for i, r in roles.items()} for x, y in players.items()}
+        for mid, v in match_summary.items():
+            if 'roles' in v:
+                positions = v['roles']['positions']
+                for pid, pos in positions.items():
+                    player_positions[pid][pos] += 1
+        for pid, v in player_positions.items():
+            pp = player_positions[pid]
+            pp = {a: '%i (%.2f %%)' % (b, 100 * b / sum(pp.values())) for a, b in pp.items()}
+            print('%s positions: %s' % (inv_p[pid], pp))
 
         print('')
         couples_win = {b: {x: 0 for w, x in players.items()} for a, b in players.items()}
@@ -145,7 +167,7 @@ class Parser:
 
     @staticmethod
     def pnk_counters(players, matches, parameter, reverse=True, min_matches=10, has_avg=True, 
-                     text=None, accumulate=False, has_max=True, tf=None, rule=None):
+                     text=None, has_max=True, tf=None, rule=None):
         text = parameter if text is None else text
 
         account_ids = [v for k, v in players.items()]
@@ -173,7 +195,7 @@ class Parser:
                         value = p['observer_kills'] + p['sentry_kills']
                     elif rule == 'max_hit':
                         value = p[parameter]['value']
-                    elif accumulate:
+                    elif rule == 'accumulate':
                         value = sum([v for k, v in p[parameter].items()])
                     else:
                         value = p[parameter]
@@ -186,21 +208,19 @@ class Parser:
         for name, pid in players.items():
             averages[name] = totals[name]/matches_played[name] if matches_played[name] > 0 else 0
 
+        results_avg = []
         if has_avg:
             sorted_average = sorted(averages.items(), key=lambda kv: kv[1])
             if reverse:
                 sorted_average.reverse()
-
-            results_avg = []
             for name, value in sorted_average:
                 if matches_played[name] >= min_matches:
                     txt = '%s has %i %s in %i matches (avg %.2f)' \
                             % (name, totals[name], text, matches_played[name],
                                averages[name] if tf is None else tf(averages[name]))
                     results_avg.append(TierItem(name, averages[name], txt))
-
-        if has_avg and not has_max:
-            return results_avg, None
+            if not has_max:
+                return results_avg, None
 
         sorted_maximum = sorted(maximum_value.items(), key=lambda kv: kv[1])
         if reverse:
@@ -254,7 +274,7 @@ class Parser:
 
 class Category:
     def __init__(self, param, text=None, reverse=True, has_avg=True,
-        has_max=True, apply_transform=None, rule=None):
+                 has_max=True, apply_transform=None, rule=None):
         self.parameter = param
         self.text = text
         self.reverse = reverse
