@@ -4,6 +4,7 @@ from tier import *
 from code import Parser
 from code import Category
 from downloader import Downloader
+from slides import Slides
 
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
@@ -86,6 +87,17 @@ categories = [
     Category(2, 'duration', text='duration in minutes', apply_transform=Transforms.sec_to_min)
 ]
 
+
+def get_title():
+    return 'PnK Gaming Awards' if TEAM_NAME == 'PnK' else TEAM_NAME
+
+
+def get_subtitle():
+    if len(YEARS) == 1:
+        return "%i Edition" % YEARS[0]
+    return str(YEARS)
+
+
 if __name__ == '__main__':
     players = player_list[TEAM_NAME]
     Downloader.download_player_data(players, override=False)
@@ -93,8 +105,14 @@ if __name__ == '__main__':
     Downloader.download_matches(unique_matches)
     
     tier_positions = Parser.identify_heroes(TEAM_NAME, players, unique_matches, min_couple_matches=MIN_COUPLE_MATCHES)
-    Parser.identify_teams(TEAM_NAME, players, unique_matches)
+    win_rate = Parser.identify_teams(TEAM_NAME, players, unique_matches)
+
     tiers = []
+
+    s = Slides(TEAM_NAME, get_title(), get_subtitle(), players, tiers)
+    s.add_intro_slide(len(unique_matches), MIN_PARTY_SIZE, MIN_COUPLE_MATCHES)
+    s.add_win_rate_slide(win_rate)
+    s.save()
 
     for c in categories:
         if c.rule == 'position':

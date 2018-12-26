@@ -179,8 +179,10 @@ class Parser:
                     break
 
         print('')
+        win_rate = 100 * len([x for x, y in match_summary.items() if y['win']]) / len(matches)
         print('%s Win Rate: %.2f %%'
-              % (team_name, 100 * len([x for x, y in match_summary.items() if y['win']]) / len(matches)))
+              % (team_name, win_rate))
+        return win_rate
 
     @staticmethod
     def stat_counter(players, matches, parameter, reverse=True, min_matches=10, has_avg=True,

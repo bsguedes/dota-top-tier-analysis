@@ -4,3 +4,5 @@ __pycache__/
 matches/
 players/
 venv/
+*.pptx
+data/pics/

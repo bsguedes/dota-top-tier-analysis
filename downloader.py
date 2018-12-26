@@ -2,6 +2,7 @@ import requests
 import os
 import os.path
 
+
 class Downloader:
     @staticmethod
     def download_player_data(players, override=True):
