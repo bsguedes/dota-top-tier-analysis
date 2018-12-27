@@ -17,7 +17,7 @@ class Tier:
         self.player_count = len(self.scores_array)
         self.tier_size = math.ceil(self.player_count / self.NUMBER_OF_TIERS)
         self.message = message
-        self.is_max = False
+        self.is_max = is_max
         self.tiers = self.get_tiers()
 
     def get_tiers(self):
@@ -39,14 +39,23 @@ class Tier:
                 tiers[i] = list()
         return tiers
 
-    def print(self):
-        print('')
-        print(self.message.upper())
+    def list_to_print(self):
+        l = list()
+        l.append('')
+        l.append(self.message.upper())
         for i in range(0, self.NUMBER_OF_TIERS):
-            print('')
-            print('Tier %i:' % (i + 1))
+            l.append('')
+            l.append('Tier %i:' % (i + 1))
             for item in self.tiers[i]:
-                print(item.text)
+                l.append(item.text)
+        return l
+
+    def print(self):
+        for item in self.list_to_print():
+            print(item)
+
+    def get_top_three(self):
+        return self.scores_array[0:3]
 
     @staticmethod
     def show_results_weights(players, tier_list):

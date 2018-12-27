@@ -5,6 +5,7 @@ from code import Parser
 from code import Category
 from downloader import Downloader
 from slides import Slides
+from popular_vote import PopularVotePnK2018
 
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
@@ -22,7 +23,7 @@ player_list = {
         'Baco': 1997649,
         'Scrider': 116551069,
         'kkz': 86722309,
-        'Tchepo': 61867497,
+        'tchepo': 61867497,
         'Lotus': 114872129,
         'Alidio': 92240711,
         'Chuvisco': 97418109,
@@ -47,44 +48,48 @@ player_list = {
     }
 }
 
+popular_vote = None
+if TEAM_NAME == PNK:
+    popular_vote = PopularVotePnK2018()
+
 categories = [
-    Category(20, 'win', text='wins', has_max=False, apply_transform=Transforms.percentage),
-    Category(10, 'kills'),
-    Category(10, 'deaths', reverse=False),
-    Category(10, 'assists'),
+    Category(20, 'win', unit='%', text='wins', has_max=False, apply_transform=Transforms.percentage),
+    Category(10, 'kills', unit='kills'),
+    Category(10, 'deaths', unit='deaths', reverse=False),
+    Category(10, 'assists', unit='assists'),
     Category(10, 'kda', text='KLA', rule='kla'),
-    Category(2, 'hard carry', text='hard carry win rate', rule='position'),
-    Category(2, 'mid', text='mid win rate', rule='position'),
-    Category(2, 'offlane', text='offlane win rate', rule='position'),
-    Category(2, 'support', text='support win rate', rule='position'),
-    Category(2, 'hard support', text='hard support win rate', rule='position'),
-    Category(4, 'xp_per_min', text='xpm'),
-    Category(4, 'total_gold', text='total gold'),
-    Category(6, 'gold_per_min', text='gpm'),
-    Category(8, 'hero_damage', text='hero damage'),
-    Category(5, 'hero_healing', text='hero healing'),
-    Category(5, 'tower_damage', text='tower damage'),
-    Category(5, 'last_hits', text='last hits'),
-    Category(2, 'denies'),
-    Category(5, 'rune_pickups', text='runes picked up'),
-    Category(8, 'obs_placed', text='observer wards placed'),
-    Category(8, 'sen_placed', text='sentry wards placed'),
-    Category(2, 'purchase', text='dusts purchased', rule='dust'),
-    Category(2, 'purchase', text='smokes purchased', rule='smoke_of_deceit'),
-    Category(2, 'purchase', text='gems of true sight purchased', rule='gem'),
-    Category(5, 'purchase', text='gold in support items', rule='support_gold'),
-    Category(5, 'creeps_stacked', text='creeps stacked'),
-    Category(4, 'observer_kills', text='wards removed', rule='ward_kill'),
-    Category(2, 'courier_kills', text='couriers killed'),
-    Category(2, 'purchase_tpscroll', text='TPs purchased'),
-    Category(2, 'purchase', text='tomes of knowledge purchased', rule='tome_of_knowledge'),
-    Category(5, 'stuns', text='stun duration dealt'),
-    Category(5, 'pings'),
-    Category(4, 'lane_efficiency_pct', text='lane efficiency at 10min'),
-    Category(2, 'buyback_count', text='buybacks'),
-    Category(2, 'kill_streaks', text='beyond godlike streaks', rule='beyond_godlike', has_max=False),
-    Category(2, 'actions_per_min', text='actions per minute'),
-    Category(2, 'duration', text='duration in minutes', apply_transform=Transforms.sec_to_min)
+    Category(2, 'hard carry', unit='%', text='hard carry win rate', rule='position'),
+    Category(2, 'mid', unit='%', text='mid win rate', rule='position'),
+    Category(2, 'offlane', unit='%', text='offlane win rate', rule='position'),
+    Category(2, 'support', unit='%', text='support win rate', rule='position'),
+    Category(2, 'hard support', unit='%', text='hard support win rate', rule='position'),
+    Category(4, 'xp_per_min', unit='xpm', text='xpm'),
+    Category(4, 'total_gold', unit='gold', text='total gold'),
+    Category(6, 'gold_per_min', unit='gpm', text='gpm'),
+    Category(8, 'hero_damage', unit='dmg', text='hero damage'),
+    Category(5, 'hero_healing', unit='heal', text='hero healing'),
+    Category(5, 'tower_damage', unit='dmg', text='tower damage'),
+    Category(5, 'last_hits', unit='last hits', text='last hits'),
+    Category(2, 'denies', unit='denies'),
+    Category(5, 'rune_pickups', unit='runes', text='runes picked up'),
+    Category(8, 'obs_placed', unit='wards', text='observer wards placed'),
+    Category(8, 'sen_placed', unit='sentries', text='sentry wards placed'),
+    Category(2, 'purchase', unit='dusts', text='dusts purchased', rule='dust'),
+    Category(2, 'purchase', unit='smokes', text='smokes purchased', rule='smoke_of_deceit'),
+    Category(2, 'purchase', unit='gems', text='gems of true sight purchased', rule='gem'),
+    Category(5, 'purchase', unit='gold', text='gold in support items', rule='support_gold'),
+    Category(5, 'creeps_stacked', unit='creeps', text='creeps stacked'),
+    Category(4, 'observer_kills', unit='wards', text='wards removed', rule='ward_kill'),
+    Category(2, 'courier_kills', unit='couriers', text='couriers killed'),
+    Category(2, 'purchase_tpscroll', unit='TPs', text='TPs purchased'),
+    Category(2, 'purchase', unit='tomes', text='tomes of knowledge purchased', rule='tome_of_knowledge'),
+    Category(5, 'stuns', unit='seconds', text='stun duration dealt'),
+    Category(5, 'pings', unit='pings'),
+    Category(4, 'lane_efficiency_pct', unit='%', text='lane efficiency at 10min'),
+    Category(2, 'buyback_count', unit='buybacks', text='buybacks'),
+    Category(2, 'kill_streaks', unit='streaks', text='beyond godlike streaks', rule='beyond_godlike', has_max=False),
+    Category(2, 'actions_per_min', unit='apm', text='actions per minute'),
+    Category(2, 'duration', unit='min', text='duration in minutes', apply_transform=Transforms.sec_to_min)
 ]
 
 
@@ -110,18 +115,20 @@ if __name__ == '__main__':
     tiers = []
 
     s = Slides(TEAM_NAME, get_title(), get_subtitle(), players, tiers)
+    s.add_divider_slide("%s General Statistics" % TEAM_NAME, 'Win Rate, Comebacks, Throws, Heroes, Compositions, Pairs')
     s.add_intro_slide(len(unique_matches), MIN_PARTY_SIZE, MIN_COUPLE_MATCHES)
     s.add_win_rate_slide(win_rate)
-    s.save()
 
+    s.add_divider_slide("%s Technical Categories" % TEAM_NAME, 'Averages and Maximum for many statistics')
     for c in categories:
         if c.rule == 'position':
             tier = Tier(c.weight, tier_positions[c.parameter], 'Win rate as %s in %s matches'
                         % (c.parameter, TEAM_NAME))
             tier.print()
             tiers.append(tier)
+            s.add_tier_slides(tier, c)
         else:
-            res_avg, res_max = Parser.stat_counter(players, unique_matches, c.parameter, text=c.text,
+            res_avg, res_max = Parser.stat_counter(players, unique_matches, c.parameter, text=c.text, unit=c.unit,
                                                    tf=c.transform, reverse=c.reverse, min_matches=MIN_MATCHES,
                                                    has_max=c.has_max, rule=c.rule, has_avg=c.has_avg)
             cat_name = c.text if c.text is not None else c.parameter
@@ -129,10 +136,19 @@ if __name__ == '__main__':
                 tier_avg = Tier(c.weight, res_avg, 'Average %s in %s matches' % (cat_name, TEAM_NAME))
                 tier_avg.print()
                 tiers.append(tier_avg)
+                s.add_tier_slides(tier_avg, c)
             if c.has_max:
                 tier_max = Tier(c.weight, res_max, 'Maximum %s in a single match' % cat_name, is_max=True)
                 tier_max.print()
                 tiers.append(tier_max)
+                s.add_tier_slides(tier_max, c)
 
     Tier.show_results(players, tiers)
     Tier.show_results_weights(players, tiers)
+
+    if popular_vote is not None:
+        s.add_divider_slide("%s Popular Vote" % TEAM_NAME, popular_vote.message)
+        for category in popular_vote.votes:
+            s.add_popular_vote_category_slides(category)
+
+    s.save()

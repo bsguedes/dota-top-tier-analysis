@@ -185,7 +185,7 @@ class Parser:
         return win_rate
 
     @staticmethod
-    def stat_counter(players, matches, parameter, reverse=True, min_matches=10, has_avg=True,
+    def stat_counter(players, matches, parameter, reverse=True, min_matches=10, has_avg=True, unit=None,
                      text=None, has_max=True, tf=None, rule=None):
         text = parameter if text is None else text
 
@@ -249,10 +249,9 @@ class Parser:
                 sorted_average.reverse()
             for name, value in sorted_average:
                 if matches_played[name] >= min_matches:
-                    txt = '%s has %i %s in %i matches (avg %.2f)' \
-                            % (name, totals[name], text, matches_played[name],
-                               averages[name] if tf is None else tf(averages[name]))
-                    results_avg.append(TierItem(name, averages[name], txt))
+                    txt = '%s has %i %s in %i matches (avg %.2f %s)' \
+                            % (name, totals[name], text, matches_played[name], tf(averages[name]), unit)
+                    results_avg.append(TierItem(name, tf(averages[name]), txt))
             if not has_max:
                 return results_avg, None
 
@@ -263,10 +262,8 @@ class Parser:
         results_max = []
         for pid, value in sorted_maximum:
             if matches_played[inv_p[pid]] >= min_matches:
-                txt = '%s: %i %s (match id: %i)' \
-                       % (inv_p[pid], maximum_value[pid] if tf is None else tf(maximum_value[pid]),
-                          text, maximum_match[pid])
-                results_max.append(TierItem(inv_p[pid], maximum_value[pid], txt))
+                txt = '%s: %i %s (match id: %i)' % (inv_p[pid], tf(maximum_value[pid]), unit, maximum_match[pid])
+                results_max.append(TierItem(inv_p[pid], tf(maximum_value[pid]), txt))
 
         if not has_avg:
             return None, results_max
@@ -307,13 +304,14 @@ class Parser:
 
 
 class Category:
-    def __init__(self, weight, param, text=None, reverse=True, has_avg=True,
+    def __init__(self, weight, param, text=None, reverse=True, has_avg=True, unit='',
                  has_max=True, apply_transform=None, rule=None):
         self.weight = weight
         self.parameter = param
         self.text = text
+        self.unit = unit
         self.reverse = reverse
         self.has_avg = has_avg
         self.has_max = has_max
         self.rule = rule
-        self.transform = apply_transform
+        self.transform = apply_transform if apply_transform is not None else lambda y: y
