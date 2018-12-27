@@ -8,11 +8,10 @@ from pptx.chart.data import ChartData
 
 
 class Slides:
-    def __init__(self, team_name, tit, sub, players, tiers):
+    def __init__(self, team_name, tit, sub, players):
         self.presentation = Presentation()
         self.team_name = team_name
         self.players = players
-        self.tiers = tiers
         self.add_divider_slide(tit, "%s" % sub)
 
     def add_divider_slide(self, text, sub_text):
@@ -71,7 +70,7 @@ class Slides:
         title_shape = slide.shapes.title
         title_shape.text = texts[1]
         scores = tier.get_top_three()
-        self.add_top_three_table(scores, slide, tier.is_max, category.unit, Inches(1), Inches(1.8))
+        self.add_top_three_table(scores, slide, tier.is_max, category.unit, Inches(0.7), Inches(1.8))
 
         slide_layout = self.presentation.slide_layouts[6]
         slide = self.presentation.slides.add_slide(slide_layout)
@@ -87,29 +86,31 @@ class Slides:
 
     def add_top_three_table(self, scores, slide, is_max, unit, left, top):
         for i, name in [(0, '1st'), (1, '2nd'), (2, '3rd')]:
-            tx_box = slide.shapes.add_textbox(left + Inches(3*i), top + Inches(0), Inches(2.5), Inches(0.5))
+            tx_box = slide.shapes.add_textbox(left + Inches(3*i), top + Inches(0), Inches(2.5), Inches(0.7))
             tf = tx_box.text_frame
             p = tf.paragraphs[0]
             p.text = name
             p.font.size = Pt(24)
-            p.font.bold = True
             p.alignment = PP_ALIGN.CENTER
 
-            tx_box = slide.shapes.add_textbox(left + Inches(3*i), top + Inches(0.6), Inches(2.5), Inches(0.5))
+            tx_box = slide.shapes.add_textbox(left + Inches(3*i), top + Inches(0.75), Inches(2.5), Inches(0.7))
             tf = tx_box.text_frame
             tf.text = scores[i].name
             p = tf.paragraphs[0]
+            p.font.size = Pt(24)
+            p.font.bold = True
             p.alignment = PP_ALIGN.CENTER
 
-            tx_box = slide.shapes.add_textbox(left + Inches(3*i), top + Inches(1.2), Inches(2.5), Inches(0.5))
+            tx_box = slide.shapes.add_textbox(left + Inches(3*i), top + Inches(1.5), Inches(2.5), Inches(0.7))
             tf = tx_box.text_frame
             text_format = "%s %s" if is_max else "%.2f %s"
             tf.text = text_format % (scores[i].score, unit)
             p = tf.paragraphs[0]
+            p.font.size = Pt(22)
             p.alignment = PP_ALIGN.CENTER
 
             pic_path = 'data/pics/%s.jpg' % self.players[scores[i].name]
-            slide.shapes.add_picture(pic_path, left + Inches(3*i), top + Inches(1.8), height=Inches(2.5))
+            slide.shapes.add_picture(pic_path, left + Inches(3*i), top + Inches(2.5), height=Inches(2.5))
 
     def add_popular_vote_category_slides(self, popular_vote_category):
         slide_layout = self.presentation.slide_layouts[1]
@@ -125,18 +126,24 @@ class Slides:
             p.text = item
             p.level = 1
         if 'winner' in popular_vote_category and isinstance(popular_vote_category['winner'], list):
-            tx_box = slide.shapes.add_textbox(Inches(6), Inches(1.8), Inches(2), Inches(0.5))
+            tx_box = slide.shapes.add_textbox(Inches(8), Inches(1.8), Inches(2), Inches(0.5))
             tf = tx_box.text_frame
             tf.text = "Vencedores"
             for i in range(0, len(popular_vote_category['winner'])):
                 pic_path = 'data/pics/%s.jpg' % self.players[popular_vote_category['winner'][i]]
-                slide.shapes.add_picture(pic_path, Inches(6), Inches(2.5 + 2*i), height=Inches(1.8))
+                slide.shapes.add_picture(pic_path, Inches(8), Inches(2.3 + 1.55 * i), height=Inches(1))
+                tx_box = slide.shapes.add_textbox(Inches(8), Inches(2.3 + 1.55 * i + 1.08), Inches(2), Inches(0.4))
+                tf = tx_box.text_frame
+                tf.text = popular_vote_category['winner'][i]
         elif 'winner' in popular_vote_category:
-            tx_box = slide.shapes.add_textbox(Inches(6), Inches(1.8), Inches(2), Inches(0.5))
+            tx_box = slide.shapes.add_textbox(Inches(8), Inches(1.8), Inches(2), Inches(0.5))
             tf = tx_box.text_frame
             tf.text = "Vencedor"
             pic_path = 'data/pics/%s.jpg' % self.players[popular_vote_category['winner']]
-            slide.shapes.add_picture(pic_path, Inches(6), Inches(2.5), height=Inches(1.8))
+            slide.shapes.add_picture(pic_path, Inches(8), Inches(2.5), height=Inches(1.4))
+            tx_box = slide.shapes.add_textbox(Inches(8), Inches(4), Inches(2), Inches(0.5))
+            tf = tx_box.text_frame
+            tf.text = popular_vote_category['winner']
 
         slide_layout = self.presentation.slide_layouts[5]
         slide = self.presentation.slides.add_slide(slide_layout)

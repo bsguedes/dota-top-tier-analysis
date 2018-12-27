@@ -98,4 +98,4 @@ class Transforms:
 
     @staticmethod
     def sec_to_min(number):
-        return number / 60
+        return (100 * (number / 60)) / 100

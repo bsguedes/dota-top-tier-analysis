@@ -10,8 +10,8 @@ from popular_vote import PopularVotePnK2018
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 MIN_PARTY_SIZE = 4
-MIN_MATCHES = 10
-MIN_COUPLE_MATCHES = 10
+MIN_MATCHES = 50
+MIN_COUPLE_MATCHES = 20
 YEARS = [2018]
 TEAM_NAME = PNK
 
@@ -105,21 +105,22 @@ def get_subtitle():
 
 if __name__ == '__main__':
     players = player_list[TEAM_NAME]
+    s = Slides(TEAM_NAME, get_title(), get_subtitle(), players)
+    p = Parser(TEAM_NAME, YEARS, players, MIN_PARTY_SIZE)
+
     Downloader.download_player_data(players, override=False)
-    unique_matches = Parser.get_matches(TEAM_NAME, YEARS, players, min_party_size=MIN_PARTY_SIZE, ranked_only=False)
+    unique_matches = p.get_matches(ranked_only=False)
     Downloader.download_matches(unique_matches)
-    
-    tier_positions = Parser.identify_heroes(TEAM_NAME, players, unique_matches, min_couple_matches=MIN_COUPLE_MATCHES)
-    win_rate = Parser.identify_teams(TEAM_NAME, players, unique_matches)
 
-    tiers = []
+    tier_positions = p.identify_heroes(unique_matches, min_couple_matches=MIN_COUPLE_MATCHES)
+    win_rate = p.identify_teams(unique_matches)
 
-    s = Slides(TEAM_NAME, get_title(), get_subtitle(), players, tiers)
     s.add_divider_slide("%s General Statistics" % TEAM_NAME, 'Win Rate, Comebacks, Throws, Heroes, Compositions, Pairs')
-    s.add_intro_slide(len(unique_matches), MIN_PARTY_SIZE, MIN_COUPLE_MATCHES)
+    s.add_intro_slide(len(unique_matches), MIN_PARTY_SIZE, MIN_MATCHES)
     s.add_win_rate_slide(win_rate)
 
     s.add_divider_slide("%s Technical Categories" % TEAM_NAME, 'Averages and Maximum for many statistics')
+    tiers = []
     for c in categories:
         if c.rule == 'position':
             tier = Tier(c.weight, tier_positions[c.parameter], 'Win rate as %s in %s matches'
@@ -128,9 +129,8 @@ if __name__ == '__main__':
             tiers.append(tier)
             s.add_tier_slides(tier, c)
         else:
-            res_avg, res_max = Parser.stat_counter(players, unique_matches, c.parameter, text=c.text, unit=c.unit,
-                                                   tf=c.transform, reverse=c.reverse, min_matches=MIN_MATCHES,
-                                                   has_max=c.has_max, rule=c.rule, has_avg=c.has_avg)
+            res_avg, res_max = p.stat_counter(unique_matches, c.parameter, text=c.text, unit=c.unit, tf=c.transform,
+                                              reverse=c.reverse, has_max=c.has_max, rule=c.rule, has_avg=c.has_avg)
             cat_name = c.text if c.text is not None else c.parameter
             if c.has_avg:
                 tier_avg = Tier(c.weight, res_avg, 'Average %s in %s matches' % (cat_name, TEAM_NAME))
