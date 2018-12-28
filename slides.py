@@ -35,7 +35,7 @@ class Slides:
         slide = self.add_slide(5, 255, 229, 204)
         title_shape = slide.shapes.title
         title_shape.text = '%s' % player_name
-        title_shape.paragraphs[0].alignment = PP_ALIGN.LEFT
+        title_shape.text_frame.paragraphs[0].alignment = PP_ALIGN.LEFT
 
         tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.7), Inches(1.5), Inches(0.5))
         tf = tx_box.text_frame
