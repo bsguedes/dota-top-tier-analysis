@@ -108,6 +108,7 @@ if __name__ == '__main__':
     s = Slides(TEAM_NAME, get_title(), get_subtitle(), players)
     p = Parser(TEAM_NAME, YEARS, players, MIN_MATCHES, MIN_PARTY_SIZE)
 
+    Downloader.download_heroes()
     Downloader.download_player_data(players, override=False)
     unique_matches = p.get_matches(ranked_only=False)
     Downloader.download_matches(unique_matches)

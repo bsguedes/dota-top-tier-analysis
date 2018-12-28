@@ -1,9 +1,32 @@
 import requests
 import os
 import os.path
+import json
+import urllib.request
 
 
 class Downloader:
+    @staticmethod
+    def download_heroes():
+        if not os.path.exists('data/heroes'):
+            os.makedirs('data/heroes')
+        hs = open('data/heroes_images.json', 'r', encoding='utf-8').read()
+        hs_json = json.loads(hs)
+        heroes_urls = [h['path'] for h in hs_json]
+        hs = open('data/heroes.json', 'r', encoding='utf-8').read()
+        hs_json = json.loads(hs)
+        heroes = {h['id']: h['localized_name'] for h in hs_json}
+        for h_id, h_name in heroes.items():
+            file_name = 'data/heroes/%i.jpg' % h_id
+            if not os.path.isfile(file_name):
+                name_parts = h_name.lower().replace('\'', '').split(' ')
+                for url in heroes_urls:
+                    if all(part in url for part in name_parts):
+                        print('Downloading %s image' % h_name)
+                        urllib.request.urlretrieve(url, file_name)
+                        break
+
+
     @staticmethod
     def download_player_data(players, override=True):
         if not os.path.exists('players'):
