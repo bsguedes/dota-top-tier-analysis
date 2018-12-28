@@ -141,7 +141,7 @@ class Parser:
                 comp_sum = sum(v['players'])
                 if comp_sum not in five_player:
                     five_player[comp_sum] = {
-                        'players': [inv_p[i] for i in v['players']],
+                        'players': ', '.join([inv_p[i] for i in v['players']]),
                         'wins': 0,
                         'matches': 0
                     }
@@ -156,7 +156,7 @@ class Parser:
             print('5-player team: %s win rate: %.2f %% (%i matches)'
                   % (five_player[k]['players'], v * 100,
                      five_player[k]['matches']))
-        
+
         print('')
         comp_matches = dict()
         comp_wins = dict()

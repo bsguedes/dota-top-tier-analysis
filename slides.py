@@ -95,7 +95,9 @@ class Slides:
         headers = ['Players', 'Wins', 'Matches', 'Win Rate']
         keys = ['players', 'wins', 'matches', 'wr']
         formats = ['%s', '%s', '%s', '%.2f %%']
-        Slides.create_table(slide, comp, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15)
+        widths = [4.5, 1.5, 1.5, 1.5]
+        Slides.create_table(slide, comp, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
+                            widths=widths)
 
     def add_win_rate_slide(self, win_rate, match_count, party_size):
         slide = self.add_slide(1, 152, 251, 152)
@@ -384,7 +386,8 @@ class Slides:
         fill.fore_color.rgb = RGBColor(r, g, b)
 
     @staticmethod
-    def create_table(slide, data, headers, keys, formats, left, top, width, height, font_size, header_size):
+    def create_table(slide, data, headers, keys, formats, left, top, width, height, font_size, header_size,
+                     widths=None):
         table_shape = slide.shapes.add_table(len(data) + 1, len(headers), left, top, width, height)
         table = table_shape.table
         for i in range(0, len(headers)):
@@ -395,6 +398,9 @@ class Slides:
         Slides.set_table_font_size(table, font_size)
         for i in range(0, len(keys)):
             table.cell(0, i).text_frame.paragraphs[0].runs[0].font.size = Pt(header_size)
+        if widths is not None:
+            for i in range(0, len(widths)):
+                table.columns[i].width = Inches(widths[i])
 
     @staticmethod
     def iter_cells(table):
