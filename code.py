@@ -25,6 +25,10 @@ class Parser:
         self.against_heroes = []
         self.with_heroes = []
         self.most_played_heroes = []
+        self.compositions = []
+        self.player_roles = {}
+        self.player_heroes = {}
+        self.player_pairs = {}
 
     def identify_heroes(self, matches, min_couple_matches=10):
         hs = open('data/heroes.json', 'r', encoding='utf-8').read()
@@ -127,6 +131,7 @@ class Parser:
             m = max(pl.items(), key=operator.itemgetter(1))
             print("%s most played hero: %s (%i of %i matches)"
                   % (p, [heroes[x] for x in ([y for y in heroes.keys() if pl[y] == m[1]])], m[1], sum(pl.values())))
+        self.player_heroes = players_heroes
 
         print('')
         comp_matches = dict()
@@ -144,6 +149,7 @@ class Parser:
         s = sorted(avg.items(), key=lambda e: e[1], reverse=True)
         for k, v in s:
             print('Composition: %s win rate: %.2f %% (%i matches)' % (k, v * 100, comp_matches[k]))
+        self.compositions = [{'comp': k, 'matches': comp_matches[k], 'wins': comp_wins[k], 'wr': v * 100} for k, v in s]
 
         print('')
         player_positions = {y: {r: 0 for i, r in Constants.roles().items()} for x, y in self.players.items()}
@@ -158,6 +164,8 @@ class Parser:
         for pid, v in player_positions.items():
             pp = player_positions[pid]
             acc = sum(pp.values())
+            self.player_roles[pid] = [{'role': a, 'matches': b, 'wr': 0 if acc == 0 else 100 * b / acc} for a, b in
+                                      pp.items()]
             pp = {a: '%i (%.2f %%)' % (b, 0 if acc == 0 else 100 * b / acc) for a, b in pp.items()}
             print('%s positions: %s' % (inv_p[pid], pp))
 
@@ -186,13 +194,20 @@ class Parser:
                 0 if couples_matches[x[0]][x[1]] == 0 else couples_win[x[0]][x[1]] / couples_matches[x[0]][x[1]]
                 for x in list(itertools.combinations(self.players.values(), 2))
         }
+        for p_name, pid in self.players.items():
+            self.player_pairs[pid] = []
         s = sorted(couples.items(), key=lambda e: e[1], reverse=True)
         for k, v in s:
             if couples_matches[self.players[k[0]]][self.players[k[1]]] >= min_couple_matches:
+                self.player_pairs[self.players[k[0]]].append(
+                    {'name': k[1], 'wins': couples_win[self.players[k[0]]][self.players[k[1]]], 'wr': 100 * v,
+                     'matches': couples_matches[self.players[k[0]]][self.players[k[1]]]})
+                self.player_pairs[self.players[k[1]]].append(
+                    {'name': k[0], 'wins': couples_win[self.players[k[0]]][self.players[k[1]]], 'wr': 100 * v,
+                     'matches': couples_matches[self.players[k[0]]][self.players[k[1]]]})
                 print('%.2f %% win rate for %s (%i wins in %i matches)'
                       % (100 * v, k, couples_win[self.players[k[0]]][self.players[k[1]]],
                          couples_matches[self.players[k[0]]][self.players[k[1]]]))
-
         return tier_dict
 
     def identify_teams(self, matches):

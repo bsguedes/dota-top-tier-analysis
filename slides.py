@@ -31,6 +31,40 @@ class Slides:
         title.text = text
         subtitle.text = sub_text
 
+    def add_player_slides(self, player_name, roles, heroes, pairs):
+        slide = self.add_slide(5, 255, 229, 204)
+        title_shape = slide.shapes.title
+        title_shape.text = '%s' % player_name
+        title_shape.paragraphs[0].alignment = PP_ALIGN.LEFT
+
+        tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.7), Inches(1.5), Inches(0.5))
+        tf = tx_box.text_frame
+        p = tf.paragraphs[0]
+        p.text = '%s played %s matches' % (player_name, sum(heroes.values()))
+
+        pic_path = 'data/pics/%s.jpg' % self.players[player_name]
+        slide.shapes.add_picture(pic_path, Inches(8), Inches(0.2), height=Inches(1.1))
+
+        headers = ['Role', 'Matches', 'Win Rate']
+        keys = ['role', 'matches', 'wr']
+        formats = ['%s', '%s', '%.2f %%']
+        Slides.create_table(slide, roles, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(3), 1, 12, 15)
+
+        heroes = sorted(heroes.items(), key=lambda e: e[1], reverse=True)
+        for i in range(0, 4):
+            pic_path = 'data/heroes/%s.jpg' % heroes[i][0]
+            slide.shapes.add_picture(pic_path, Inches(0.5), Inches(4.5) + i * Inches(0.8), height=Inches(0.7))
+            tx_box = slide.shapes.add_textbox(Inches(2), Inches(4.7) + i * Inches(0.8), Inches(1.5), Inches(0.5))
+            tf = tx_box.text_frame
+            p = tf.paragraphs[0]
+            p.text = '%s matches' % heroes[i][1]
+            p.font.size = Pt(22)
+
+        headers = ['Paired with', 'Matches', 'Wins', 'Win Rate']
+        keys = ['name', 'matches', 'wins', 'wr']
+        formats = ['%s', '%s', '%s', '%.2f %%']
+        Slides.create_table(slide, pairs, headers, keys, formats, Inches(3.5), Inches(1.5), Inches(4.5), 1, 11, 15)
+
     def add_intro_slide(self, match_count, min_player_count, min_matches, min_couples_matches):
         slide = self.add_slide(1, 152, 251, 152)
         shapes = slide.shapes
@@ -82,6 +116,15 @@ class Slides:
         title_shape = slide.shapes.title
         title_shape.text = 'Top 10 Throws'
         Slides.create_table(slide, throws, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15)
+
+    def add_compositions(self, compositions):
+        slide = self.add_slide(5, 152, 251, 152)
+        title_shape = slide.shapes.title
+        title_shape.text = 'Lane Compositions'
+        headers = ['Lane Composition', 'Wins', 'Matches', 'Win Rate']
+        keys = ['comp', 'wins', 'matches', 'wr']
+        formats = ['%s', '%s', '%s', '%.2f %%']
+        Slides.create_table(slide, compositions, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15)
 
     def add_win_rate_heroes(self, versus, text):
         for c in range(0, math.ceil(len(versus)/14)):

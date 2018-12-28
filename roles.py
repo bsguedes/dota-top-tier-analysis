@@ -16,7 +16,11 @@ class Roles:
         mid_players = [x['account_id'] for x in team_players if x['lane_role'] == 2 and x['account_id'] not in roamers]
         safe_players = [x['account_id'] for x in team_players if x['lane_role'] == 1 and x['account_id'] not in roamers]
         off_players = [x['account_id'] for x in team_players if x['lane_role'] == 3 and x['account_id'] not in roamers]
-        composition = '%i-%i-%i' % (len(safe_players), len(mid_players), len(off_players))
+        if len(roamers) == 0:
+            composition = '%i-%i-%i' % (len(safe_players), len(mid_players), len(off_players))
+        else:
+            composition = '%i-%i-%i (%i roaming)' % (len(safe_players), len(mid_players),
+                                                     len(off_players), len(roamers))
 
         if len(mid_players) == 1:
             result_roles[1] = mid_players[0]

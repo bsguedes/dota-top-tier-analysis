@@ -125,6 +125,14 @@ if __name__ == '__main__':
     s.add_win_rate_heroes(p.with_heroes, 'Playing')
     s.add_most_played(p.most_played_heroes)
     s.add_win_rate_heroes(p.against_heroes, 'Versus')
+    s.add_compositions(p.compositions)
+
+    s.add_divider_slide("%s Players" % TEAM_NAME, 'Roles, Pairings and Most Played Heroes')
+    for p_name, pid in players.items():
+        roles = p.player_roles[pid]
+        player_heroes = p.player_heroes[pid]
+        pairings = p.player_pairs[pid]
+        s.add_player_slides(p_name, roles, player_heroes, pairings)
 
     s.add_divider_slide("%s Technical Categories" % TEAM_NAME, 'Averages and Maximum for many statistics')
     tiers = []
