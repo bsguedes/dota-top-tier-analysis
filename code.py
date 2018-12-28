@@ -22,6 +22,9 @@ class Parser:
         self.match_summary_by_team = []
         self.top_comebacks = []
         self.top_throws = []
+        self.against_heroes = []
+        self.with_heroes = []
+        self.most_played_heroes = []
 
     def identify_heroes(self, matches, min_couple_matches=10):
         hs = open('data/heroes.json', 'r', encoding='utf-8').read()
@@ -82,6 +85,9 @@ class Parser:
         for k, v in s:
             print('%.2f %% %s win rate versus %s (%i matches)'
                   % (100 * v, self.team_name, k, wr_versus[inv_h[k]]['matches']))
+        self.against_heroes = [
+            {'id': inv_h[k], 'name': k, 'matches': wr_versus[inv_h[k]]['matches'], 'wins': wr_versus[inv_h[k]]['wins'],
+             'wr': '%.2f %%' % (100 * v)} for k, v in s]
 
         print('')
         wr_with = {k: {'matches': 0, 'wins': 0} for k, v in heroes.items()}
@@ -96,6 +102,9 @@ class Parser:
         for k, v in s:
             print('%.2f %% %s win rate playing %s (%i matches)'
                   % (100 * v, self.team_name, k, wr_with[inv_h[k]]['matches']))
+        self.with_heroes = [
+            {'id': inv_h[k], 'name': k, 'matches': wr_with[inv_h[k]]['matches'], 'wins': wr_with[inv_h[k]]['wins'],
+             'wr': '%.2f %%' % (100 * v)} for k, v in s]
 
         print('')
         matches = {h: v['matches'] for h, v in wr_with.items()}
@@ -103,6 +112,7 @@ class Parser:
         for k, v in s:
             print('%s played %s for a total of %i matches'
                   % (self.team_name, heroes[k], v))
+        self.most_played_heroes = [{'id': k, 'name': heroes[k], 'matches': v} for k, v in s]
 
         print('')
         player_hero_in_match = dict()

@@ -35,7 +35,8 @@ player_list = {
         'Cristian': 160043364,
         'Pringles': 84962243,
         'Alpiona': 30320098,
-        'Fallenzão': 396690444
+        'Fallenzão': 396690444,
+        'Maionese': 35304398
     },
     BLAZING_DOTA: {
         'Pogo': 121639063,
@@ -121,6 +122,9 @@ if __name__ == '__main__':
     s.add_win_rate_slide(win_rate, len(unique_matches), p.matches_by_party_size)
     s.add_match_summary_by_player(p.match_summary_by_player, p.match_summary_by_team)
     s.add_comebacks_throws(p.top_comebacks, p.top_throws)
+    s.add_win_rate_heroes(p.with_heroes, 'Playing')
+    s.add_most_played(p.most_played_heroes)
+    s.add_win_rate_heroes(p.against_heroes, 'Versus')
 
     s.add_divider_slide("%s Technical Categories" % TEAM_NAME, 'Averages and Maximum for many statistics')
     tiers = []
