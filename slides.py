@@ -88,10 +88,10 @@ class Slides:
         p.level = 1
         p.font.size = Pt(16)
 
-    def add_five_player_compositions(self, comp):
+    def add_five_player_compositions(self, comp, matches):
         slide = self.add_slide(5, 152, 251, 152)
         title_shape = slide.shapes.title
-        title_shape.text = 'Full Parties with >= 5 matches'
+        title_shape.text = 'Full Parties with >= %i matches' % matches
         headers = ['Players', 'Wins', 'Matches', 'Win Rate']
         keys = ['players', 'wins', 'matches', 'wr']
         formats = ['%s', '%s', '%s', '%.2f %%']

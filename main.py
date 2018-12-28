@@ -7,14 +7,33 @@ from downloader import Downloader
 from slides import Slides
 from popular_vote import PopularVotePnK2018
 
+
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
-MIN_PARTY_SIZE = 4
-MIN_MATCHES = 35
-MIN_COUPLE_MATCHES = 20
+
+parameters = {
+    PNK: {
+        'min_matches': 35,
+        'min_couple_matches': 20,
+        'min_party_size': 4,
+        'full_party_matches': 5
+    },
+    BLAZING_DOTA: {
+        'min_matches': 10,
+        'min_couple_matches': 5,
+        'min_party_size': 2,
+        'full_party_matches': 2
+    }
+}
+
+TEAM_NAME = BLAZING_DOTA
 YEARS = [2018]
-TEAM_NAME = PNK
 DOWNLOAD_PLAYERS = False
+
+MIN_PARTY_SIZE = parameters[TEAM_NAME]['min_party_size']
+MIN_MATCHES = parameters[TEAM_NAME]['min_matches']
+MIN_COUPLE_MATCHES = parameters[TEAM_NAME]['min_couple_matches']
+FULL_PARTY_MATCHES = parameters[TEAM_NAME]['full_party_matches']
 
 player_list = {
     PNK: {
@@ -108,7 +127,7 @@ def get_subtitle():
 if __name__ == '__main__':
     players = player_list[TEAM_NAME]
     s = Slides(TEAM_NAME, get_title(), get_subtitle(), players)
-    p = Parser(TEAM_NAME, YEARS, players, MIN_MATCHES, MIN_PARTY_SIZE)
+    p = Parser(TEAM_NAME, YEARS, players, MIN_MATCHES, MIN_PARTY_SIZE, FULL_PARTY_MATCHES)
 
     Downloader.download_heroes()
     Downloader.download_player_data(players, override=DOWNLOAD_PLAYERS)
@@ -121,7 +140,7 @@ if __name__ == '__main__':
     s.add_divider_slide("%s General Statistics" % TEAM_NAME, 'Win Rate, Comebacks, Throws, Heroes, Compositions, Pairs')
     s.add_intro_slide(len(unique_matches), MIN_PARTY_SIZE, MIN_MATCHES, MIN_COUPLE_MATCHES)
     s.add_win_rate_slide(win_rate, len(unique_matches), p.matches_by_party_size)
-    s.add_five_player_compositions(p.five_player_compositions)
+    s.add_five_player_compositions(p.five_player_compositions, FULL_PARTY_MATCHES)
     s.add_match_summary_by_player(p.match_summary_by_player, p.match_summary_by_team)
     s.add_comebacks_throws(p.top_comebacks, p.top_throws)
     s.add_win_rate_heroes(p.with_heroes, 'Playing')

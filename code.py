@@ -11,12 +11,13 @@ from constants import Constants
 
 
 class Parser:
-    def __init__(self, team_name, years, players, min_matches, min_party_size):
+    def __init__(self, team_name, years, players, min_matches, min_party_size, full_party):
         self.team_name = team_name
         self.years = years
         self.players = players
         self.min_matches = min_matches
         self.min_party_size = min_party_size
+        self.full_party_matches = full_party
         self.matches_by_party_size = []
         self.match_summary_by_player = []
         self.match_summary_by_team = []
@@ -148,7 +149,7 @@ class Parser:
                 five_player[comp_sum]['matches'] += 1
                 if v['win']:
                     five_player[comp_sum]['wins'] += 1
-        avg = {k: v['wins'] / v['matches'] for k, v in five_player.items() if v['matches'] >= 5}
+        avg = {k: v['wins'] / v['matches'] for k, v in five_player.items() if v['matches'] >= self.full_party_matches}
         s = sorted(avg.items(), key=lambda e: e[1], reverse=True)
         for k, v in s:
             five_player[k]['wr'] = v * 100
