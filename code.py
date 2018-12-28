@@ -19,6 +19,9 @@ class Parser:
         self.min_party_size = min_party_size
         self.matches_by_party_size = []
         self.match_summary_by_player = []
+        self.match_summary_by_team = []
+        self.top_comebacks = []
+        self.top_throws = []
 
     def identify_heroes(self, matches, min_couple_matches=10):
         hs = open('data/heroes.json', 'r', encoding='utf-8').read()
@@ -54,9 +57,17 @@ class Parser:
         for k, v in sorted(list_comebacks.items(), key=lambda e: e[1], reverse=True)[:10]:            
             print('%s came back from %s gold disadvantage in match id %i with team: %s'
                   % (self.team_name, v, k, [x for x, y in self.players.items() if y in match_summary[k]['players']]))
+        self.top_comebacks = [
+            {'match': m, 'gold': g,
+             'players': ', '.join([x for x, y in self.players.items() if y in match_summary[m]['players']])}
+            for m, g in sorted(list_comebacks.items(), key=lambda e: e[1], reverse=True)[:10]]
         for k, v in sorted(list_throws.items(), key=lambda e: e[1], reverse=True)[:10]:            
             print('%s threw a %s gold advantage in match id %i with team: %s'
                   % (self.team_name, v, k, [x for x, y in self.players.items() if y in match_summary[k]['players']]))
+        self.top_throws = [
+            {'match': m, 'gold': g,
+             'players': ', '.join([x for x, y in self.players.items() if y in match_summary[m]['players']])}
+            for m, g in sorted(list_throws.items(), key=lambda e: e[1], reverse=True)[:10]]
 
         print('')
         wr_versus = {k: {'matches': 0, 'wins': 0} for k, v in heroes.items()}
@@ -312,4 +323,5 @@ class Parser:
             print('%s played %i matches -- %i matches (%.2f %%) played with %s'
                   % (name, match_count, matches_with_team, 100 * percentage_with_team, self.team_name))
 
+        self.match_summary_by_team = sorted(self.match_summary_by_player, key=lambda v: v['team_matches'], reverse=True)
         return {k: v for k, v in matches.items() if len(v) >= self.min_party_size}

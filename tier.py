@@ -65,13 +65,14 @@ class Tier:
             for tier_level, tier_items in table.tiers.items():
                 for ti in tier_items:
                     p = (3 - level) * table.weight
-                    points[ti.name] += p if not table.is_max else p / 3
+                    points[ti.name] += p if not table.is_max else p / 4
                 level += 1
 
         print('')
         s = sorted(points.items(), key=lambda e: e[1], reverse=True)
         for k, v in s:
             print('%s;%i' % (k, v))
+        return s
 
     @staticmethod
     def show_results(players, tier_list):
@@ -89,6 +90,7 @@ class Tier:
         s = sorted(medals.items(), key=lambda e: e[1], reverse=True)
         for k, v in s:
             print('%s;%i;%i;%i' % (k, v[0], v[1], v[2]))
+        return s
 
 
 class Transforms:

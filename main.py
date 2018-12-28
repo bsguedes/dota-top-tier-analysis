@@ -10,7 +10,7 @@ from popular_vote import PopularVotePnK2018
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 MIN_PARTY_SIZE = 4
-MIN_MATCHES = 50
+MIN_MATCHES = 35
 MIN_COUPLE_MATCHES = 20
 YEARS = [2018]
 TEAM_NAME = PNK
@@ -119,7 +119,8 @@ if __name__ == '__main__':
     s.add_divider_slide("%s General Statistics" % TEAM_NAME, 'Win Rate, Comebacks, Throws, Heroes, Compositions, Pairs')
     s.add_intro_slide(len(unique_matches), MIN_PARTY_SIZE, MIN_MATCHES, MIN_COUPLE_MATCHES)
     s.add_win_rate_slide(win_rate, len(unique_matches), p.matches_by_party_size)
-    s.add_match_summary_by_player(p.match_summary_by_player)
+    s.add_match_summary_by_player(p.match_summary_by_player, p.match_summary_by_team)
+    s.add_comebacks_throws(p.top_comebacks, p.top_throws)
 
     s.add_divider_slide("%s Technical Categories" % TEAM_NAME, 'Averages and Maximum for many statistics')
     tiers = []
@@ -146,8 +147,9 @@ if __name__ == '__main__':
                 tiers.append(tier_max)
                 s.add_tier_slides(tier_max, c)
 
-    Tier.show_results(players, tiers)
-    Tier.show_results_weights(players, tiers)
+    medals = Tier.show_results(players, tiers)
+    points = Tier.show_results_weights(players, tiers)
+    s.add_results_slides(medals, points)
 
     if popular_vote is not None:
         s.add_divider_slide("%s Popular Vote" % TEAM_NAME, popular_vote.message)
