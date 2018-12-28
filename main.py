@@ -10,6 +10,9 @@ from popular_vote import PopularVotePnK2018
 
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
+TEAM_NAME = PNK
+YEARS = [2018]
+DOWNLOAD_PLAYERS = False
 
 parameters = {
     PNK: {
@@ -25,10 +28,6 @@ parameters = {
         'full_party_matches': 2
     }
 }
-
-TEAM_NAME = BLAZING_DOTA
-YEARS = [2018]
-DOWNLOAD_PLAYERS = False
 
 MIN_PARTY_SIZE = parameters[TEAM_NAME]['min_party_size']
 MIN_MATCHES = parameters[TEAM_NAME]['min_matches']
