@@ -87,9 +87,9 @@ class Slides:
             table.cell(i + 1, 1).text = str(summary[i]['matches'])
             table.cell(i + 1, 2).text = str(summary[i]['team_matches'])
             table.cell(i + 1, 3).text = "%.2f %%" % summary[i]['perc_with_team']
-        Slides.set_table_font_size(table, 8)
+        Slides.set_table_font_size(table, 11)
         for i in range(0, 4):
-            table.cell(0, i).text_frame.paragraphs[0].runs[0].font.size = Pt(18)
+            table.cell(0, i).text_frame.paragraphs[0].runs[0].font.size = Pt(14)
 
     @staticmethod
     def iter_cells(table):
@@ -226,15 +226,15 @@ class Slides:
         for i in range(0, 5):
             pic_path = 'data/pics/%s.jpg' % self.players[top[i]]
             slide.shapes.add_picture(pic_path, Inches(0.5 + 1.8 * i), Inches(2), height=Inches(1.6))
-            tx_box = slide.shapes.add_textbox(Inches(0.5 + 1.8 * i), Inches(3.5), Inches(1.6), Inches(0.4))
+            tx_box = slide.shapes.add_textbox(Inches(0.5 + 1.8 * i), Inches(4), Inches(1.6), Inches(0.4))
             tf = tx_box.text_frame
             tf.text = top[i]
             tf.paragraphs[0].alignment = PP_ALIGN.CENTER
-            tx_box = slide.shapes.add_textbox(Inches(0.5 + 1.8 * i), Inches(3.5), Inches(1.6), Inches(0.4))
+            tx_box = slide.shapes.add_textbox(Inches(0.5 + 1.8 * i), Inches(5), Inches(1.6), Inches(0.4))
             tf = tx_box.text_frame
             tf.text = str(i + 1)
-            tf.font.bold = True
-            tf.font.size = Pt(36)
+            tf.paragraphs[0].font.bold = True
+            tf.paragraphs[0].font.size = Pt(36)
             tf.paragraphs[0].alignment = PP_ALIGN.CENTER
 
 
