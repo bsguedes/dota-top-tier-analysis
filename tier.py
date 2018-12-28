@@ -42,7 +42,7 @@ class Tier:
     def list_to_print(self):
         l = list()
         l.append('')
-        l.append(self.message.upper())
+        l.append(self.message)
         for i in range(0, self.NUMBER_OF_TIERS):
             l.append('')
             l.append('Tier %i:' % (i + 1))

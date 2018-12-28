@@ -42,25 +42,46 @@ class Slides:
         p.text = 'The list of players is: %s' % (', '.join(self.players.keys()))
         p.level = 1
 
-    def add_win_rate_slide(self, win_rate):
+    def add_win_rate_slide(self, win_rate, match_count, party_size):
         slide_layout = self.presentation.slide_layouts[1]
         slide = self.presentation.slides.add_slide(slide_layout)
         shapes = slide.shapes
         title_shape = shapes.title
         body_shape = shapes.placeholders[1]
-
         title_shape.text = '%s Win Rate' % self.team_name
         tf = body_shape.text_frame
         tf.text = 'Win rate: %.2f %%' % win_rate
+        p = tf.add_paragraph()
+        p.text = 'Match count: %s' % match_count
+        tf.add_paragraph()
+        for i in range(1, 6):
+            p = tf.add_paragraph()
+            p.text = 'Party size = %i: %s' % (i, party_size[i-1])
 
-        left = Inches(2)
-        top = Inches(2.5)
-        width = Inches(6)
-        height = Inches(0.5)
-        tx_box = slide.shapes.add_textbox(left, top, width, height)
-        tf = tx_box.text_frame
-        tf.text = "%s players with most matches" % self.team_name
-        # self.add_top_three_table([], slide, Inches(1), Inches(2.8))
+    def add_match_summary_by_player(self, match_summary_by_player):
+        slide_layout = self.presentation.slide_layouts[5]
+        slide = self.presentation.slides.add_slide(slide_layout)
+        title_shape = slide.shapes.title
+        title_shape.text = 'Most Matches Played'
+        scores = []
+        self.add_top_three_table(scores, slide, True, 'matches', Inches(1), Inches(2))
+
+        slide_layout = self.presentation.slide_layouts[5]
+        slide = self.presentation.slides.add_slide(slide_layout)
+        title_shape = slide.shapes.title
+        title_shape.text = 'Match Summary by Player'
+        table_shape = slide.shapes.add_table(3, 3, Inches(0.5), Inches(1.5), Inches(9), Inches(7))
+        table = table_shape.table
+        table.cell(0, 0).text = 'Player'
+        table.cell(0, 1).text = 'Total Matches'
+        table.cell(0, 2).text = 'Matches with %s' % self.team_name
+        table.cell(0, 3).text = '%% with %s' % self.team_name
+        for i in range(0, len(match_summary_by_player)):
+            table.cell(i + 1, 0).text = match_summary_by_player[i]['name']
+            table.cell(i + 1, 1).text = match_summary_by_player[i]['matches']
+            table.cell(i + 1, 2).text = match_summary_by_player[i]['team_matches']
+            table.cell(i + 1, 3).text = match_summary_by_player[i]['perc_with_team']
+
 
     def add_tier_slides(self, tier, category):
         texts = tier.list_to_print()
@@ -131,8 +152,8 @@ class Slides:
             tf.text = "Vencedores"
             for i in range(0, len(popular_vote_category['winner'])):
                 pic_path = 'data/pics/%s.jpg' % self.players[popular_vote_category['winner'][i]]
-                slide.shapes.add_picture(pic_path, Inches(8), Inches(2.3 + 1.55 * i), height=Inches(1))
-                tx_box = slide.shapes.add_textbox(Inches(8), Inches(2.3 + 1.55 * i + 1.08), Inches(2), Inches(0.4))
+                slide.shapes.add_picture(pic_path, Inches(8.3), Inches(2.3 + 1.55 * i), height=Inches(1))
+                tx_box = slide.shapes.add_textbox(Inches(8.3), Inches(2.3 + 1.55 * i + 1.08), Inches(2), Inches(0.4))
                 tf = tx_box.text_frame
                 tf.text = popular_vote_category['winner'][i]
         elif 'winner' in popular_vote_category:

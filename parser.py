@@ -11,11 +11,14 @@ from constants import Constants
 
 
 class Parser:
-    def __init__(self, team_name, years, players, min_party_size):
+    def __init__(self, team_name, years, players, min_matches, min_party_size):
         self.team_name = team_name
         self.years = years
         self.players = players
+        self.min_matches = min_matches
         self.min_party_size = min_party_size
+        self.matches_by_party_size = []
+        self.match_summary_by_player = []
 
     def identify_heroes(self, matches, min_couple_matches=10):
         hs = open('data/heroes.json', 'r', encoding='utf-8').read()
@@ -138,14 +141,14 @@ class Parser:
             print('%s positions: %s' % (inv_p[pid], pp))
 
         tier_dict = dict()
-        for pos_id, pos_name in Constants.roles().items():
-            avg = {k: player_win_pos[v][pos_name] / player_positions[v][pos_name] for k, v in self.players.items()
-                   if player_positions[v][pos_name] >= min_couple_matches}
+        for pos_id, pos_n in Constants.roles().items():
+            avg = {k: player_win_pos[v][pos_n] / player_positions[v][pos_n] for k, v in self.players.items()
+                   if player_positions[v][pos_n] >= min_couple_matches}
             s = sorted(avg.items(), key=lambda e: e[1], reverse=True)
-            tier_dict[pos_name] = list()
+            tier_dict[pos_n] = list()
             for k, v in s:
-                tier_dict[pos_name].append(TierItem(k, v * 100, '%s: %s\'s win rate: %.2f %% (%i matches)'
-                                                    % (pos_name, k, v * 100, player_positions[self.players[k]][pos_name])))
+                tier_dict[pos_n].append(TierItem(k, v * 100, '%s: %s\'s win rate: %.2f %% (%i matches)'
+                                                 % (pos_n, k, v * 100, player_positions[self.players[k]][pos_n])))
 
         print('')
         couples_win = {b: {x: 0 for w, x in self.players.items()} for a, b in self.players.items()}
@@ -222,8 +225,8 @@ class Parser:
                         if rule == 'support_gold':
                             pch = dict()
                             costs = Constants.item_cost()
-                            l = ['ward_observer', 'ward_sentry', 'dust', 'smoke_of_deceit', 'ward_dispenser', 'gem']
-                            for i in l:
+                            lst = ['ward_observer', 'ward_sentry', 'dust', 'smoke_of_deceit', 'ward_dispenser', 'gem']
+                            for i in lst:
                                 pch[i] = p[parameter][i] if i in p[parameter] and p[parameter][i] is not None else 0
                             obs_gold = max(pch['ward_observer'], pch['ward_dispenser']) * costs['ward_observer']
                             sen_gold = max(pch['ward_sentry'], pch['ward_dispenser']) * costs['ward_sentry']
@@ -282,22 +285,30 @@ class Parser:
             for o in obj:
                 y = gmtime(int(o['start_time'])).tm_year                
                 if ((last_days is not None and (calendar.timegm(gmtime()) - int(o['start_time'])) < last_days * 86400)
-                        or (last_days is None and y in self.years) and (not ranked_only or o['lobby_type'] in [5, 6, 7])):
+                        or (last_days is None and y in self.years)
+                        and (not ranked_only or o['lobby_type'] in [5, 6, 7])):
                     total_matches[name] += 1
                     if not o['match_id'] in matches:
                         matches[o['match_id']] = []
                     matches[o['match_id']].append(name)
         for i in range(0, 5):
-            print('Matches played by party of size %i: %s'
-                  % (i+1, len({k: v for k, v in matches.items() if len(v) == i+1})))
+            self.matches_by_party_size.append(len({k: v for k, v in matches.items() if len(v) == i + 1}))
+            print('Matches played by party of size %i: %s' % (i + 1, self.matches_by_party_size[i]))
         
         print('')                    
         sorted_matches = sorted(total_matches.items(), key=lambda kv: kv[1])
         sorted_matches.reverse()
-        
+
         for name, match_count in sorted_matches:
             matches_with_team = len([i for i, v in matches.items() if len(v) >= self.min_party_size and name in v])
             percentage_with_team = matches_with_team / match_count if match_count > 0 else 0
+            self.match_summary_by_player.append(
+                {
+                    'player': name,
+                    'matches': match_count,
+                    'team_matches': matches_with_team,
+                    'perc_with_team': 100 * percentage_with_team
+                })
             print('%s played %i matches -- %i matches (%.2f %%) played with %s'
                   % (name, match_count, matches_with_team, 100 * percentage_with_team, self.team_name))
 

@@ -1,8 +1,8 @@
 # coding=utf-8
 
 from tier import *
-from code import Parser
-from code import Category
+from parser import Parser
+from parser import Category
 from downloader import Downloader
 from slides import Slides
 from popular_vote import PopularVotePnK2018
@@ -106,7 +106,7 @@ def get_subtitle():
 if __name__ == '__main__':
     players = player_list[TEAM_NAME]
     s = Slides(TEAM_NAME, get_title(), get_subtitle(), players)
-    p = Parser(TEAM_NAME, YEARS, players, MIN_PARTY_SIZE)
+    p = Parser(TEAM_NAME, YEARS, players, MIN_MATCHES, MIN_PARTY_SIZE)
 
     Downloader.download_player_data(players, override=False)
     unique_matches = p.get_matches(ranked_only=False)
@@ -117,7 +117,8 @@ if __name__ == '__main__':
 
     s.add_divider_slide("%s General Statistics" % TEAM_NAME, 'Win Rate, Comebacks, Throws, Heroes, Compositions, Pairs')
     s.add_intro_slide(len(unique_matches), MIN_PARTY_SIZE, MIN_MATCHES)
-    s.add_win_rate_slide(win_rate)
+    s.add_win_rate_slide(win_rate, len(unique_matches), p.matches_by_party_size)
+    s.add_match_summary_by_player(p.match_summary_by_player)
 
     s.add_divider_slide("%s Technical Categories" % TEAM_NAME, 'Averages and Maximum for many statistics')
     tiers = []
@@ -138,7 +139,8 @@ if __name__ == '__main__':
                 tiers.append(tier_avg)
                 s.add_tier_slides(tier_avg, c)
             if c.has_max:
-                tier_max = Tier(c.weight, res_max, 'Maximum %s in a single match' % cat_name, is_max=True)
+                st = 'Maximum' if c.reverse else 'Minimum'
+                tier_max = Tier(c.weight, res_max, '%s %s in a single match' % (st, cat_name), is_max=True)
                 tier_max.print()
                 tiers.append(tier_max)
                 s.add_tier_slides(tier_max, c)
