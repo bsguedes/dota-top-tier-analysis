@@ -1,8 +1,8 @@
 # coding=utf-8
 
-from tier import *
-from parser import Parser
 from category import Category
+from code import Parser
+from tier import *
 from downloader import Downloader
 from slides import Slides
 from popular_vote import PopularVotePnK2018
@@ -116,7 +116,7 @@ if __name__ == '__main__':
     win_rate = p.identify_teams(unique_matches)
 
     s.add_divider_slide("%s General Statistics" % TEAM_NAME, 'Win Rate, Comebacks, Throws, Heroes, Compositions, Pairs')
-    s.add_intro_slide(len(unique_matches), MIN_PARTY_SIZE, MIN_MATCHES)
+    s.add_intro_slide(len(unique_matches), MIN_PARTY_SIZE, MIN_MATCHES, MIN_COUPLE_MATCHES)
     s.add_win_rate_slide(win_rate, len(unique_matches), p.matches_by_party_size)
     s.add_match_summary_by_player(p.match_summary_by_player)
 
@@ -152,5 +152,5 @@ if __name__ == '__main__':
         s.add_divider_slide("%s Popular Vote" % TEAM_NAME, popular_vote.message)
         for category in popular_vote.votes:
             s.add_popular_vote_category_slides(category)
-
+        s.add_top_five_slides(popular_vote.get_top_five())
     s.save()

@@ -1,6 +1,7 @@
 class PopularVotePnK2018:
 
     def __init__(self):
+        self.top_five = ['kkz', 'Osaka', 'Chaos', 'Zé', 'Lotus']
         self.votes = [
             {
                 'category': 'Maior evolução',
@@ -120,3 +121,6 @@ class PopularVotePnK2018:
 
     def get_categories(self):
         return self.votes
+
+    def get_top_five(self):
+        return self.top_five
