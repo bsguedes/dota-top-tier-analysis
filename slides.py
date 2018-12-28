@@ -150,7 +150,7 @@ class Slides:
                         pic_path = 'data/heroes/%s.jpg' % hero['id']
                         slide.shapes.add_picture(pic_path, Inches(0.5) + y * Inches(5), Inches(1.8) + x * Inches(0.8),
                                                  height=Inches(0.7))
-                        tx_box = slide.shapes.add_textbox(Inches(0.5) + y * Inches(4) + Inches(2),
+                        tx_box = slide.shapes.add_textbox(Inches(0.5) + y * Inches(5) + Inches(2),
                                                           Inches(1.65) + x * Inches(0.8), Inches(1.5), Inches(0.5))
                         tf = tx_box.text_frame
                         p = tf.paragraphs[0]
@@ -187,7 +187,7 @@ class Slides:
                         p.text = '%s matches' % (hero['matches'])
                         p.font.size = Pt(22)
                         p.alignment = PP_ALIGN.CENTER
-                        tx_box = slide.shapes.add_textbox(Inches(0.5) + y * Inches(4) + Inches(2),
+                        tx_box = slide.shapes.add_textbox(Inches(0.5) + y * Inches(5) + Inches(2),
                                                           Inches(1.65) + x * Inches(0.8) + Inches(0.5), Inches(1.5),
                                                           Inches(0.5))
                         tf = tx_box.text_frame

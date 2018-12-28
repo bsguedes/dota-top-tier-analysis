@@ -65,7 +65,7 @@ class Tier:
             for tier_level, tier_items in table.tiers.items():
                 for ti in tier_items:
                     p = (3 - level) * table.weight
-                    points[ti.name] += p if not table.is_max else p / 4
+                    points[ti.name] += p
                 level += 1
 
         print('')

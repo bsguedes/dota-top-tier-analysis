@@ -91,7 +91,7 @@ categories = [
     Category(5, 'tower_damage', unit='dmg', text='tower damage'),
     Category(5, 'damage_taken', unit='dmg', text='damage taken', rule='accumulate'),
     Category(5, 'teamfight_participation', unit='%', text='team fight participation', apply_transform=T.percentage),
-    Category(1, 'randomed', rule='bool', unit='%', text='randomed games', apply_transform=T.percentage),
+    Category(1, 'randomed', rule='bool', unit='%', text='randomed games', has_max=False, apply_transform=T.percentage),
     Category(5, 'last_hits', unit='last hits', text='last hits'),
     Category(2, 'denies', unit='denies'),
     Category(5, 'rune_pickups', unit='runes', text='runes picked up'),
