@@ -29,6 +29,7 @@ class Parser:
         self.player_roles = {}
         self.player_heroes = {}
         self.player_pairs = {}
+        self.five_player_compositions = []
 
     def identify_heroes(self, matches, min_couple_matches=10):
         hs = open('data/heroes.json', 'r', encoding='utf-8').read()
@@ -133,6 +134,29 @@ class Parser:
                   % (p, [heroes[x] for x in ([y for y in heroes.keys() if pl[y] == m[1]])], m[1], sum(pl.values())))
         self.player_heroes = players_heroes
 
+        print('')
+        five_player = dict()
+        for mid, v in match_summary.items():
+            if len(v['players']) == 5:
+                comp_sum = sum(v['players'])
+                if comp_sum not in five_player:
+                    five_player[comp_sum] = {
+                        'players': [inv_p[i] for i in v['players']],
+                        'wins': 0,
+                        'matches': 0
+                    }
+                five_player[comp_sum]['matches'] += 1
+                if v['win']:
+                    five_player[comp_sum]['wins'] += 1
+        avg = {k: v['wins'] / v['matches'] for k, v in five_player.items() if v['matches'] >= 5}
+        s = sorted(avg.items(), key=lambda e: e[1], reverse=True)
+        for k, v in s:
+            five_player[k]['wr'] = v * 100
+            self.five_player_compositions.append(five_player[k])
+            print('5-player team: %s win rate: %.2f %% (%i matches)'
+                  % (five_player[k]['players'], v * 100,
+                     five_player[k]['matches']))
+        
         print('')
         comp_matches = dict()
         comp_wins = dict()
