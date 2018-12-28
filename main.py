@@ -2,7 +2,7 @@
 
 from tier import *
 from parser import Parser
-from parser import Category
+from category import Category
 from downloader import Downloader
 from slides import Slides
 from popular_vote import PopularVotePnK2018
