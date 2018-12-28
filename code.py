@@ -187,11 +187,14 @@ class Parser:
                         player_win_pos[pid][pos] += 1
         for pid, v in player_positions.items():
             pp = player_positions[pid]
-            acc = sum(pp.values())
-            self.player_roles[pid] = [{'role': a, 'matches': b, 'wr': 0 if acc == 0 else 100 * b / acc} for a, b in
-                                      pp.items()]
-            pp = {a: '%i (%.2f %%)' % (b, 0 if acc == 0 else 100 * b / acc) for a, b in pp.items()}
-            print('%s positions: %s' % (inv_p[pid], pp))
+            ppp = {a: '%i (%.2f %%)' % (
+                   b, 0 if player_positions[pid][a] == 0 else 100 * player_win_pos[pid][a] / player_positions[pid][a])
+                   for a, b in pp.items()}
+            print('%s positions: %s' % (inv_p[pid], ppp))
+            self.player_roles[pid] = [
+                {'role': a, 'matches': b,
+                 'wr': 0 if player_positions[pid][a] == 0 else 100 * player_win_pos[pid][a] / player_positions[pid][a]}
+                for a, b in player_positions[pid].items()]
 
         tier_dict = dict()
         for pos_id, pos_n in Constants.roles().items():

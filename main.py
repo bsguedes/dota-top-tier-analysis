@@ -14,6 +14,7 @@ MIN_MATCHES = 35
 MIN_COUPLE_MATCHES = 20
 YEARS = [2018]
 TEAM_NAME = PNK
+DOWNLOAD_PLAYERS = False
 
 player_list = {
     PNK: {
@@ -110,7 +111,7 @@ if __name__ == '__main__':
     p = Parser(TEAM_NAME, YEARS, players, MIN_MATCHES, MIN_PARTY_SIZE)
 
     Downloader.download_heroes()
-    Downloader.download_player_data(players, override=False)
+    Downloader.download_player_data(players, override=DOWNLOAD_PLAYERS)
     unique_matches = p.get_matches(ranked_only=False)
     Downloader.download_matches(unique_matches)
 
