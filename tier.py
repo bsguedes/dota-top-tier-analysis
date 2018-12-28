@@ -12,7 +12,7 @@ class Tier:
     NUMBER_OF_TIERS = 3
 
     def __init__(self, weight, sorted_scores, message, is_max=False):
-        self.weight = weight
+        self.weight = weight / 4 if is_max else weight
         self.scores_array = sorted_scores
         self.player_count = len(self.scores_array)
         self.tier_size = math.ceil(self.player_count / self.NUMBER_OF_TIERS)
@@ -93,7 +93,7 @@ class Tier:
         return s
 
 
-class Transforms:
+class T:
     @staticmethod
     def percentage(number):
         return number * 100

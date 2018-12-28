@@ -285,6 +285,8 @@ class Parser:
                         value = p[parameter]['value']
                     elif rule == 'accumulate':
                         value = sum([v for k, v in p[parameter].items()])
+                    elif rule == 'bool':
+                        value = 1 if p[parameter] else 0
                     elif parameter == 'purchase':
                         if rule == 'support_gold':
                             pch = dict()

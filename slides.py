@@ -148,16 +148,16 @@ class Slides:
                     if len(versus) > index:
                         hero = versus[index]
                         pic_path = 'data/heroes/%s.jpg' % hero['id']
-                        slide.shapes.add_picture(pic_path, Inches(0.5) + y * Inches(4), Inches(1.8) + x * Inches(0.8),
+                        slide.shapes.add_picture(pic_path, Inches(0.5) + y * Inches(5), Inches(1.8) + x * Inches(0.8),
                                                  height=Inches(0.7))
                         tx_box = slide.shapes.add_textbox(Inches(0.5) + y * Inches(4) + Inches(2),
                                                           Inches(1.65) + x * Inches(0.8), Inches(1.5), Inches(0.5))
                         tf = tx_box.text_frame
                         p = tf.paragraphs[0]
-                        p.text = '%i/%i (%s wr)' % (hero['wins'], hero['matches'] - hero['wins'], hero['wr'])
+                        p.text = '%i-%i (%s wr)' % (hero['wins'], hero['matches'] - hero['wins'], hero['wr'])
                         p.font.size = Pt(22)
                         p.alignment = PP_ALIGN.CENTER
-                        tx_box = slide.shapes.add_textbox(Inches(0.5) + y * Inches(4) + Inches(2),
+                        tx_box = slide.shapes.add_textbox(Inches(0.5) + y * Inches(5) + Inches(2),
                                                           Inches(1.65) + x * Inches(0.8) + Inches(0.5), Inches(1.5),
                                                           Inches(0.5))
                         tf = tx_box.text_frame
@@ -178,9 +178,9 @@ class Slides:
                     if len(heroes) > index:
                         hero = heroes[index]
                         pic_path = 'data/heroes/%s.jpg' % hero['id']
-                        slide.shapes.add_picture(pic_path, Inches(0.5) + y * Inches(4), Inches(1.8) + x * Inches(0.8),
+                        slide.shapes.add_picture(pic_path, Inches(0.5) + y * Inches(5), Inches(1.8) + x * Inches(0.8),
                                                  height=Inches(0.7))
-                        tx_box = slide.shapes.add_textbox(Inches(0.5) + y * Inches(4) + Inches(2),
+                        tx_box = slide.shapes.add_textbox(Inches(0.5) + y * Inches(5) + Inches(2),
                                                           Inches(1.65) + x * Inches(0.8), Inches(1.5), Inches(0.5))
                         tf = tx_box.text_frame
                         p = tf.paragraphs[0]
@@ -240,7 +240,7 @@ class Slides:
         left = top = width = height = Inches(0.4)
         txt_box = slide.shapes.add_textbox(left, top, width, height)
         tf = txt_box.text_frame
-        tf.text = "%s - weights %i points" % (texts[1], tier.weight)
+        tf.text = "%s - weights %s points" % (texts[1], tier.weight)
         tf.paragraphs[0].font.bold = True
         for i in range(2, len(texts)):
             p = tf.add_paragraph()

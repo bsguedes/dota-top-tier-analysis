@@ -73,7 +73,7 @@ if TEAM_NAME == PNK:
     popular_vote = PopularVotePnK2018()
 
 categories = [
-    Category(20, 'win', unit='%', text='wins', has_max=False, apply_transform=Transforms.percentage),
+    Category(20, 'win', unit='%', text='wins', has_max=False, apply_transform=T.percentage),
     Category(10, 'kills', unit='kills'),
     Category(10, 'deaths', unit='deaths', reverse=False),
     Category(10, 'assists', unit='assists'),
@@ -89,6 +89,9 @@ categories = [
     Category(8, 'hero_damage', unit='dmg', text='hero damage'),
     Category(5, 'hero_healing', unit='heal', text='hero healing'),
     Category(5, 'tower_damage', unit='dmg', text='tower damage'),
+    Category(5, 'damage_taken', unit='dmg', text='damage taken', rule='accumulate'),
+    Category(5, 'teamfight_participation', unit='%', text='team fight participation', apply_transform=T.percentage),
+    Category(1, 'randomed', rule='bool', unit='%', text='randomed games', apply_transform=T.percentage),
     Category(5, 'last_hits', unit='last hits', text='last hits'),
     Category(2, 'denies', unit='denies'),
     Category(5, 'rune_pickups', unit='runes', text='runes picked up'),
@@ -109,7 +112,7 @@ categories = [
     Category(2, 'buyback_count', unit='buybacks', text='buybacks'),
     Category(2, 'kill_streaks', unit='streaks', text='beyond godlike streaks', rule='beyond_godlike', has_max=False),
     Category(2, 'actions_per_min', unit='apm', text='actions per minute'),
-    Category(2, 'duration', unit='min', text='duration in minutes', apply_transform=Transforms.sec_to_min)
+    Category(2, 'duration', unit='min', text='duration in minutes', apply_transform=T.sec_to_min)
 ]
 
 
