@@ -21,11 +21,11 @@ class Downloader:
             if not os.path.isfile(file_name):
                 name_parts = h_name.lower().replace('\'', '').split(' ')
                 for url in heroes_urls:
-                    if all(part in url for part in name_parts):
+                    if name_parts[0] == 'io' and '/io' in url or name_parts[0] != 'io' and all(
+                            part in url for part in name_parts):
                         print('Downloading %s image' % h_name)
                         urllib.request.urlretrieve(url, file_name)
                         break
-
 
     @staticmethod
     def download_player_data(players, override=True):
