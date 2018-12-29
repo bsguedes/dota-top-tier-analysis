@@ -151,7 +151,9 @@ if __name__ == '__main__':
     s.add_compositions(p.compositions)
 
     s.add_divider_slide("%s Players" % TEAM_NAME, 'Roles, Pairings and Most Played Heroes')
-    for p_name, pid in players.items():
+    for item in p.match_summary_by_team:
+        p_name = item['player']
+        pid = players[p_name]
         roles = p.player_roles[pid]
         player_heroes = p.player_heroes[pid]
         pairings = p.player_pairs[pid]
