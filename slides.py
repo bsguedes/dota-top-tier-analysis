@@ -48,7 +48,9 @@ class Slides:
         headers = ['Role', 'Matches', 'Win Rate']
         keys = ['role', 'matches', 'wr']
         formats = ['%s', '%s', '%.2f %%']
-        Slides.create_table(slide, roles, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(3), 1, 12, 15)
+        widths = [1.5, 1, 1]
+        Slides.create_table(slide, roles, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(3.5), 1, 12, 15,
+                            widths=widths)
 
         heroes = sorted(heroes.items(), key=lambda e: e[1], reverse=True)
         for i in range(0, 4):
