@@ -159,6 +159,9 @@ if __name__ == '__main__':
         pairings = p.player_pairs[pid]
         s.add_player_slides(p_name, roles, player_heroes, pairings)
 
+    s.add_divider_slide("Individual Hero Statistics", 'Positions, Win Rate and Best Players at each Hero')
+    s.add_heroes(p.hero_statistics)
+
     s.add_divider_slide("%s Technical Categories" % TEAM_NAME, 'Averages and Maximum for many statistics')
     tiers = []
     for c in categories:

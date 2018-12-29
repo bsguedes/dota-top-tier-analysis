@@ -31,6 +31,50 @@ class Slides:
         title.text = text
         subtitle.text = sub_text
 
+    def add_heroes(self, hero_stats):
+        for hero in hero_stats:
+            slide = self.add_slide(5, 204, 255, 255)
+            title_shape = slide.shapes.title
+            title_shape.text = '%s' % hero['name']
+            title_shape.text_frame.paragraphs[0].alignment = PP_ALIGN.LEFT
+
+            pic_path = 'data/heroes/%s.jpg' % hero['id']
+            slide.shapes.add_picture(pic_path, Inches(7), Inches(0.2), height=Inches(1.1))
+
+            tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.7), Inches(1.5), Inches(0.5))
+            tf = tx_box.text_frame
+            p = tf.paragraphs[0]
+            p.text = '%s appears in %s matches' % (hero['name'], hero['matches'])
+
+            tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(4.3), Inches(1.5), Inches(0.5))
+            tf = tx_box.text_frame
+            p = tf.paragraphs[0]
+            p.text = 'Best players with at least 3 matches:'
+            p.font.size = Pt(16)
+
+            headers = ['Role', 'Matches', 'Win Rate']
+            keys = ['role', 'matches', 'wr']
+            formats = ['%s', '%s', '%.2f %%']
+            widths = [1.5, 1, 1]
+            Slides.create_table(slide, hero['roles'], headers, keys, formats, Inches(0.5), Inches(1.5), Inches(3.5), 1,
+                                12, 15, widths=widths)
+
+            s = sorted([x for x in hero['played_by'] if x['matches'] > 3], key=lambda e: e['wr'], reverse=True)
+            for i in range(0, min(3, len(s))):
+                pic_path = 'data/pics/%s.jpg' % self.players[s[i]['name']]
+                slide.shapes.add_picture(pic_path, Inches(0.5), Inches(4.8) + i * Inches(0.8), height=Inches(0.7))
+                tx_box = slide.shapes.add_textbox(Inches(2), Inches(4.9) + i * Inches(0.8), Inches(1.5), Inches(0.5))
+                tf = tx_box.text_frame
+                p = tf.paragraphs[0]
+                p.text = '%i-%i (%.2f %% wr)' % (s[i]['wins'], s[i]['matches'] - s[i]['wins'], s[i]['wr'])
+                p.font.size = Pt(22)
+
+            headers = ['Played by', 'Matches', 'Wins', 'Win Rate']
+            keys = ['name', 'matches', 'wins', 'wr']
+            formats = ['%s', '%s', '%s', '%.2f %%']
+            Slides.create_table(slide, hero['played_by'], headers, keys, formats, Inches(4.5), Inches(1.5), Inches(4.5),
+                                1, 11, 15)
+
     def add_player_slides(self, player_name, roles, heroes, pairs):
         slide = self.add_slide(5, 255, 229, 204)
         title_shape = slide.shapes.title

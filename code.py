@@ -31,6 +31,7 @@ class Parser:
         self.player_heroes = {}
         self.player_pairs = {}
         self.five_player_compositions = []
+        self.hero_statistics = []
 
     def identify_heroes(self, matches, min_couple_matches=10):
         hs = open('data/heroes.json', 'r', encoding='utf-8').read()
@@ -104,13 +105,13 @@ class Parser:
                     wr_with[ally_hero]['wins'] += 1
         avg = {v: 0 if wr_with[k]['matches'] == 0 else wr_with[k]['wins'] / wr_with[k]['matches']
                for k, v in heroes.items()}
-        s = sorted(avg.items(), key=lambda e: e[1], reverse=True)
-        for k, v in s:
+        ss = sorted(avg.items(), key=lambda e: e[1], reverse=True)
+        for k, v in ss:
             print('%.2f %% %s win rate playing %s (%i matches)'
                   % (100 * v, self.team_name, k, wr_with[inv_h[k]]['matches']))
         self.with_heroes = [
             {'id': inv_h[k], 'name': k, 'matches': wr_with[inv_h[k]]['matches'], 'wins': wr_with[inv_h[k]]['wins'],
-             'wr': '%.2f %%' % (100 * v)} for k, v in s]
+             'wr': '%.2f %%' % (100 * v)} for k, v in ss]
 
         print('')
         matches = {h: v['matches'] for h, v in wr_with.items()}
@@ -123,11 +124,15 @@ class Parser:
         print('')
         player_hero_in_match = dict()
         players_heroes = {i: {h: 0 for h, n in heroes.items()} for p, i in self.players.items()}
+        phd = {i: {h: {'wins': 0, 'matches': 0} for h, n in heroes.items()} for p, i in self.players.items()}
         for mid, v in match_summary.items():
             player_hero_in_match[mid] = dict()
             for ally_hero, player in zip(v['our_heroes'], v['players']):
                 player_hero_in_match[mid][player] = ally_hero
-                players_heroes[player][ally_hero] += 1        
+                players_heroes[player][ally_hero] += 1
+                phd[player][ally_hero]['matches'] += 1
+                if v['win']:
+                    phd[player][ally_hero]['wins'] += 1
         for p, i in self.players.items():
             pl = players_heroes[self.players[p]]
             m = max(pl.items(), key=operator.itemgetter(1))
@@ -179,12 +184,16 @@ class Parser:
         print('')
         player_positions = {y: {r: 0 for i, r in Constants.roles().items()} for x, y in self.players.items()}
         player_win_pos = {y: {r: 0 for i, r in Constants.roles().items()} for x, y in self.players.items()}
+        hero_positions = {k: {p: {'wins': 0, 'matches': 0} for i, p in Constants.roles().items()} for k, v in
+                          heroes.items()}
         for mid, v in match_summary.items():
             if 'roles' in v:
                 positions = v['roles']['positions']
                 for pid, pos in positions.items():
                     player_positions[pid][pos] += 1
+                    hero_positions[player_hero_in_match[mid][pid]][pos]['matches'] += 1
                     if v['win']:
+                        hero_positions[player_hero_in_match[mid][pid]][pos]['wins'] += 1
                         player_win_pos[pid][pos] += 1
         for pid, v in player_positions.items():
             pp = player_positions[pid]
@@ -196,6 +205,21 @@ class Parser:
                 {'role': a, 'matches': b,
                  'wr': 0 if player_positions[pid][a] == 0 else 100 * player_win_pos[pid][a] / player_positions[pid][a]}
                 for a, b in player_positions[pid].items()]
+        self.hero_statistics = [{
+            'name': hero_name,
+            'id': inv_h[hero_name],
+            'matches': wr_with[inv_h[hero_name]]['matches'],
+            'roles': [{'role': r, 'matches': v['matches'], 'wins': v['wins'],
+                       'wr': 0 if v['matches'] == 0 else v['wins'] / v['matches']} for r, v in
+                      hero_positions[inv_h[hero_name]].items()],
+            'played_by': [{'name': p_name, 'matches': phd[pid][inv_h[hero_name]]['matches'],
+                           'wins': phd[pid][inv_h[hero_name]]['wins'],
+                           'wr': (phd[pid][inv_h[hero_name]]['wins'] / phd[pid][inv_h[hero_name]]['matches'] if
+                                  phd[pid][inv_h[hero_name]][
+                                      'matches'] > 0
+                                  else 0)}
+                          for p_name, pid in self.players.items()]
+        } for hero_name, value in ss]
 
         tier_dict = dict()
         for pos_id, pos_n in Constants.roles().items():
