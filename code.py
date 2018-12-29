@@ -366,7 +366,7 @@ class Parser:
         sorted_matches.reverse()
 
         for name, match_count in sorted_matches:
-            matches_with_team = len([i for i, v in matches.items() if len(v) >= self.min_party_size and name in v])
+            matches_with_team = len([i for i, v in matches.items() if len(v) >= 2 and name in v])
             percentage_with_team = matches_with_team / match_count if match_count > 0 else 0
             self.match_summary_by_player.append(
                 {
