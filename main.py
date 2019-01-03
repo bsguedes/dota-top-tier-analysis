@@ -6,6 +6,7 @@ from tier import *
 from downloader import Downloader
 from slides import Slides
 from popular_vote import PopularVotePnK2018
+import time
 
 
 PNK = 'PnK'
@@ -127,6 +128,7 @@ def get_subtitle():
 
 
 if __name__ == '__main__':
+    start = time.time()
     players = player_list[TEAM_NAME]
     s = Slides(TEAM_NAME, get_title(), get_subtitle(), players)
     p = Parser(TEAM_NAME, YEARS, players, MIN_MATCHES, MIN_PARTY_SIZE, FULL_PARTY_MATCHES)
@@ -164,6 +166,7 @@ if __name__ == '__main__':
 
     s.add_divider_slide("%s Technical Categories" % TEAM_NAME, 'Averages and Maximum for many statistics')
     tiers = []
+    matches_json = Parser.load_matches(unique_matches)
     for c in categories:
         if c.rule == 'position':
             tier = Tier(c.weight, tier_positions[c.parameter], 'Win rate as %s in %s matches'
@@ -172,7 +175,7 @@ if __name__ == '__main__':
             tiers.append(tier)
             s.add_tier_slides(tier, c)
         else:
-            res_avg, res_max = p.stat_counter(unique_matches, c.parameter, text=c.text, unit=c.unit, tf=c.transform,
+            res_avg, res_max = p.stat_counter(matches_json, c.parameter, text=c.text, unit=c.unit, tf=c.transform,
                                               reverse=c.reverse, has_max=c.has_max, rule=c.rule, has_avg=c.has_avg)
             cat_name = c.text if c.text is not None else c.parameter
             if c.has_avg:
@@ -197,3 +200,6 @@ if __name__ == '__main__':
             s.add_popular_vote_category_slides(category)
         s.add_top_five_slides(popular_vote.get_top_five())
     s.save()
+
+    print('')
+    print("Running Time took %.2f seconds." % (time.time() - start))

@@ -33,6 +33,14 @@ class Parser:
         self.five_player_compositions = []
         self.hero_statistics = []
 
+    @staticmethod
+    def load_matches(unique_matches):
+        matches = {}
+        for match_id, match_players in unique_matches.items():
+            content = open('matches/%i.json' % match_id, 'r', encoding='utf-8').read()
+            matches[match_id] = json.loads(content)
+        return matches
+
     def identify_heroes(self, matches, min_couple_matches=10):
         hs = open('data/heroes.json', 'r', encoding='utf-8').read()
         hs_json = json.loads(hs)
@@ -205,21 +213,23 @@ class Parser:
                 {'role': a, 'matches': b,
                  'wr': 0 if player_positions[pid][a] == 0 else 100 * player_win_pos[pid][a] / player_positions[pid][a]}
                 for a, b in player_positions[pid].items()]
-        self.hero_statistics = [{
+        self.hero_statistics = sorted([{
             'name': hero_name,
             'id': inv_h[hero_name],
             'matches': wr_with[inv_h[hero_name]]['matches'],
             'roles': [{'role': r, 'matches': v['matches'], 'wins': v['wins'],
-                       'wr': 0 if v['matches'] == 0 else v['wins'] / v['matches']} for r, v in
+                       'wr': 0 if v['matches'] == 0 else 100 * v['wins'] / v['matches']} for r, v in
                       hero_positions[inv_h[hero_name]].items()],
-            'played_by': [{'name': p_name, 'matches': phd[pid][inv_h[hero_name]]['matches'],
-                           'wins': phd[pid][inv_h[hero_name]]['wins'],
-                           'wr': (phd[pid][inv_h[hero_name]]['wins'] / phd[pid][inv_h[hero_name]]['matches'] if
-                                  phd[pid][inv_h[hero_name]][
-                                      'matches'] > 0
-                                  else 0)}
-                          for p_name, pid in self.players.items()]
-        } for hero_name, value in ss]
+            'played_by': sorted([{'name': p_name, 'matches': phd[pid][inv_h[hero_name]]['matches'],
+                                  'wins': phd[pid][inv_h[hero_name]]['wins'],
+                                  'wr': (100 * phd[pid][inv_h[hero_name]]['wins'] / phd[pid][inv_h[hero_name]][
+                                      'matches'] if
+                                         phd[pid][inv_h[hero_name]][
+                                             'matches'] > 0
+                                         else 0)}
+                                 for p_name, pid in self.players.items() if phd[pid][inv_h[hero_name]]['matches'] > 0],
+                                key=lambda z: z['matches'], reverse=True)
+        } for hero_name, value in ss], key=lambda l: l['name'])
 
         tier_dict = dict()
         for pos_id, pos_n in Constants.roles().items():
@@ -291,10 +301,9 @@ class Parser:
 
         maximum_value = {v: 0 for k, v in self.players.items()}
         maximum_match = {v: 0 for k, v in self.players.items()}
-        for match_id, match_players in matches.items():
-            content = open('matches/%i.json' % match_id, 'r', encoding='utf-8').read()
-            obj = json.loads(content)
-            for p in obj['players']:                
+
+        for match_id, obj in matches.items():
+            for p in obj['players']:
                 if p['account_id'] in account_ids and (parameter in p and p[parameter] is not None):
                     if not inv_p[p['account_id']] in totals:
                         totals[inv_p[p['account_id']]] = 0
