@@ -95,7 +95,12 @@ class Slides:
         title_shape.text = '%s' % player_name
         title_shape.text_frame.paragraphs[0].alignment = PP_ALIGN.LEFT
 
-        tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.7), Inches(1.5), Inches(0.5))
+        tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.45), Inches(1.5), Inches(0.5))
+        tf = tx_box.text_frame
+        p = tf.paragraphs[0]
+        p.text = '%s played %s distinct heroes' % (player_name, len([x for x in heroes.values() if x > 0]))
+
+        tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.85), Inches(1.5), Inches(0.5))
         tf = tx_box.text_frame
         p = tf.paragraphs[0]
         p.text = '%s played %s matches' % (player_name, sum(heroes.values()))
@@ -214,7 +219,7 @@ class Slides:
                                                           Inches(1.65) + x * Inches(0.8), Inches(1.5), Inches(0.5))
                         tf = tx_box.text_frame
                         p = tf.paragraphs[0]
-                        p.text = '%i-%i (%s wr)' % (hero['wins'], hero['matches'] - hero['wins'], hero['wr'])
+                        p.text = '%i-%i (%.2f %% wr)' % (hero['wins'], hero['matches'] - hero['wins'], hero['wr'])
                         p.font.size = Pt(22)
                         p.alignment = PP_ALIGN.CENTER
                         tx_box = slide.shapes.add_textbox(Inches(0.5) + y * Inches(5) + Inches(2),

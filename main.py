@@ -139,12 +139,12 @@ if __name__ == '__main__':
     unique_matches = p.get_matches(ranked_only=False)
     Downloader.download_matches(unique_matches)
 
-    tier_positions = p.identify_heroes(unique_matches, min_couple_matches=MIN_COUPLE_MATCHES)
-    win_rate = p.identify_teams(unique_matches)
+    matches_json = Parser.load_matches(unique_matches)
+    tier_positions = p.identify_heroes(matches_json, min_couple_matches=MIN_COUPLE_MATCHES)
 
     s.add_divider_slide("%s General Statistics" % TEAM_NAME, 'Win Rate, Comebacks, Throws, Heroes, Compositions, Pairs')
     s.add_intro_slide(len(unique_matches), MIN_PARTY_SIZE, MIN_MATCHES, MIN_COUPLE_MATCHES)
-    s.add_win_rate_slide(win_rate, len(unique_matches), p.matches_by_party_size)
+    s.add_win_rate_slide(p.win_rate, len(unique_matches), p.matches_by_party_size)
     s.add_five_player_compositions(p.five_player_compositions, FULL_PARTY_MATCHES)
     s.add_match_summary_by_player(p.match_summary_by_player, p.match_summary_by_team)
     s.add_comebacks_throws(p.top_comebacks, p.top_throws)
@@ -167,7 +167,7 @@ if __name__ == '__main__':
 
     s.add_divider_slide("%s Technical Categories" % TEAM_NAME, 'Averages and Maximum for many statistics')
     tiers = []
-    matches_json = Parser.load_matches(unique_matches)
+
     for c in categories:
         if c.rule == 'position':
             tier = Tier(c.weight, tier_positions[c.parameter], 'Win rate as %s in %s matches'

@@ -15,6 +15,7 @@ class Parser:
         self.team_name = team_name
         self.years = years
         self.players = players
+        self.win_rate = 0
         self.min_matches = min_matches
         self.min_party_size = min_party_size
         self.full_party_matches = full_party
@@ -49,9 +50,7 @@ class Parser:
         inv_p = {v: k for k, v in self.players.items()}
         account_ids = [v for k, v in self.players.items()]
         match_summary = {k: {'our_heroes': [], 'enemy_heroes': [], 'players': []} for k, v in matches.items()}
-        for match_id, match_players in matches.items():
-            content = open('matches/%i.json' % match_id, 'r', encoding='utf-8').read()
-            obj = json.loads(content)
+        for match_id, obj in matches.items():
             for p in obj['players']:
                 if p['account_id'] in account_ids:
                     match_summary[match_id]['our_heroes'].append(p['hero_id'])
@@ -68,6 +67,10 @@ class Parser:
             for p in obj['players']:
                 if p['isRadiant'] != match_summary[match_id]['is_radiant']:
                     match_summary[match_id]['enemy_heroes'].append(p['hero_id'])
+
+        print('')
+        self.win_rate = 100 * len([x for x, y in match_summary.items() if y['win']]) / len(matches)
+        print('%s Win Rate: %.2f %%' % (self.team_name, self.win_rate))
 
         print('')
         list_comebacks = {m: v['comeback_throw'] for m, v in match_summary.items() if v['win'] > 0}
@@ -102,7 +105,7 @@ class Parser:
                   % (100 * v, self.team_name, k, wr_versus[inv_h[k]]['matches']))
         self.against_heroes = sorted([
             {'id': inv_h[k], 'name': k, 'matches': wr_versus[inv_h[k]]['matches'], 'wins': wr_versus[inv_h[k]]['wins'],
-             'wr': '%.2f %%' % (100 * v)} for k, v in s], key=lambda z: (z['wr'], z['wins'], -z['matches']))
+             'wr': 100 * v} for k, v in s], key=lambda z: (-z['wr'], -z['wins'], z['matches']))
 
         print('')
         wr_with = {k: {'matches': 0, 'wins': 0} for k, v in heroes.items()}
@@ -119,7 +122,7 @@ class Parser:
                   % (100 * v, self.team_name, k, wr_with[inv_h[k]]['matches']))
         self.with_heroes = sorted([
             {'id': inv_h[k], 'name': k, 'matches': wr_with[inv_h[k]]['matches'], 'wins': wr_with[inv_h[k]]['wins'],
-             'wr': '%.2f %%' % (100 * v)} for k, v in ss], key=lambda z: (z['wr'], z['wins'], -z['matches']))
+             'wr': 100 * v} for k, v in ss], key=lambda z: (-z['wr'], -z['wins'], z['matches']))
 
         print('')
         matches = {h: v['matches'] for h, v in wr_with.items()}
@@ -271,22 +274,6 @@ class Parser:
                       % (100 * v, k, couples_win[self.players[k[0]]][self.players[k[1]]],
                          couples_matches[self.players[k[0]]][self.players[k[1]]]))
         return tier_dict
-
-    def identify_teams(self, matches):
-        account_ids = [v for k, v in self.players.items()]
-        match_summary = {k: {'players': [], 'win': False} for k, v in matches.items()}
-        for match_id, match_players in matches.items():
-            content = open('matches/%i.json' % match_id, 'r', encoding='utf-8').read()
-            obj = json.loads(content)
-            for p in obj['players']:
-                if p['account_id'] in account_ids:
-                    match_summary[match_id] = {'players': match_players, 'win': p['win'] > 0}
-                    break
-
-        print('')
-        win_rate = 100 * len([x for x, y in match_summary.items() if y['win']]) / len(matches)
-        print('%s Win Rate: %.2f %%' % (self.team_name, win_rate))
-        return win_rate
 
     def stat_counter(self, matches, parameter, reverse=True, has_avg=True, unit=None,
                      text=None, has_max=True, tf=None, rule=None):
