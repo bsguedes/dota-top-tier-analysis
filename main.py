@@ -13,6 +13,7 @@ PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
 YEARS = [2018]
+MONTH = None
 DOWNLOAD_PLAYERS = False
 
 parameters = {
@@ -130,7 +131,7 @@ def get_subtitle():
 if __name__ == '__main__':
     start = time.time()
     players = player_list[TEAM_NAME]
-    s = Slides(TEAM_NAME, get_title(), get_subtitle(), players)
+    s = Slides(TEAM_NAME, YEARS, get_title(), get_subtitle(), players, month=MONTH)
     p = Parser(TEAM_NAME, YEARS, players, MIN_MATCHES, MIN_PARTY_SIZE, FULL_PARTY_MATCHES)
 
     Downloader.download_heroes()

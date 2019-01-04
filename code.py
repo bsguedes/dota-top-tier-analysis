@@ -100,9 +100,9 @@ class Parser:
         for k, v in s:
             print('%.2f %% %s win rate versus %s (%i matches)'
                   % (100 * v, self.team_name, k, wr_versus[inv_h[k]]['matches']))
-        self.against_heroes = [
+        self.against_heroes = sorted([
             {'id': inv_h[k], 'name': k, 'matches': wr_versus[inv_h[k]]['matches'], 'wins': wr_versus[inv_h[k]]['wins'],
-             'wr': '%.2f %%' % (100 * v)} for k, v in s]
+             'wr': '%.2f %%' % (100 * v)} for k, v in s], key=lambda z: (z['wr'], z['wins'], -z['matches']))
 
         print('')
         wr_with = {k: {'matches': 0, 'wins': 0} for k, v in heroes.items()}
@@ -117,9 +117,9 @@ class Parser:
         for k, v in ss:
             print('%.2f %% %s win rate playing %s (%i matches)'
                   % (100 * v, self.team_name, k, wr_with[inv_h[k]]['matches']))
-        self.with_heroes = [
+        self.with_heroes = sorted([
             {'id': inv_h[k], 'name': k, 'matches': wr_with[inv_h[k]]['matches'], 'wins': wr_with[inv_h[k]]['wins'],
-             'wr': '%.2f %%' % (100 * v)} for k, v in ss]
+             'wr': '%.2f %%' % (100 * v)} for k, v in ss], key=lambda z: (z['wr'], z['wins'], -z['matches']))
 
         print('')
         matches = {h: v['matches'] for h, v in wr_with.items()}
@@ -228,7 +228,7 @@ class Parser:
                                              'matches'] > 0
                                          else 0)}
                                  for p_name, pid in self.players.items() if phd[pid][inv_h[hero_name]]['matches'] > 0],
-                                key=lambda z: z['matches'], reverse=True)
+                                key=lambda z: (z['matches'], z['wins']), reverse=True)
         } for hero_name, value in ss], key=lambda l: l['name'])
 
         tier_dict = dict()

@@ -55,7 +55,7 @@ class Tier:
             print(item)
 
     def get_top_three(self):
-        return self.scores_array[0:3]
+        return self.scores_array[0:min(3, len(self.scores_array))]
 
     @staticmethod
     def show_results_weights(players, tier_list):

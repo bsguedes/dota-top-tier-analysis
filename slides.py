@@ -9,13 +9,16 @@ from pptx.enum.chart import XL_LABEL_POSITION
 from pptx.chart.data import ChartData
 from pptx.chart.data import CategoryChartData
 from pptx.dml.color import RGBColor
+import calendar
 
 
 class Slides:
-    def __init__(self, team_name, tit, sub, players):
+    def __init__(self, team_name, years, tit, sub, players, month=None):
         self.presentation = Presentation()
         self.team_name = team_name
         self.players = players
+        y = '_'.join([str(x) for x in years])
+        self.dates = y if month is None else "%s_%s" % (y, calendar.month_abbr[month])
         self.add_divider_slide(tit, "%s" % sub)
 
     def add_slide(self, layout, r, g, b):
@@ -53,7 +56,8 @@ class Slides:
             p = tf.paragraphs[0]
             p.text = '%s has %s matches' % (hero['name'], hero['matches'])
 
-            s = sorted([x for x in hero['played_by'] if x['matches'] >= 3], key=lambda e: e['wr'], reverse=True)
+            s = sorted([x for x in hero['played_by'] if x['matches'] >= 3], key=lambda e: (e['wr'], e['matches']),
+                       reverse=True)
             if len(s) > 0:
                 tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(4.3), Inches(1.5), Inches(0.5))
                 tf = tx_box.text_frame
@@ -304,7 +308,9 @@ class Slides:
             p.font.size = Pt(14)
 
     def add_top_three_table(self, scores, slide, is_max, unit, left, top):
-        for i, name in [(0, '1st'), (1, '2nd'), (2, '3rd')]:
+        pos = [(0, '1st'), (1, '2nd'), (2, '3rd')]
+        val = min(3, len(scores))
+        for i, name in pos[0:val]:
             tx_box = slide.shapes.add_textbox(left + Inches(3*i), top + Inches(0), Inches(2.5), Inches(0.7))
             tf = tx_box.text_frame
             p = tf.paragraphs[0]
@@ -433,7 +439,7 @@ class Slides:
             tf.paragraphs[0].alignment = PP_ALIGN.CENTER
 
     def save(self):
-        self.presentation.save('report.pptx')
+        self.presentation.save('report_%s_%s.pptx' % (self.team_name, self.dates))
 
     @staticmethod
     def change_slide_color(slide, r, g, b):
