@@ -1,5 +1,7 @@
 # coding=utf-8
 
+import math
+import statistics
 import json
 import calendar
 import operator
@@ -191,6 +193,7 @@ class Parser:
         for k, v in s:
             print('Composition: %s win rate: %.2f %% (%i matches)' % (k, v * 100, comp_matches[k]))
         self.compositions = [{'comp': k, 'matches': comp_matches[k], 'wins': comp_wins[k], 'wr': v * 100} for k, v in s]
+        self.compositions = sorted(self.compositions, key=lambda e: e['matches'], reverse=True)
 
         print('')
         player_positions = {y: {r: 0 for i, r in Constants.roles().items()} for x, y in self.players.items()}
@@ -275,7 +278,7 @@ class Parser:
                          couples_matches[self.players[k[0]]][self.players[k[1]]]))
         return tier_dict
 
-    def stat_counter(self, matches, parameter, reverse=True, has_avg=True, unit=None,
+    def stat_counter(self, matches, parameter, reverse=True, has_avg=True, unit=None, max_fmt=None, avg_fmt=None,
                      text=None, has_max=True, tf=None, rule=None):
         text = parameter if text is None else text
 
@@ -340,9 +343,10 @@ class Parser:
                 sorted_average.reverse()
             for name, value in sorted_average:
                 if matches_played[name] >= self.min_matches:
-                    txt = '%s has %i %s in %i matches (avg %.2f %s)' \
-                            % (name, totals[name], text, matches_played[name], tf(averages[name]), unit)
-                    results_avg.append(TierItem(name, tf(averages[name]), txt))
+                    vl = avg_fmt % tf(averages[name])
+                    avg_block = ('(avg %s %s)' % (vl, unit)) if len(unit) > 0 else ('(avg %s)' % vl)
+                    txt = '%s has %i %s in %i matches %s' % (name, totals[name], text, matches_played[name], avg_block)
+                    results_avg.append(TierItem(name, vl, txt))
             if not has_max:
                 return results_avg, None
 
@@ -353,7 +357,8 @@ class Parser:
         results_max = []
         for pid, value in sorted_maximum:
             if matches_played[inv_p[pid]] >= self.min_matches:
-                txt = '%s: %i %s (match id: %i)' % (inv_p[pid], tf(maximum_value[pid]), unit, maximum_match[pid])
+                v = max_fmt % tf(maximum_value[pid])
+                txt = '%s: %s %s (match id: %i)' % (inv_p[pid], v, unit, maximum_match[pid])
                 results_max.append(TierItem(inv_p[pid], tf(maximum_value[pid]), txt))
 
         if not has_avg:
@@ -361,7 +366,7 @@ class Parser:
 
         return results_avg, results_max
 
-    def get_matches(self, last_days=None, ranked_only=False):
+    def get_matches(self, month=None, last_days=None, ranked_only=False):
         matches = dict()
         total_matches = {n: 0 for n, pid in self.players.items()}
         for name, pid in self.players.items():
@@ -369,8 +374,10 @@ class Parser:
             obj = json.loads(content)            
             total_matches[name] = 0
             for o in obj:
+                m = gmtime(int(o['start_time'])).tm_mon
                 y = gmtime(int(o['start_time'])).tm_year                
                 if ((last_days is not None and (calendar.timegm(gmtime()) - int(o['start_time'])) < last_days * 86400)
+                        or (last_days is None and month is not None and y in self.years and m == month)
                         or (last_days is None and y in self.years)
                         and (not ranked_only or o['lobby_type'] in [5, 6, 7])):
                     total_matches[name] += 1
@@ -400,3 +407,28 @@ class Parser:
 
         self.match_summary_by_team = sorted(self.match_summary_by_player, key=lambda v: v['team_matches'], reverse=True)
         return {k: v for k, v in matches.items() if len(v) >= self.min_party_size}
+
+    def player_versatility(self):
+        tier = []
+        inv_p = {v: k for k, v in self.players.items()}
+        versatility_dict = dict()
+        for pid, hero_dict in self.player_heroes.items():
+            versatility = self.versatility([y for x, y in hero_dict.items()])
+            if versatility > 0:
+                versatility_dict[inv_p[pid]] = versatility
+        s = sorted(versatility_dict.items(), key=lambda e: e[1], reverse=True)
+        for k, v in s:
+            txt = '%s versatility: %.3f' % (k, v)
+            tier.append(TierItem(k, v, txt))
+        return tier
+
+    def versatility(self, values):
+        count = len([x for x in values if x > 0])
+        h_sum = sum([x for x in values if x > 0])
+        if count == 0 or h_sum < self.min_matches:
+            return 0
+        matches_factor = 1 - math.exp(-(count - 1) / 20)
+        mean = statistics.mean(values)
+        norm = statistics.stdev(values) / mean
+        variance_factor = math.exp(-norm / 2)
+        return math.sqrt(matches_factor * variance_factor)

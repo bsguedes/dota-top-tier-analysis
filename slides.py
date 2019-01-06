@@ -2,6 +2,7 @@ import math
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from tier import TierItem
+from category import Category
 from pptx.enum.text import PP_ALIGN
 from pptx.enum.chart import XL_CHART_TYPE
 from pptx.enum.chart import XL_LEGEND_POSITION
@@ -36,58 +37,59 @@ class Slides:
 
     def add_heroes(self, hero_stats):
         for hero in hero_stats:
-            slide = self.add_slide(5, 204, 255, 255)
-            title_shape = slide.shapes.title
-            title_shape.text = '%s' % hero['name']
-            title_shape.text_frame.paragraphs[0].alignment = PP_ALIGN.LEFT
+            if hero['matches'] > 0:
+                slide = self.add_slide(5, 204, 255, 255)
+                title_shape = slide.shapes.title
+                title_shape.text = '%s' % hero['name']
+                title_shape.text_frame.paragraphs[0].alignment = PP_ALIGN.LEFT
 
-            pic_path = 'data/heroes/%s.jpg' % hero['id']
-            slide.shapes.add_picture(pic_path, Inches(7), Inches(0.2), height=Inches(1.1))
+                pic_path = 'data/heroes/%s.jpg' % hero['id']
+                slide.shapes.add_picture(pic_path, Inches(7), Inches(0.2), height=Inches(1.1))
 
-            headers = ['Role', 'Matches', 'Win Rate']
-            keys = ['role', 'matches', 'wr']
-            formats = ['%s', '%s', '%.2f %%']
-            widths = [1.5, 1, 1]
-            Slides.create_table(slide, hero['roles'], headers, keys, formats, Inches(0.5), Inches(1.5), Inches(3.5), 1,
-                                12, 15, widths=widths)
+                headers = ['Role', 'Matches', 'Win Rate']
+                keys = ['role', 'matches', 'wr']
+                formats = ['%s', '%s', '%.2f %%']
+                widths = [1.5, 1, 1]
+                Slides.create_table(slide, hero['roles'], headers, keys, formats, Inches(0.5), Inches(1.5), Inches(3.5),
+                                    1,
+                                    12, 15, widths=widths)
 
-            tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.7), Inches(1.5), Inches(0.5))
-            tf = tx_box.text_frame
-            p = tf.paragraphs[0]
-            p.text = '%s has %s matches' % (hero['name'], hero['matches'])
-
-            s = sorted([x for x in hero['played_by'] if x['matches'] >= 3], key=lambda e: (e['wr'], e['matches']),
-                       reverse=True)
-            if len(s) > 0:
-                tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(4.3), Inches(1.5), Inches(0.5))
+                tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.7), Inches(1.5), Inches(0.5))
                 tf = tx_box.text_frame
                 p = tf.paragraphs[0]
-                p.text = 'Best players with at least 3 matches:'
-                p.font.size = Pt(16)
-                for i in range(0, min(3, len(s))):
-                    pic_path = 'data/pics/%s.jpg' % self.players[s[i]['name']]
-                    slide.shapes.add_picture(pic_path, Inches(0.5), Inches(4.8) + i * Inches(0.8), height=Inches(0.7))
+                p.text = '%s has %s matches' % (hero['name'], hero['matches'])
 
-                    tx_box = slide.shapes.add_textbox(Inches(1.5), Inches(5.05) + i * Inches(0.8), Inches(1.5),
-                                                      Inches(0.5))
+                s = sorted([x for x in hero['played_by'] if x['matches'] >= 3], key=lambda e: (e['wr'], e['matches']),
+                           reverse=True)
+                if len(s) > 0:
+                    tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(4.3), Inches(1.5), Inches(0.5))
                     tf = tx_box.text_frame
                     p = tf.paragraphs[0]
-                    p.text = '%i-%i (%.2f %% wr)' % (s[i]['wins'], s[i]['matches'] - s[i]['wins'], s[i]['wr'])
-                    p.font.size = Pt(22)
+                    p.text = 'Best players with at least 3 matches:'
+                    p.font.size = Pt(16)
+                    for i in range(0, min(3, len(s))):
+                        pic_path = 'data/pics/%s.jpg' % self.players[s[i]['name']]
+                        slide.shapes.add_picture(pic_path, Inches(0.5), Inches(4.8) + i * Inches(0.8),
+                                                 height=Inches(0.7))
 
-                    tx_box = slide.shapes.add_textbox(Inches(1.5), Inches(4.75) + i * Inches(0.8), Inches(1.5),
-                                                      Inches(0.5))
-                    tf = tx_box.text_frame
-                    p = tf.paragraphs[0]
-                    p.text = '%s' % s[i]['name']
-                    p.font.size = Pt(14)
-                    p.font.bold = True
+                        tx_box = slide.shapes.add_textbox(Inches(1.5), Inches(5.05) + i * Inches(0.8), Inches(1.5),
+                                                          Inches(0.5))
+                        p = tx_box.text_frame.paragraphs[0]
+                        p.text = '%i-%i (%.2f %% wr)' % (s[i]['wins'], s[i]['matches'] - s[i]['wins'], s[i]['wr'])
+                        p.font.size = Pt(22)
 
-            headers = ['Played by', 'Matches', 'Wins', 'Win Rate']
-            keys = ['name', 'matches', 'wins', 'wr']
-            formats = ['%s', '%s', '%s', '%.2f %%']
-            Slides.create_table(slide, hero['played_by'], headers, keys, formats, Inches(4.5), Inches(1.5), Inches(4.5),
-                                1, 11, 15)
+                        tx_box = slide.shapes.add_textbox(Inches(1.5), Inches(4.75) + i * Inches(0.8), Inches(1.5),
+                                                          Inches(0.5))
+                        p = tx_box.text_frame.paragraphs[0]
+                        p.text = '%s' % s[i]['name']
+                        p.font.size = Pt(14)
+                        p.font.bold = True
+
+                headers = ['Played by', 'Matches', 'Wins', 'Win Rate']
+                keys = ['name', 'matches', 'wins', 'wr']
+                formats = ['%s', '%s', '%s', '%.2f %%']
+                Slides.create_table(slide, hero['played_by'], headers, keys, formats, Inches(4.5), Inches(1.5),
+                                    Inches(4.5), 1, 11, 15)
 
     def add_player_slides(self, player_name, roles, heroes, pairs):
         slide = self.add_slide(5, 255, 229, 204)
@@ -100,7 +102,7 @@ class Slides:
         p = tf.paragraphs[0]
         p.text = '%s played %s distinct heroes' % (player_name, len([x for x in heroes.values() if x > 0]))
 
-        tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.85), Inches(1.5), Inches(0.5))
+        tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.8), Inches(1.5), Inches(0.5))
         tf = tx_box.text_frame
         p = tf.paragraphs[0]
         p.text = '%s played %s matches' % (player_name, sum(heroes.values()))
@@ -263,17 +265,19 @@ class Slides:
                         p.alignment = PP_ALIGN.CENTER
 
     def add_match_summary_by_player(self, summary, team):
+        cat = Category(0, '', unit='matches')
+
         slide = self.add_slide(5, 152, 251, 152)
         title_shape = slide.shapes.title
         title_shape.text = 'Most Matches Played'
         scores = [TierItem(summary[i]['player'], summary[i]['matches'], '') for i in range(0, 3)]
-        self.add_top_three_table(scores, slide, True, 'matches', Inches(1), Inches(2))
+        self.add_top_three_table(scores, slide, True, cat, Inches(1), Inches(2))
 
         slide = self.add_slide(5, 152, 251, 152)
         title_shape = slide.shapes.title
         title_shape.text = 'Most Matches Played with %s' % self.team_name
         scores = [TierItem(team[i]['player'], team[i]['team_matches'], '') for i in range(0, 3)]
-        self.add_top_three_table(scores, slide, True, 'matches', Inches(1), Inches(2))
+        self.add_top_three_table(scores, slide, True, cat, Inches(1), Inches(2))
 
         slide = self.add_slide(5, 152, 251, 152)
         title_shape = slide.shapes.title
@@ -281,7 +285,8 @@ class Slides:
         headers = ['Player', 'Total Matches', 'Matches with %s' % self.team_name, '%% with %s' % self.team_name]
         keys = ['player', 'matches', 'team_matches', 'perc_with_team']
         formats = ['%s', '%s', '%s', '%.2f %%']
-        Slides.create_table(slide, summary, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 11, 14)
+        Slides.create_table(slide, [x for x in summary if x['team_matches'] > 0], headers, keys, formats, Inches(0.5),
+                            Inches(1.5), Inches(9), 1, 11, 14)
 
     def add_tier_slides(self, tier, category):
         texts = tier.list_to_print()
@@ -290,16 +295,17 @@ class Slides:
         title_shape = slide.shapes.title
         title_shape.text = texts[1]
         scores = tier.get_top_three()
-        self.add_top_three_table(scores, slide, tier.is_max, category.unit, Inches(0.7), Inches(1.8))
+        self.add_top_three_table(scores, slide, tier.is_max, category, Inches(0.7), Inches(1.8))
 
-        slide = self.add_slide(5, 255, 255, 224)
-        title_shape = slide.shapes.title
-        title_shape.text = texts[1]
-        chart_data = CategoryChartData()
-        chart_data.categories = [x.name for x in tier.scores_array]
-        chart_data.add_series(texts[1], [x.score for x in tier.scores_array])
-        x, y, cx, cy = Inches(1), Inches(1.6), Inches(8), Inches(5)
-        slide.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, x, y, cx, cy, chart_data)
+        if len(tier.scores_array) > 0:
+            slide = self.add_slide(5, 255, 255, 224)
+            title_shape = slide.shapes.title
+            title_shape.text = texts[1]
+            chart_data = CategoryChartData()
+            chart_data.categories = [x.name for x in tier.scores_array]
+            chart_data.add_series(texts[1], [x.score for x in tier.scores_array])
+            x, y, cx, cy = Inches(1), Inches(1.6), Inches(8), Inches(5)
+            slide.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, x, y, cx, cy, chart_data)
 
         slide = self.add_slide(6, 255, 255, 224)
         left = top = width = height = Inches(0.4)
@@ -312,7 +318,7 @@ class Slides:
             p.text = texts[i]
             p.font.size = Pt(14)
 
-    def add_top_three_table(self, scores, slide, is_max, unit, left, top):
+    def add_top_three_table(self, scores, slide, is_max, category, left, top):
         pos = [(0, '1st'), (1, '2nd'), (2, '3rd')]
         val = min(3, len(scores))
         for i, name in pos[0:val]:
@@ -333,8 +339,11 @@ class Slides:
 
             tx_box = slide.shapes.add_textbox(left + Inches(3*i), top + Inches(1.5), Inches(2.5), Inches(0.7))
             tf = tx_box.text_frame
-            text_format = "%s %s" if is_max else "%.2f %s"
-            tf.text = text_format % (scores[i].score, unit)
+            if not isinstance(scores[i].score, str):
+                fmt = (category.max_format if is_max else category.avg_format) % scores[i].score
+            else:
+                fmt = scores[i].score
+            tf.text = "%s %s" % (fmt, category.unit)
             p = tf.paragraphs[0]
             p.font.size = Pt(22)
             p.alignment = PP_ALIGN.CENTER
@@ -343,11 +352,12 @@ class Slides:
             slide.shapes.add_picture(pic_path, left + Inches(3*i), top + Inches(2.5), height=Inches(2.5))
 
     def add_results_slides(self, medals, points):
+        cat = Category(0, '', max_format='%s')
         slide = self.add_slide(5, 255, 255, 224)
         title_shape = slide.shapes.title
         title_shape.text = 'Top Tier Results Compilation'
-        scores = [TierItem(medals[i][0], medals[i][1], '') for i in range(0, 3)]
-        self.add_top_three_table(scores, slide, True, '', Inches(0.7), Inches(1.8))
+        scores = [TierItem(medals[i][0], str(medals[i][1]), '') for i in range(0, 3)]
+        self.add_top_three_table(scores, slide, True, cat, Inches(0.7), Inches(1.8))
 
         slide = self.add_slide(5, 255, 255, 224)
         title_shape = slide.shapes.title
@@ -362,8 +372,8 @@ class Slides:
         slide = self.add_slide(5, 255, 255, 224)
         title_shape = slide.shapes.title
         title_shape.text = 'Top Tier Weighted Points'
-        scores = [TierItem(points[i][0], points[i][1], '') for i in range(0, 3)]
-        self.add_top_three_table(scores, slide, True, '', Inches(0.7), Inches(1.8))
+        scores = [TierItem(points[i][0], str(points[i][1]), '') for i in range(0, 3)]
+        self.add_top_three_table(scores, slide, True, cat, Inches(0.7), Inches(1.8))
 
         slide = self.add_slide(5, 255, 255, 224)
         title_shape = slide.shapes.title

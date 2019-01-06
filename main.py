@@ -7,6 +7,7 @@ from downloader import Downloader
 from slides import Slides
 from popular_vote import PopularVotePnK2018
 import time
+import calendar
 
 
 PNK = 'PnK'
@@ -19,7 +20,7 @@ DOWNLOAD_PLAYERS = False
 parameters = {
     PNK: {
         'min_matches': 35,
-        'min_couple_matches': 20,
+        'min_couple_matches': 10,
         'min_party_size': 4,
         'full_party_matches': 5
     },
@@ -57,7 +58,8 @@ player_list = {
         'Pringles': 84962243,
         'Alpiona': 30320098,
         'Fallenzão': 396690444,
-        'Maionese': 35304398
+        'Maionese': 35304398,
+        'Kiddy': 32757138
     },
     BLAZING_DOTA: {
         'Pogo': 121639063,
@@ -71,7 +73,7 @@ player_list = {
 }
 
 popular_vote = None
-if TEAM_NAME == PNK:
+if TEAM_NAME == PNK and 2018 in YEARS:
     popular_vote = PopularVotePnK2018()
 
 categories = [
@@ -79,7 +81,8 @@ categories = [
     Category(10, 'kills', unit='kills'),
     Category(10, 'deaths', unit='deaths', reverse=False),
     Category(10, 'assists', unit='assists'),
-    Category(10, 'kda', text='KLA', rule='kla'),
+    Category(10, 'kda', text='KLA', rule='kla', max_format='%.2f'),
+    Category(10, 'versatility', rule='versatility', avg_format='%.3f'),
     Category(2, 'hard carry', unit='%', text='hard carry win rate', rule='position'),
     Category(2, 'mid', unit='%', text='mid win rate', rule='position'),
     Category(2, 'offlane', unit='%', text='offlane win rate', rule='position'),
@@ -92,7 +95,8 @@ categories = [
     Category(5, 'hero_healing', unit='heal', text='hero healing'),
     Category(5, 'tower_damage', unit='dmg', text='tower damage'),
     Category(5, 'damage_taken', unit='dmg', text='damage taken', rule='accumulate'),
-    Category(5, 'teamfight_participation', unit='%', text='team fight participation', apply_transform=T.percentage),
+    Category(5, 'teamfight_participation', unit='%', text='team fight participation',
+             apply_transform=T.percentage, max_format='%.2f'),
     Category(1, 'randomed', rule='bool', unit='%', text='randomed games', has_max=False, apply_transform=T.percentage),
     Category(5, 'last_hits', unit='last hits', text='last hits'),
     Category(2, 'denies', unit='denies'),
@@ -108,13 +112,13 @@ categories = [
     Category(2, 'courier_kills', unit='couriers', text='couriers killed'),
     Category(2, 'purchase_tpscroll', unit='TPs', text='TPs purchased'),
     Category(2, 'purchase', unit='tomes', text='tomes of knowledge purchased', rule='tome_of_knowledge'),
-    Category(5, 'stuns', unit='seconds', text='stun duration dealt'),
+    Category(5, 'stuns', unit='seconds', text='stun duration dealt', max_format='%.2f'),
     Category(5, 'pings', unit='pings'),
     Category(4, 'lane_efficiency_pct', unit='%', text='lane efficiency at 10min'),
     Category(2, 'buyback_count', unit='buybacks', text='buybacks'),
     Category(2, 'kill_streaks', unit='streaks', text='beyond godlike streaks', rule='beyond_godlike', has_max=False),
     Category(2, 'actions_per_min', unit='apm', text='actions per minute'),
-    Category(2, 'duration', unit='min', text='duration in minutes', apply_transform=T.sec_to_min)
+    Category(2, 'duration', unit='min', text='duration in minutes', apply_transform=T.sec_to_min, max_format='%.2f')
 ]
 
 
@@ -123,9 +127,12 @@ def get_title():
 
 
 def get_subtitle():
+    if MONTH is not None:
+        return "%i %i Edition" % (YEARS[0], calendar.month_abbr[MONTH])
     if len(YEARS) == 1:
         return "%i Edition" % YEARS[0]
-    return str(YEARS)
+    else:
+        return "%i - %i Edition" % (min(YEARS), max(YEARS))
 
 
 if __name__ == '__main__':
@@ -136,7 +143,7 @@ if __name__ == '__main__':
 
     Downloader.download_heroes()
     Downloader.download_player_data(players, override=DOWNLOAD_PLAYERS)
-    unique_matches = p.get_matches(ranked_only=False)
+    unique_matches = p.get_matches(month=MONTH, ranked_only=False)
     Downloader.download_matches(unique_matches)
 
     matches_json = Parser.load_matches(unique_matches)
@@ -154,7 +161,7 @@ if __name__ == '__main__':
     s.add_compositions(p.compositions)
 
     s.add_divider_slide("%s Players" % TEAM_NAME, 'Roles, Pairings and Most Played Heroes')
-    for item in p.match_summary_by_team:
+    for item in sorted(p.match_summary_by_team, key=lambda e:e['team_matches'], reverse=True):
         p_name = item['player']
         pid = players[p_name]
         roles = p.player_roles[pid]
@@ -175,8 +182,14 @@ if __name__ == '__main__':
             tier.print()
             tiers.append(tier)
             s.add_tier_slides(tier, c)
+        elif c.rule == 'versatility':
+            tier = Tier(c.weight, p.player_versatility(), 'Versatility in %s matches' % TEAM_NAME)
+            tier.print()
+            tiers.append(tier)
+            s.add_tier_slides(tier, c)
         else:
             res_avg, res_max = p.stat_counter(matches_json, c.parameter, text=c.text, unit=c.unit, tf=c.transform,
+                                              max_fmt=c.max_format, avg_fmt=c.avg_format,
                                               reverse=c.reverse, has_max=c.has_max, rule=c.rule, has_avg=c.has_avg)
             cat_name = c.text if c.text is not None else c.parameter
             if c.has_avg:
