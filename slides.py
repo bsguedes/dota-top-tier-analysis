@@ -188,12 +188,15 @@ class Slides:
         headers = ['Match ID', 'Gold', 'Players']
         keys = ['match', 'gold', 'players']
         formats = ['%s', '%s', '%s']
-        Slides.create_table(slide, comebacks, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15)
+        widths = [2, 2, 5]
+        Slides.create_table(slide, comebacks, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
+                            widths=widths)
 
         slide = self.add_slide(5, 152, 251, 152)
         title_shape = slide.shapes.title
         title_shape.text = 'Top 10 %s Throws' % self.team_name
-        Slides.create_table(slide, throws, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15)
+        Slides.create_table(slide, throws, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
+                            widths=widths)
 
     def add_compositions(self, compositions):
         slide = self.add_slide(5, 152, 251, 152)

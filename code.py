@@ -17,6 +17,7 @@ class Parser:
         self.team_name = team_name
         self.years = years
         self.players = players
+        self.heroes = {}
         self.win_rate = 0
         self.min_matches = min_matches
         self.min_party_size = min_party_size
@@ -35,6 +36,7 @@ class Parser:
         self.player_pairs = {}
         self.five_player_compositions = []
         self.hero_statistics = []
+        self.player_heroes_in_match = {}
 
     @staticmethod
     def load_matches(unique_matches):
@@ -47,7 +49,7 @@ class Parser:
     def identify_heroes(self, matches, min_couple_matches=10):
         hs = open('data/heroes.json', 'r', encoding='utf-8').read()
         hs_json = json.loads(hs)
-        heroes = {h['id']: h['localized_name'] for h in hs_json}
+        self.heroes = {h['id']: h['localized_name'] for h in hs_json}
         inv_h = {h['localized_name']: h['id'] for h in hs_json}
         inv_p = {v: k for k, v in self.players.items()}
         account_ids = [v for k, v in self.players.items()]
@@ -93,14 +95,14 @@ class Parser:
             for m, g in sorted(list_throws.items(), key=lambda e: e[1], reverse=True)[:10]]
 
         print('')
-        wr_versus = {k: {'matches': 0, 'wins': 0} for k, v in heroes.items()}
+        wr_versus = {k: {'matches': 0, 'wins': 0} for k, v in self.heroes.items()}
         for mid, v in match_summary.items():
             for enemy_hero in v['enemy_heroes']:
                 wr_versus[enemy_hero]['matches'] += 1
                 if v['win']:
                     wr_versus[enemy_hero]['wins'] += 1
         avg = {v: 0 if wr_versus[k]['matches'] == 0 else wr_versus[k]['wins'] / wr_versus[k]['matches']
-               for k, v in heroes.items()}
+               for k, v in self.heroes.items()}
         s = sorted(avg.items(), key=lambda e: e[1], reverse=True)
         for k, v in s:
             print('%.2f %% %s win rate versus %s (%i matches)'
@@ -110,14 +112,14 @@ class Parser:
              'wr': 100 * v} for k, v in s], key=lambda z: (-z['wr'], -z['wins'], z['matches']))
 
         print('')
-        wr_with = {k: {'matches': 0, 'wins': 0} for k, v in heroes.items()}
+        wr_with = {k: {'matches': 0, 'wins': 0} for k, v in self.heroes.items()}
         for mid, v in match_summary.items():
             for ally_hero in v['our_heroes']:
                 wr_with[ally_hero]['matches'] += 1
                 if v['win']:
                     wr_with[ally_hero]['wins'] += 1
         avg = {v: 0 if wr_with[k]['matches'] == 0 else wr_with[k]['wins'] / wr_with[k]['matches']
-               for k, v in heroes.items()}
+               for k, v in self.heroes.items()}
         ss = sorted(avg.items(), key=lambda e: e[1], reverse=True)
         for k, v in ss:
             print('%.2f %% %s win rate playing %s (%i matches)'
@@ -131,13 +133,13 @@ class Parser:
         s = sorted(matches.items(), key=lambda e: e[1], reverse=True)
         for k, v in s:
             print('%s played %s for a total of %i matches'
-                  % (self.team_name, heroes[k], v))
-        self.most_played_heroes = [{'id': k, 'name': heroes[k], 'matches': v} for k, v in s]
+                  % (self.team_name, self.heroes[k], v))
+        self.most_played_heroes = [{'id': k, 'name': self.heroes[k], 'matches': v} for k, v in s]
 
         print('')
         player_hero_in_match = dict()
-        players_heroes = {i: {h: 0 for h, n in heroes.items()} for p, i in self.players.items()}
-        phd = {i: {h: {'wins': 0, 'matches': 0} for h, n in heroes.items()} for p, i in self.players.items()}
+        players_heroes = {i: {h: 0 for h, n in self.heroes.items()} for p, i in self.players.items()}
+        phd = {i: {h: {'wins': 0, 'matches': 0} for h, n in self.heroes.items()} for p, i in self.players.items()}
         for mid, v in match_summary.items():
             player_hero_in_match[mid] = dict()
             for ally_hero, player in zip(v['our_heroes'], v['players']):
@@ -150,7 +152,9 @@ class Parser:
             pl = players_heroes[self.players[p]]
             m = max(pl.items(), key=operator.itemgetter(1))
             print("%s most played hero: %s (%i of %i matches)"
-                  % (p, [heroes[x] for x in ([y for y in heroes.keys() if pl[y] == m[1]])], m[1], sum(pl.values())))
+                  % (p, [self.heroes[x] for x in ([y for y in self.heroes.keys() if pl[y] == m[1]])], m[1],
+                     sum(pl.values())))
+        self.player_heroes_in_match = player_hero_in_match
         self.player_heroes = players_heroes
 
         print('')
@@ -199,7 +203,7 @@ class Parser:
         player_positions = {y: {r: 0 for i, r in Constants.roles().items()} for x, y in self.players.items()}
         player_win_pos = {y: {r: 0 for i, r in Constants.roles().items()} for x, y in self.players.items()}
         hero_positions = {k: {p: {'wins': 0, 'matches': 0} for i, p in Constants.roles().items()} for k, v in
-                          heroes.items()}
+                          self.heroes.items()}
         for mid, v in match_summary.items():
             if 'roles' in v:
                 positions = v['roles']['positions']
@@ -356,9 +360,10 @@ class Parser:
 
         results_max = []
         for pid, value in sorted_maximum:
-            if matches_played[inv_p[pid]] >= self.min_matches:
+            if matches_played[inv_p[pid]] >= self.min_matches and maximum_match[pid] > 0:
                 v = max_fmt % tf(maximum_value[pid])
-                txt = '%s: %s %s (match id: %i)' % (inv_p[pid], v, unit, maximum_match[pid])
+                hero = self.heroes[self.player_heroes_in_match[maximum_match[pid]][pid]]
+                txt = '%s: %s %s as %s (match id: %i)' % (inv_p[pid], v, unit, hero, maximum_match[pid])
                 results_max.append(TierItem(inv_p[pid], tf(maximum_value[pid]), txt))
 
         if not has_avg:

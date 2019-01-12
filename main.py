@@ -3,7 +3,7 @@
 from category import Category
 from code import Parser
 from tier import *
-from downloader import Downloader
+import downloader
 from slides import Slides
 from popular_vote import PopularVotePnK2018
 import time
@@ -13,16 +13,16 @@ import calendar
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
-YEARS = [2018]
+YEARS = [2019]
 MONTH = None
 DOWNLOAD_PLAYERS = False
 
 parameters = {
     PNK: {
-        'min_matches': 35,
-        'min_couple_matches': 10,
-        'min_party_size': 4,
-        'full_party_matches': 5
+        'min_matches': 2,
+        'min_couple_matches': 2,
+        'min_party_size': 2,
+        'full_party_matches': 2
     },
     BLAZING_DOTA: {
         'min_matches': 10,
@@ -141,10 +141,10 @@ if __name__ == '__main__':
     s = Slides(TEAM_NAME, YEARS, get_title(), get_subtitle(), players, month=MONTH)
     p = Parser(TEAM_NAME, YEARS, players, MIN_MATCHES, MIN_PARTY_SIZE, FULL_PARTY_MATCHES)
 
-    Downloader.download_heroes()
-    Downloader.download_player_data(players, override=DOWNLOAD_PLAYERS)
+    downloader.download_heroes()
+    downloader.download_player_data(players, override=DOWNLOAD_PLAYERS)
     unique_matches = p.get_matches(month=MONTH, ranked_only=False)
-    Downloader.download_matches(unique_matches)
+    downloader.download_matches(unique_matches)
 
     matches_json = Parser.load_matches(unique_matches)
     tier_positions = p.identify_heroes(matches_json, min_couple_matches=MIN_COUPLE_MATCHES)
@@ -161,7 +161,7 @@ if __name__ == '__main__':
     s.add_compositions(p.compositions)
 
     s.add_divider_slide("%s Players" % TEAM_NAME, 'Roles, Pairings and Most Played Heroes')
-    for item in sorted(p.match_summary_by_team, key=lambda e:e['team_matches'], reverse=True):
+    for item in sorted(p.match_summary_by_team, key=lambda e: e['team_matches'], reverse=True):
         p_name = item['player']
         pid = players[p_name]
         roles = p.player_roles[pid]
