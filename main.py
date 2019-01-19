@@ -6,6 +6,7 @@ from tier import *
 import downloader
 from slides import Slides
 from popular_vote import PopularVotePnK2018
+from achievements import PnKAchievements
 import time
 import calendar
 
@@ -78,6 +79,8 @@ player_list = {
 popular_vote = None
 if TEAM_NAME == PNK and 2018 in YEARS:
     popular_vote = PopularVotePnK2018()
+
+achievements = None
 
 categories = [
     Category(20, 'win', unit='%', text='wins', has_max=False, apply_transform=T.percentage),
@@ -213,6 +216,14 @@ if __name__ == '__main__':
     medals = Tier.show_results(players, tiers)
     points = Tier.show_results_weights(players, tiers)
     s.add_results_slides(medals, points)
+
+    if TEAM_NAME == PNK:
+        achievements = PnKAchievements(unique_matches)
+
+    if achievements is not None:
+        s.add_divider_slide("%s Achievements" % TEAM_NAME, '')
+        for achievement in achievements.get_achievements():
+            s.add_achievement_slide(achievement)
 
     if popular_vote is not None:
         s.add_divider_slide("%s Popular Vote" % TEAM_NAME, popular_vote.message)
