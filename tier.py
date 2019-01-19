@@ -1,54 +1,63 @@
 import math
+import numpy as np
 
 
 class TierItem:
-    def __init__(self, name, score, text):
+    def __init__(self, name, score, text, number=None):
         self.name = name
         self.score = score
         self.text = text
+        self.number = float(score) if number is None else number
 
 
 class Tier:
     NUMBER_OF_TIERS = 3
 
-    def __init__(self, weight, sorted_scores, message, is_max=False):
+    def __init__(self, weight, sorted_scores, message, reverse=True, is_max=False):
         self.weight = weight / 4 if is_max else weight
         self.scores_array = sorted_scores
         self.player_count = len(self.scores_array)
         self.tier_size = math.ceil(self.player_count / self.NUMBER_OF_TIERS)
         self.message = message
         self.is_max = is_max
+        self.reverse = reverse
         self.tiers = self.get_tiers()
 
     def get_tiers(self):
+        values = [a.number for a in self.scores_array]
+        diff = np.array([abs(values[i + 1] - values[i]) for i in range(len(self.scores_array) - 1)])
+        print(diff)
+        d1 = np.argmax(diff)
+        diff[d1] = 0
+        d2 = np.argmax(diff)
+        d1 += 0.5
+        d2 += 0.5
+
         tiers = dict()
-        count = 0
-        for i in range(0, self.NUMBER_OF_TIERS):
-            tiers[i] = list()
-            for j in range(count, min(int((i + 1) * self.tier_size), self.player_count)):
-                tiers[i].append(self.scores_array[j])
-                count += 1
-            if i < self.NUMBER_OF_TIERS - 1:
-                while count < len(self.scores_array) and len(tiers[i]) > 0 \
-                        and self.scores_array[count].score == tiers[i][-1].score:
-                    tiers[i].append(self.scores_array[count])
-                    count += 1
-        for i in range(1, self.NUMBER_OF_TIERS):
-            if len(tiers[i-1]) == 0:
-                tiers[i-1] = tiers[i]
-                tiers[i] = list()
+        tier = 0
+        tiers[tier] = list()
+        for i in range(len(self.scores_array)):
+            if i > d1:
+                tier += 1
+                tiers[tier] = list()
+                d1 = 1000
+            if i > d2:
+                tier += 1
+                tiers[tier] = list()
+                d2 = 1000
+            tiers[tier].append(self.scores_array[i])
         return tiers
 
     def list_to_print(self):
-        l = list()
-        l.append('')
-        l.append(self.message)
-        for i in range(0, self.NUMBER_OF_TIERS):
-            l.append('')
-            l.append('Tier %i:' % (i + 1))
+        lst = list()
+        lst.append('')
+        lst.append(self.message)
+        for i in range(self.NUMBER_OF_TIERS):
+            lst.append('')
+            lst.append('Tier %i:' % (i + 1))
             for item in self.tiers[i]:
-                l.append(item.text)
-        return l
+                lst.append(item.text)
+        return lst
 
     def print(self):
         for item in self.list_to_print():

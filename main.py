@@ -14,7 +14,7 @@ PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
 YEARS = [2019]
-MONTH = None
+MONTH = 1
 DOWNLOAD_PLAYERS = False
 
 parameters = {
@@ -22,13 +22,15 @@ parameters = {
         'min_matches': 2,
         'min_couple_matches': 2,
         'min_party_size': 2,
-        'full_party_matches': 2
+        'full_party_matches': 2,
+        'min_matches_with_hero': 2
     },
     BLAZING_DOTA: {
         'min_matches': 10,
         'min_couple_matches': 5,
         'min_party_size': 2,
-        'full_party_matches': 2
+        'full_party_matches': 2,
+        'min_matches_with_hero': 2
     }
 }
 
@@ -36,6 +38,7 @@ MIN_PARTY_SIZE = parameters[TEAM_NAME]['min_party_size']
 MIN_MATCHES = parameters[TEAM_NAME]['min_matches']
 MIN_COUPLE_MATCHES = parameters[TEAM_NAME]['min_couple_matches']
 FULL_PARTY_MATCHES = parameters[TEAM_NAME]['full_party_matches']
+MIN_MATCHES_WITH_HERO = parameters[TEAM_NAME]['min_matches_with_hero']
 
 player_list = {
     PNK: {
@@ -128,7 +131,7 @@ def get_title():
 
 def get_subtitle():
     if MONTH is not None:
-        return "%i %i Edition" % (YEARS[0], calendar.month_abbr[MONTH])
+        return "%i %s Edition" % (YEARS[0], calendar.month_abbr[MONTH])
     if len(YEARS) == 1:
         return "%i Edition" % YEARS[0]
     else:
@@ -162,15 +165,16 @@ if __name__ == '__main__':
 
     s.add_divider_slide("%s Players" % TEAM_NAME, 'Roles, Pairings and Most Played Heroes')
     for item in sorted(p.match_summary_by_team, key=lambda e: e['team_matches'], reverse=True):
-        p_name = item['player']
-        pid = players[p_name]
-        roles = p.player_roles[pid]
-        player_heroes = p.player_heroes[pid]
-        pairings = p.player_pairs[pid]
-        s.add_player_slides(p_name, roles, player_heroes, pairings)
+        if item['team_matches'] > 0:
+            p_name = item['player']
+            pid = players[p_name]
+            roles = p.player_roles[pid]
+            player_heroes = p.player_heroes[pid]
+            pairings = p.player_pairs[pid]
+            s.add_player_slides(p_name, roles, player_heroes, pairings)
 
     s.add_divider_slide("Individual Hero Statistics", 'Positions, Win Rate and Best Players at each Hero')
-    s.add_heroes(p.hero_statistics)
+    s.add_heroes(p.hero_statistics, MIN_MATCHES_WITH_HERO)
 
     s.add_divider_slide("%s Technical Categories" % TEAM_NAME, 'Averages and Maximum for many statistics')
     tiers = []
@@ -193,13 +197,15 @@ if __name__ == '__main__':
                                               reverse=c.reverse, has_max=c.has_max, rule=c.rule, has_avg=c.has_avg)
             cat_name = c.text if c.text is not None else c.parameter
             if c.has_avg:
-                tier_avg = Tier(c.weight, res_avg, 'Average %s in %s matches' % (cat_name, TEAM_NAME))
+                tier_avg = Tier(c.weight, res_avg, 'Average %s in %s matches' % (cat_name, TEAM_NAME),
+                                reverse=c.reverse)
                 tier_avg.print()
                 tiers.append(tier_avg)
                 s.add_tier_slides(tier_avg, c)
             if c.has_max:
                 st = 'Maximum' if c.reverse else 'Minimum'
-                tier_max = Tier(c.weight, res_max, '%s %s in a single match' % (st, cat_name), is_max=True)
+                tier_max = Tier(c.weight, res_max, '%s %s in a single match' % (st, cat_name), reverse=c.reverse,
+                                is_max=True)
                 tier_max.print()
                 tiers.append(tier_max)
                 s.add_tier_slides(tier_max, c)

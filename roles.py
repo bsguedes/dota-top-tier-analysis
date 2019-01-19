@@ -8,7 +8,7 @@ class Roles:
         our_players = match_summary['players']
         result_roles = [-1] * 5
         team_players = team_players[0:5] if match_summary['is_radiant'] else team_players[5:10]
-        for i in range(0, 5):
+        for i in range(5):
             if team_players[i]['account_id'] not in our_players:
                 team_players[i]['account_id'] = i
 

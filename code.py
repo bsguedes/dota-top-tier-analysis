@@ -389,7 +389,7 @@ class Parser:
                     if not o['match_id'] in matches:
                         matches[o['match_id']] = []
                     matches[o['match_id']].append(name)
-        for i in range(0, 5):
+        for i in range(5):
             self.matches_by_party_size.append(len({k: v for k, v in matches.items() if len(v) == i + 1}))
             print('Matches played by party of size %i: %s' % (i + 1, self.matches_by_party_size[i]))
         

@@ -35,7 +35,7 @@ class Slides:
         title.text = text
         subtitle.text = sub_text
 
-    def add_heroes(self, hero_stats):
+    def add_heroes(self, hero_stats, min_matches_with_hero):
         for hero in hero_stats:
             if hero['matches'] > 0:
                 slide = self.add_slide(5, 204, 255, 255)
@@ -59,15 +59,16 @@ class Slides:
                 p = tf.paragraphs[0]
                 p.text = '%s has %s matches' % (hero['name'], hero['matches'])
 
-                s = sorted([x for x in hero['played_by'] if x['matches'] >= 3], key=lambda e: (e['wr'], e['matches']),
+                s = sorted([x for x in hero['played_by'] if x['matches'] >= min_matches_with_hero],
+                           key=lambda e: (e['wr'], e['matches']),
                            reverse=True)
                 if len(s) > 0:
                     tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(4.3), Inches(1.5), Inches(0.5))
                     tf = tx_box.text_frame
                     p = tf.paragraphs[0]
-                    p.text = 'Best players with at least 3 matches:'
+                    p.text = 'Best players with at least %s matches:' % min_matches_with_hero
                     p.font.size = Pt(16)
-                    for i in range(0, min(3, len(s))):
+                    for i in range(min(3, len(s))):
                         pic_path = 'data/pics/%s.jpg' % self.players[s[i]['name']]
                         slide.shapes.add_picture(pic_path, Inches(0.5), Inches(4.8) + i * Inches(0.8),
                                                  height=Inches(0.7))
@@ -118,7 +119,7 @@ class Slides:
                             widths=widths)
 
         heroes = sorted(heroes.items(), key=lambda e: e[1], reverse=True)
-        for i in range(0, 4):
+        for i in range(4):
             pic_path = 'data/heroes/%s.jpg' % heroes[i][0]
             slide.shapes.add_picture(pic_path, Inches(0.5), Inches(4.2) + i * Inches(0.8), height=Inches(0.7))
             tx_box = slide.shapes.add_textbox(Inches(2), Inches(4.4) + i * Inches(0.8), Inches(1.5), Inches(0.5))
@@ -130,7 +131,9 @@ class Slides:
         headers = ['Paired with', 'Matches', 'Wins', 'Win Rate']
         keys = ['name', 'matches', 'wins', 'wr']
         formats = ['%s', '%s', '%s', '%.2f %%']
-        Slides.create_table(slide, pairs, headers, keys, formats, Inches(4.5), Inches(1.5), Inches(4.5), 1, 11, 15)
+        widths = [1.5, 1, 1, 1]
+        Slides.create_table(slide, pairs, headers, keys, formats, Inches(4.5), Inches(1.5), Inches(4.5), 1, 11, 15,
+                            widths=widths)
 
     def add_intro_slide(self, match_count, min_player_count, min_matches, min_couples_matches):
         slide = self.add_slide(1, 152, 251, 152)
@@ -208,12 +211,13 @@ class Slides:
         Slides.create_table(slide, compositions, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15)
 
     def add_win_rate_heroes(self, versus, text):
-        for c in range(0, math.ceil(len(versus)/14)):
+        versus = [v for v in versus if v['matches'] > 0]
+        for c in range(math.ceil(len(versus)/14)):
             slide = self.add_slide(5, 204, 255, 204)
             title_shape = slide.shapes.title
             title_shape.text = '%s Win Rate %s Heroes [%i]' % (self.team_name, text, c + 1)
-            for y in range(0, 2):
-                for x in range(0, 7):
+            for y in range(2):
+                for x in range(7):
                     index = c*14 + y*7 + x
                     if len(versus) > index:
                         hero = versus[index]
@@ -238,12 +242,13 @@ class Slides:
                         p.alignment = PP_ALIGN.CENTER
 
     def add_most_played(self, heroes):
-        for c in range(0, math.ceil(len(heroes)/14)):
+        heroes = [v for v in heroes if v['matches'] > 0]
+        for c in range(math.ceil(len(heroes)/14)):
             slide = self.add_slide(5, 255, 204, 255)
             title_shape = slide.shapes.title
             title_shape.text = '%s\'s Most Played Heroes [%i]' % (self.team_name, c + 1)
-            for y in range(0, 2):
-                for x in range(0, 7):
+            for y in range(2):
+                for x in range(7):
                     index = c*14 + y*7 + x
                     if len(heroes) > index:
                         hero = heroes[index]
@@ -273,13 +278,13 @@ class Slides:
         slide = self.add_slide(5, 152, 251, 152)
         title_shape = slide.shapes.title
         title_shape.text = 'Most Matches Played'
-        scores = [TierItem(summary[i]['player'], summary[i]['matches'], '') for i in range(0, 3)]
+        scores = [TierItem(summary[i]['player'], summary[i]['matches'], '') for i in range(3)]
         self.add_top_three_table(scores, slide, True, cat, Inches(1), Inches(2))
 
         slide = self.add_slide(5, 152, 251, 152)
         title_shape = slide.shapes.title
         title_shape.text = 'Most Matches Played with %s' % self.team_name
-        scores = [TierItem(team[i]['player'], team[i]['team_matches'], '') for i in range(0, 3)]
+        scores = [TierItem(team[i]['player'], team[i]['team_matches'], '') for i in range(3)]
         self.add_top_three_table(scores, slide, True, cat, Inches(1), Inches(2))
 
         slide = self.add_slide(5, 152, 251, 152)
@@ -359,7 +364,9 @@ class Slides:
         slide = self.add_slide(5, 255, 255, 224)
         title_shape = slide.shapes.title
         title_shape.text = 'Top Tier Results Compilation'
-        scores = [TierItem(medals[i][0], str(medals[i][1]), '') for i in range(0, 3)]
+        scores = [
+            TierItem(medals[i][0], str(medals[i][1]), '', medals[i][1][0] * 3 + medals[i][1][1] * 2 + medals[i][1][2])
+            for i in range(3)]
         self.add_top_three_table(scores, slide, True, cat, Inches(0.7), Inches(1.8))
 
         slide = self.add_slide(5, 255, 255, 224)
@@ -375,7 +382,7 @@ class Slides:
         slide = self.add_slide(5, 255, 255, 224)
         title_shape = slide.shapes.title
         title_shape.text = 'Top Tier Weighted Points'
-        scores = [TierItem(points[i][0], str(points[i][1]), '') for i in range(0, 3)]
+        scores = [TierItem(points[i][0], str(points[i][1]), '') for i in range(3)]
         self.add_top_three_table(scores, slide, True, cat, Inches(0.7), Inches(1.8))
 
         slide = self.add_slide(5, 255, 255, 224)
@@ -404,7 +411,7 @@ class Slides:
             tx_box = slide.shapes.add_textbox(Inches(8), Inches(1.8), Inches(2), Inches(0.5))
             tf = tx_box.text_frame
             tf.text = "Vencedores"
-            for i in range(0, len(popular_vote_category['winner'])):
+            for i in range(0,len(popular_vote_category['winner'])):
                 pic_path = 'data/pics/%s.jpg' % self.players[popular_vote_category['winner'][i]]
                 slide.shapes.add_picture(pic_path, Inches(8.3), Inches(2.3 + 1.55 * i), height=Inches(1))
                 tx_box = slide.shapes.add_textbox(Inches(8.3), Inches(2.3 + 1.55 * i + 1.08), Inches(2), Inches(0.4))
@@ -442,7 +449,7 @@ class Slides:
     def add_top_five_slides(self, top):
         slide = self.add_slide(5, 221, 160, 221)
         slide.shapes.title.text = "Dream Team by Popular Vote"
-        for i in range(0, 5):
+        for i in range(5):
             pic_path = 'data/pics/%s.jpg' % self.players[top[i]]
             slide.shapes.add_picture(pic_path, Inches(0.5 + 1.8 * i), Inches(2), height=Inches(1.6))
             tx_box = slide.shapes.add_textbox(Inches(0.5 + 1.8 * i), Inches(4), Inches(1.6), Inches(0.4))
@@ -470,16 +477,16 @@ class Slides:
                      widths=None):
         table_shape = slide.shapes.add_table(len(data) + 1, len(headers), left, top, width, height)
         table = table_shape.table
-        for i in range(0, len(headers)):
+        for i in range(len(headers)):
             table.cell(0, i).text = headers[i]
-        for i in range(0, len(data)):
-            for j in range(0, len(keys)):
+        for i in range(len(data)):
+            for j in range(len(keys)):
                 table.cell(i + 1, j).text = formats[j] % data[i][keys[j]]
         Slides.set_table_font_size(table, font_size)
-        for i in range(0, len(keys)):
+        for i in range(len(keys)):
             table.cell(0, i).text_frame.paragraphs[0].runs[0].font.size = Pt(header_size)
         if widths is not None:
-            for i in range(0, len(widths)):
+            for i in range(len(widths)):
                 table.columns[i].width = Inches(widths[i])
 
     @staticmethod
