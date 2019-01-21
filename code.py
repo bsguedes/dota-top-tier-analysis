@@ -40,11 +40,8 @@ class Parser:
 
     @staticmethod
     def load_matches(unique_matches):
-        matches = {}
-        for match_id, match_players in unique_matches.items():
-            content = open('matches/%i.json' % match_id, 'r', encoding='utf-8').read()
-            matches[match_id] = json.loads(content)
-        return matches
+        return {match_id: json.loads(open('matches/%i.json' % match_id, 'r', encoding='utf-8').read()) for
+                match_id, match_players in unique_matches.items()}
 
     def identify_heroes(self, matches, min_couple_matches=10):
         hs = open('data/heroes.json', 'r', encoding='utf-8').read()
@@ -414,7 +411,6 @@ class Parser:
         return {k: v for k, v in matches.items() if len(v) >= self.min_party_size}
 
     def player_versatility(self):
-        tier = []
         inv_p = {v: k for k, v in self.players.items()}
         versatility_dict = dict()
         for pid, hero_dict in self.player_heroes.items():
@@ -422,10 +418,7 @@ class Parser:
             if versatility > 0:
                 versatility_dict[inv_p[pid]] = versatility
         s = sorted(versatility_dict.items(), key=lambda e: e[1], reverse=True)
-        for k, v in s:
-            txt = '%s versatility: %.3f' % (k, v)
-            tier.append(TierItem(k, v, txt))
-        return tier
+        return [TierItem(k, v, '%s versatility: %.3f' % (k, v)) for k, v in s]
 
     def versatility(self, values):
         count = len([x for x in values if x > 0])
