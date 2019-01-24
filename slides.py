@@ -1,4 +1,6 @@
 import math
+import os
+import os.path
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from tier import TierItem
@@ -70,7 +72,8 @@ class Slides:
                     p.font.size = Pt(16)
                     for i in range(min(3, len(s))):
                         pic_path = 'data/pics/%s.jpg' % self.players[s[i]['name']]
-                        slide.shapes.add_picture(pic_path, Inches(0.5), Inches(4.8) + i * Inches(0.8),
+                        if os.path.isfile(pic_path):
+                            slide.shapes.add_picture(pic_path, Inches(0.5), Inches(4.8) + i * Inches(0.8),
                                                  height=Inches(0.7))
 
                         tx_box = slide.shapes.add_textbox(Inches(1.5), Inches(5.05) + i * Inches(0.8), Inches(1.5),
@@ -109,7 +112,8 @@ class Slides:
         p.text = '%s played %s matches' % (player_name, sum(heroes.values()))
 
         pic_path = 'data/pics/%s.jpg' % self.players[player_name]
-        slide.shapes.add_picture(pic_path, Inches(8), Inches(0.2), height=Inches(1.1))
+        if os.path.isfile(pic_path):
+            slide.shapes.add_picture(pic_path, Inches(8), Inches(0.2), height=Inches(1.1))
 
         headers = ['Role', 'Matches', 'Win Rate']
         keys = ['role', 'matches', 'wr']
@@ -357,7 +361,8 @@ class Slides:
             p.alignment = PP_ALIGN.CENTER
 
             pic_path = 'data/pics/%s.jpg' % self.players[scores[i].name]
-            slide.shapes.add_picture(pic_path, left + Inches(3*i), top + Inches(2.5), height=Inches(2.5))
+            if os.path.isfile(pic_path):
+                slide.shapes.add_picture(pic_path, left + Inches(3*i), top + Inches(2.5), height=Inches(2.5))
 
     def add_results_slides(self, medals, points):
         cat = Category(0, '', max_format='%s')
@@ -413,7 +418,8 @@ class Slides:
             tf.text = "Vencedores"
             for i in range(0,len(popular_vote_category['winner'])):
                 pic_path = 'data/pics/%s.jpg' % self.players[popular_vote_category['winner'][i]]
-                slide.shapes.add_picture(pic_path, Inches(8.3), Inches(2.3 + 1.55 * i), height=Inches(1))
+                if os.path.isfile(pic_path):
+                    slide.shapes.add_picture(pic_path, Inches(8.3), Inches(2.3 + 1.55 * i), height=Inches(1))
                 tx_box = slide.shapes.add_textbox(Inches(8.3), Inches(2.3 + 1.55 * i + 1.08), Inches(2), Inches(0.4))
                 tf = tx_box.text_frame
                 tf.text = popular_vote_category['winner'][i]
@@ -422,7 +428,8 @@ class Slides:
             tf = tx_box.text_frame
             tf.text = "Vencedor"
             pic_path = 'data/pics/%s.jpg' % self.players[popular_vote_category['winner']]
-            slide.shapes.add_picture(pic_path, Inches(8), Inches(2.5), height=Inches(1.4))
+            if os.path.isfile(pic_path):
+                slide.shapes.add_picture(pic_path, Inches(8), Inches(2.5), height=Inches(1.4))
             tx_box = slide.shapes.add_textbox(Inches(8), Inches(4), Inches(2), Inches(0.5))
             tf = tx_box.text_frame
             tf.text = popular_vote_category['winner']
@@ -451,7 +458,8 @@ class Slides:
         slide.shapes.title.text = "Dream Team by Popular Vote"
         for i in range(5):
             pic_path = 'data/pics/%s.jpg' % self.players[top[i]]
-            slide.shapes.add_picture(pic_path, Inches(0.5 + 1.8 * i), Inches(2), height=Inches(1.6))
+            if os.path.isfile(pic_path):
+                slide.shapes.add_picture(pic_path, Inches(0.5 + 1.8 * i), Inches(2), height=Inches(1.6))
             tx_box = slide.shapes.add_textbox(Inches(0.5 + 1.8 * i), Inches(4), Inches(1.6), Inches(0.4))
             tf = tx_box.text_frame
             tf.text = top[i]

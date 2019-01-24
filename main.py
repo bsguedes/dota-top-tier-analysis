@@ -106,6 +106,7 @@ categories = [
     Category(5, 'rune_pickups', unit='runes', text='runes picked up'),
     Category(8, 'obs_placed', unit='wards', text='observer wards placed'),
     Category(8, 'sen_placed', unit='sentries', text='sentry wards placed'),
+    Category(5, 'purchase', unit='bkbs', text='BKBs purchased', rule='black_king_bar', has_max=False),
     Category(2, 'purchase', unit='dusts', text='dusts purchased', rule='dust'),
     Category(2, 'purchase', unit='smokes', text='smokes purchased', rule='smoke_of_deceit'),
     Category(2, 'purchase', unit='gems', text='gems of true sight purchased', rule='gem'),

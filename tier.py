@@ -25,8 +25,7 @@ class Tier:
 
     def get_tiers(self):
         values = [a.number for a in self.scores_array]
-        diff = np.array([abs(values[i + 1] - values[i]) for i in range(len(self.scores_array) - 1)])
-        print(diff)
+        diff = np.array([abs(values[i + 1] - values[i]) for i in range(len(self.scores_array) - 1)])        
         d1 = np.argmax(diff)
         diff[d1] = 0
         d2 = np.argmax(diff)
