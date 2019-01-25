@@ -6,10 +6,10 @@ import json
 import calendar
 import operator
 import itertools
-from time import *
+from time import gmtime
 from tier import TierItem
 from roles import Roles
-from constants import Constants
+from constants import *
 
 
 class Parser:
@@ -41,7 +41,7 @@ class Parser:
     @staticmethod
     def load_matches(unique_matches):
         matches = {}
-        for match_id, match_players in unique_matches.items():
+        for match_id, _ in unique_matches.items():
             content = open('matches/%i.json' % match_id, 'r', encoding='utf-8').read()
             matches[match_id] = json.loads(content)
         return matches
@@ -148,7 +148,7 @@ class Parser:
                 phd[player][ally_hero]['matches'] += 1
                 if v['win']:
                     phd[player][ally_hero]['wins'] += 1
-        for p, i in self.players.items():
+        for p, _ in self.players.items():
             pl = players_heroes[self.players[p]]
             m = max(pl.items(), key=operator.itemgetter(1))
             print("%s most played hero: %s (%i of %i matches)"
@@ -200,9 +200,9 @@ class Parser:
         self.compositions = sorted(self.compositions, key=lambda e: e['matches'], reverse=True)
 
         print('')
-        player_positions = {y: {r: 0 for i, r in Constants.roles().items()} for x, y in self.players.items()}
-        player_win_pos = {y: {r: 0 for i, r in Constants.roles().items()} for x, y in self.players.items()}
-        hero_positions = {k: {p: {'wins': 0, 'matches': 0} for i, p in Constants.roles().items()} for k, v in
+        player_positions = {y: {r: 0 for i, r in roles().items()} for x, y in self.players.items()}
+        player_win_pos = {y: {r: 0 for i, r in roles().items()} for x, y in self.players.items()}
+        hero_positions = {k: {p: {'wins': 0, 'matches': 0} for i, p in roles().items()} for k, v in
                           self.heroes.items()}
         for mid, v in match_summary.items():
             if 'roles' in v:
@@ -242,7 +242,7 @@ class Parser:
         } for hero_name, value in ss], key=lambda l: l['name'])
 
         tier_dict = dict()
-        for pos_id, pos_n in Constants.roles().items():
+        for _, pos_n in roles().items():
             avg = {k: player_win_pos[v][pos_n] / player_positions[v][pos_n] for k, v in self.players.items()
                    if player_positions[v][pos_n] >= min_couple_matches}
             s = sorted(avg.items(), key=lambda e: e[1], reverse=True)
@@ -255,8 +255,8 @@ class Parser:
         couples_win = {b: {x: 0 for w, x in self.players.items()} for a, b in self.players.items()}
         couples_matches = {b: {x: 0 for w, x in self.players.items()} for a, b in self.players.items()}
         for mid, v in match_summary.items():
-            for p1, pid1 in self.players.items():
-                for p2, pid2 in self.players.items():
+            for _, pid1 in self.players.items():
+                for _, pid2 in self.players.items():
                     if pid1 in v['players'] and pid2 in v['players'] and pid1 != pid2:
                         couples_matches[pid1][pid2] += 1
                         if v['win']:
@@ -266,7 +266,7 @@ class Parser:
                 0 if couples_matches[x[0]][x[1]] == 0 else couples_win[x[0]][x[1]] / couples_matches[x[0]][x[1]]
                 for x in list(itertools.combinations(self.players.values(), 2))
         }
-        for p_name, pid in self.players.items():
+        for _, pid in self.players.items():
             self.player_pairs[pid] = []
         s = sorted(couples.items(), key=lambda e: e[1], reverse=True)
         for k, v in s:
@@ -317,7 +317,7 @@ class Parser:
                     elif parameter == 'purchase':
                         if rule == 'support_gold':
                             pch = dict()
-                            costs = Constants.item_cost()
+                            costs = item_cost()
                             lst = ['ward_observer', 'ward_sentry', 'dust', 'smoke_of_deceit', 'ward_dispenser', 'gem']
                             for i in lst:
                                 pch[i] = p[parameter][i] if i in p[parameter] and p[parameter][i] is not None else 0
@@ -374,7 +374,7 @@ class Parser:
     def get_matches(self, month=None, last_days=None, ranked_only=False):
         matches = dict()
         total_matches = {n: 0 for n, pid in self.players.items()}
-        for name, pid in self.players.items():
+        for name, _ in self.players.items():
             content = open('players/%s_matches.json' % name, 'r').read()
             obj = json.loads(content)            
             total_matches[name] = 0

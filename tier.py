@@ -70,7 +70,7 @@ class Tier:
         points = {k: 0 for k, v in players.items()}
         for table in tier_list:
             level = 0
-            for tier_level, tier_items in table.tiers.items():
+            for _, tier_items in table.tiers.items():
                 for ti in tier_items:
                     p = (3 - level) * table.weight
                     points[ti.name] += p
@@ -87,11 +87,11 @@ class Tier:
         medals = {k: [0, 0, 0] for k, v in players.items()}
         for table in tier_list:
             level = 0
-            for tier_level, tier_items in table.tiers.items():
+            for _, tier_items in table.tiers.items():
                 for ti in tier_items:
                     medals[ti.name][level] += 1
                 level += 1
-        for name, pid in players.items():
+        for name, _ in players.items():
             medals[name] = (medals[name][0], medals[name][1], medals[name][2])
 
         print('')

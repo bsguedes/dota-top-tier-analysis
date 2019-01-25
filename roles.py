@@ -1,5 +1,5 @@
 import operator
-from constants import Constants
+from constants import roles
 
 
 class Roles:
@@ -60,7 +60,7 @@ class Roles:
                 rest_of_players.remove(result_roles[pos])
             pos += 1
 
-        positions = {x: Constants.roles()[result_roles.index(x)+1] for x in result_roles if x > 9}
+        positions = {x: roles()[result_roles.index(x)+1] for x in result_roles if x > 9}
         return {'composition': composition, 'positions': positions}
 
     @staticmethod

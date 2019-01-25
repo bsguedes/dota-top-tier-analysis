@@ -2,7 +2,7 @@
 
 from category import Category
 from code import Parser
-from tier import *
+from tier import Tier, T
 import downloader
 from slides import Slides
 from popular_vote import PopularVotePnK2018
