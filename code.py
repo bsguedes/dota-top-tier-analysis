@@ -32,6 +32,7 @@ class Parser:
         self.compositions = []
         self.player_roles = {}
         self.player_heroes = {}
+        self.player_wins_by_hero = {}
         self.player_pairs = {}
         self.five_player_compositions = []
         self.hero_statistics = []
@@ -194,6 +195,10 @@ class Parser:
                      sum(pl.values())))
         self.player_heroes_in_match = player_hero_in_match
         self.player_heroes = players_heroes
+        for pid, v in phd.items():
+            for hid, s in v.items():
+                phd[pid][hid]['rating'] = rating(phd[pid][hid]['wins'], matches=phd[pid][hid]['matches'])
+        self.player_wins_by_hero = phd
 
         print('')
         five_player = dict()

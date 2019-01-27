@@ -172,7 +172,7 @@ if __name__ == '__main__':
             p_name = item['player']
             pid = players[p_name]
             roles = p.player_roles[pid]
-            player_heroes = p.player_heroes[pid]
+            player_heroes = p.player_wins_by_hero[pid]
             pairings = p.player_pairs[pid]
             s.add_player_slides(p_name, roles, player_heroes, pairings)
 
