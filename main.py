@@ -19,11 +19,11 @@ DOWNLOAD_PLAYERS = False
 
 parameters = {
     PNK: {
-        'min_matches': 2,
-        'min_couple_matches': 2,
-        'min_party_size': 2,
-        'full_party_matches': 2,
-        'min_matches_with_hero': 2
+        'min_matches': 30,
+        'min_couple_matches': 10,
+        'min_party_size': 4,
+        'full_party_matches': 5,
+        'min_matches_with_hero': 3
     },
     BLAZING_DOTA: {
         'min_matches': 10,
@@ -163,6 +163,8 @@ if __name__ == '__main__':
     s.add_most_played(p.most_played_heroes)
     s.add_win_rate_heroes(p.against_heroes, 'Versus')
     s.add_compositions(p.compositions)
+    s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES))
+    s.add_best_team_by_player(p.evaluate_best_team_by_hero_player(MIN_COUPLE_MATCHES/2))
 
     s.add_divider_slide("%s Players" % TEAM_NAME, 'Roles, Pairings and Most Played Heroes')
     for item in sorted(p.match_summary_by_team, key=lambda e: e['team_matches'], reverse=True):
