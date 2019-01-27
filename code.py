@@ -1,6 +1,5 @@
 # coding=utf-8
 
-import math
 import statistics
 import json
 import calendar
@@ -45,6 +44,45 @@ class Parser:
             content = open('matches/%i.json' % match_id, 'r', encoding='utf-8').read()
             matches[match_id] = json.loads(content)
         return matches
+
+    def evaluate_best_team_by_hero_player(self, min_matches):
+        role_dict = {}
+        result_dict = {}
+        inv_p = {v: k for k, v in self.players.items()}
+        for _, r in roles().items():
+            role_dict[r] = list()
+            for hero in self.hero_statistics:
+                for p in hero['played_by']:
+                    if p['roles'][r]['matches'] >= min_matches:
+                        role_dict[r].append({'player': p['id'], 'hero': hero['id'], 'data': p['roles'][r]})
+        for _, r in roles().items():
+            s = sorted(role_dict[r], key=lambda e: e['data']['rating'], reverse=True)
+            result_dict[r] = list()
+            for i in range(5):
+                m = s[i]
+                result_dict[r].append({'hero_id': m['hero'], 'hero_name': self.heroes[m['hero']],
+                                       'rating': m['data']['rating'],
+                                       'player_id': m['player'], 'player_name': inv_p[m['player']], 'role': r})
+        return result_dict
+
+    def evaluate_best_team_by_hero(self, min_matches):
+        role_dict = {}
+        result_dict = {}
+        for _, r in roles().items():
+            role_dict[r] = list()
+        for hero in self.hero_statistics:
+            for r in hero['roles']:
+                rtg = rating(r['wins'], r['matches'] - r['wins'])
+                if rtg > 0 and r['matches'] >= min_matches:
+                    role_dict[r['role']].append({'hero': hero['id'], 'rating': rtg})
+        for _, r in roles().items():
+            s = sorted(role_dict[r], key=lambda e: e['rating'], reverse=True)
+            result_dict[r] = list()
+            for i in range(5):
+                m = s[i]
+                result_dict[r].append({'hero_id': m['hero'], 'hero_name': self.heroes[m['hero']], 'rating': m['rating'],
+                                       'role': r})
+        return result_dict
 
     def identify_heroes(self, matches, min_couple_matches=10):
         hs = open('data/heroes.json', 'r', encoding='utf-8').read()
@@ -204,14 +242,19 @@ class Parser:
         player_win_pos = {y: {r: 0 for i, r in roles().items()} for x, y in self.players.items()}
         hero_positions = {k: {p: {'wins': 0, 'matches': 0} for i, p in roles().items()} for k, v in
                           self.heroes.items()}
+        player_hero_position = {r: {(a, b): {'wins': 0, 'matches': 0}
+                                for _, a in self.players.items() for b, _ in self.heroes.items()
+                                    } for _, r in roles().items()}
         for mid, v in match_summary.items():
             if 'roles' in v:
                 positions = v['roles']['positions']
                 for pid, pos in positions.items():
                     player_positions[pid][pos] += 1
                     hero_positions[player_hero_in_match[mid][pid]][pos]['matches'] += 1
+                    player_hero_position[pos][(pid, player_hero_in_match[mid][pid])]['matches'] += 1
                     if v['win']:
                         hero_positions[player_hero_in_match[mid][pid]][pos]['wins'] += 1
+                        player_hero_position[pos][(pid, player_hero_in_match[mid][pid])]['wins'] += 1
                         player_win_pos[pid][pos] += 1
         for pid, v in player_positions.items():
             pp = player_positions[pid]
@@ -230,15 +273,20 @@ class Parser:
             'roles': [{'role': r, 'matches': v['matches'], 'wins': v['wins'],
                        'wr': 0 if v['matches'] == 0 else 100 * v['wins'] / v['matches']} for r, v in
                       hero_positions[inv_h[hero_name]].items()],
-            'played_by': sorted([{'name': p_name, 'matches': phd[pid][inv_h[hero_name]]['matches'],
+            'played_by': sorted([{'name': p_name, 'id': pid, 'matches': phd[pid][inv_h[hero_name]]['matches'],
                                   'wins': phd[pid][inv_h[hero_name]]['wins'],
+                                  'roles': {r: {'wins': player_hero_position[r][(pid, inv_h[hero_name])]['wins'],
+                                                'matches': player_hero_position[r][(pid, inv_h[hero_name])]['matches'],
+                                                'rating': rating(
+                                                    player_hero_position[r][(pid, inv_h[hero_name])]['wins'],
+                                                    matches=player_hero_position[r][(pid, inv_h[hero_name])][
+                                                        'matches'])} for _, r in roles().items()},
+                                  'rating': rating(phd[pid][inv_h[hero_name]]['wins'],
+                                                   matches=phd[pid][inv_h[hero_name]]['matches']),
                                   'wr': (100 * phd[pid][inv_h[hero_name]]['wins'] / phd[pid][inv_h[hero_name]][
-                                      'matches'] if
-                                         phd[pid][inv_h[hero_name]][
-                                             'matches'] > 0
-                                         else 0)}
+                                      'matches'] if phd[pid][inv_h[hero_name]]['matches'] > 0 else 0)}
                                  for p_name, pid in self.players.items() if phd[pid][inv_h[hero_name]]['matches'] > 0],
-                                key=lambda z: (z['matches'], z['wins']), reverse=True)
+                                key=lambda z: (z['rating'], z['wins']), reverse=True)
         } for hero_name, value in ss], key=lambda l: l['name'])
 
         tier_dict = dict()
