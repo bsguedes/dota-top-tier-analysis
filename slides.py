@@ -172,13 +172,16 @@ class Slides:
         p = tf.add_paragraph()
         p.text = 'For best pairings and best players in roles, a minimum of %i matches.' % min_couples_matches
         p.level = 2
+        p.font.size = Pt(20)
         p = tf.add_paragraph()
         p.text = 'Best team per hero on each role requires a minimum of %i matches for that hero.' % min_couples_matches
         p.level = 2
+        p.font.size = Pt(20)
         p = tf.add_paragraph()
         p.text = 'Best team per hero and player on each role requires a minimum of %i matches.' \
                  % (min_couples_matches / 2)
         p.level = 2
+        p.font.size = Pt(20)
         p = tf.add_paragraph()
         p.text = 'The list of players is: %s' % (', '.join(self.players.keys()))
         p.level = 1
