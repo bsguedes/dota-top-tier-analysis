@@ -413,7 +413,7 @@ class Slides:
             tf.paragraphs[0].font.bold = True
             tf.paragraphs[0].font.size = Pt(18)
             tf.paragraphs[0].alignment = PP_ALIGN.CENTER
-            for j in range(1, 5):
+            for j in range(1, min(len(best_team[r]), 5)):
                 pic_path = 'data/heroes/%s.jpg' % best_team[r][j]['hero_id']
                 slide.shapes.add_picture(pic_path, Inches(0.5 + 1.8 * i), Inches(4.5 + (j - 1) * 0.7),
                                          height=Inches(0.5))
@@ -464,7 +464,7 @@ class Slides:
             tf.paragraphs[0].font.size = Pt(24)
             tf.paragraphs[0].alignment = PP_ALIGN.CENTER
 
-            for j in range(1, 5):
+            for j in range(1, min(len(best_team[r]), 5)):
                 pic_path = 'data/heroes/%s.jpg' % best_team[r][j]['hero_id']
                 slide.shapes.add_picture(pic_path, Inches(0.5 + 1.8 * i), Inches(5.6 + (j - 1) * 0.45),
                                          height=Inches(0.35))

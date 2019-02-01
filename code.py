@@ -59,7 +59,7 @@ class Parser:
         for _, r in roles().items():
             s = sorted(role_dict[r], key=lambda e: e['data']['rating'], reverse=True)
             result_dict[r] = list()
-            for i in range(5):
+            for i in range(min(5, len(s))):
                 m = s[i]
                 result_dict[r].append({'hero_id': m['hero'], 'hero_name': self.heroes[m['hero']],
                                        'rating': m['data']['rating'],
@@ -79,7 +79,7 @@ class Parser:
         for _, r in roles().items():
             s = sorted(role_dict[r], key=lambda e: e['rating'], reverse=True)
             result_dict[r] = list()
-            for i in range(5):
+            for i in range(min(5, len(s))):
                 m = s[i]
                 result_dict[r].append({'hero_id': m['hero'], 'hero_name': self.heroes[m['hero']], 'rating': m['rating'],
                                        'role': r})
