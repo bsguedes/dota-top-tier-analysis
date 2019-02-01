@@ -28,5 +28,5 @@ def rating(win, loss=None, matches=None):
         return 0
     wr = win / (win + loss)
     ex = 1 - math.exp(-(win + loss)/2)
-    sg = 1 / (1 + math.exp(-(win-loss)))
-    return 9 * wr * ex + sg
+    sg = 1 / (1 + math.exp(-(win-loss)/3))
+    return 3 * wr * ex + 7 * sg

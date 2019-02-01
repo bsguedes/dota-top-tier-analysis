@@ -19,16 +19,16 @@ DOWNLOAD_PLAYERS = False
 
 parameters = {
     PNK: {
-        'min_matches': 5,
+        'min_matches': 4,
         'min_couple_matches': 3,
-        'min_party_size': 2,
+        'min_party_size': 4,
         'full_party_matches': 2,
         'min_matches_with_hero': 2
     },
     BLAZING_DOTA: {
-        'min_matches': 10,
-        'min_couple_matches': 5,
-        'min_party_size': 2,
+        'min_matches': 4,
+        'min_couple_matches': 4,
+        'min_party_size': 4,
         'full_party_matches': 2,
         'min_matches_with_hero': 2
     }
@@ -62,7 +62,8 @@ player_list = {
         'Alpiona': 30320098,
         'Fallenzão': 396690444,
         'Maionese': 35304398,
-        'Kiddy': 32757138
+        'Kiddy': 32757138,
+        'Roshan': 151913285
     },
     BLAZING_DOTA: {
         'Pogo': 121639063,
@@ -176,8 +177,9 @@ if __name__ == '__main__':
             pairings = p.player_pairs[pid]
             s.add_player_slides(p_name, roles, player_heroes, pairings)
 
-    s.add_divider_slide("Individual Hero Statistics", 'Positions, Win Rate and Best Players at each Hero')
-    s.add_heroes(p.hero_statistics, MIN_MATCHES_WITH_HERO)
+    if MONTH is None:
+        s.add_divider_slide("Individual Hero Statistics", 'Positions, Win Rate and Best Players at each Hero')
+        s.add_heroes(p.hero_statistics, MIN_MATCHES_WITH_HERO)
 
     s.add_divider_slide("%s Technical Categories" % TEAM_NAME, 'Averages and Maximum for many statistics')
     tiers = []

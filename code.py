@@ -214,14 +214,14 @@ class Parser:
                 five_player[comp_sum]['matches'] += 1
                 if v['win']:
                     five_player[comp_sum]['wins'] += 1
-        avg = {k: v['wins'] / v['matches'] for k, v in five_player.items() if v['matches'] >= self.full_party_matches}
-        s = sorted(avg.items(), key=lambda e: e[1], reverse=True)
-        for k, v in s:
-            five_player[k]['wr'] = v * 100
-            self.five_player_compositions.append(five_player[k])
-            print('5-player team: %s win rate: %.2f %% (%i matches)'
-                  % (five_player[k]['players'], v * 100,
-                     five_player[k]['matches']))
+        avg = [{'key': k, 'wr': v['wins'] / v['matches'], 'matches': v['matches']} for k, v in five_player.items() if
+               v['matches'] >= self.full_party_matches]
+        s = sorted(avg, key=lambda e: (e['wr'], e['matches']), reverse=True)
+        for k in s:
+            five_player[k['key']]['wr'] = k['wr'] * 100
+            self.five_player_compositions.append(five_player[k['key']])
+            print('5-player team: %s win rate: %.2f %% (%i matches)' % (
+                   five_player[k['key']]['players'], k['wr'] * 100, k['matches']))
 
         print('')
         comp_matches = dict()
