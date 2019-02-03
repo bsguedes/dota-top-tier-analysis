@@ -128,7 +128,8 @@ class Slides:
         keys = ['role', 'matches', 'wr']
         formats = ['%s', '%s', '%.2f %%']
         widths = [1.5, 1, 1]
-        Slides.create_table(slide, player_roles, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(3.5), 1, 12, 15,
+        Slides.create_table(slide, player_roles, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(3.5), 1, 12,
+                            15,
                             widths=widths)
 
         heroes = sorted(heroes.items(), key=lambda e: e[1]['rating'], reverse=True)
@@ -340,32 +341,71 @@ class Slides:
     def add_tier_slides(self, tier, category):
         texts = tier.list_to_print()
 
-        slide = self.add_slide(5, 255, 255, 224)
-        title_shape = slide.shapes.title
-        title_shape.text = texts[1]
-        scores = tier.get_top_three()
-        self.add_top_three_table(scores, slide, tier.is_max, category, Inches(0.7), Inches(1.8))
-
-        if len(tier.scores_array) > 0:
-            slide = self.add_slide(5, 255, 255, 224)
-            title_shape = slide.shapes.title
-            title_shape.text = texts[1]
-            chart_data = CategoryChartData()
-            chart_data.categories = [x.name for x in tier.scores_array]
-            chart_data.add_series(texts[1], [x.score for x in tier.scores_array])
-            x, y, cx, cy = Inches(1), Inches(1.6), Inches(8), Inches(5)
-            slide.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, x, y, cx, cy, chart_data)
-
         slide = self.add_slide(6, 255, 255, 224)
         left = top = width = height = Inches(0.4)
         txt_box = slide.shapes.add_textbox(left, top, width, height)
         tf = txt_box.text_frame
-        tf.text = "%s - weights %s points" % (texts[1], tier.weight)
+        tf.text = texts[1]
         tf.paragraphs[0].font.bold = True
+        tf.paragraphs[0].font.size = Pt(22)
+
+        txt_box = slide.shapes.add_textbox(Inches(8.5), top, width, height)
+        tf = txt_box.text_frame
+        tf.text = "Tier points: %s" % tier.weight
+        tf.paragraphs[0].font.size = Pt(14)
+
+        scores = tier.get_top_three()
+        self.add_top_three_small_table(scores, slide, tier.is_max, category, Inches(0.3), Inches(1))
+
+        if len(tier.scores_array) > 0:
+            chart_data = CategoryChartData()
+            chart_data.categories = [x.name for x in tier.scores_array]
+            chart_data.add_series(texts[1], [x.score for x in tier.scores_array])
+            x, y, cx, cy = Inches(0.1), Inches(2.8), Inches(5), Inches(4.7)
+            chart = slide.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, x, y, cx, cy, chart_data).chart
+            category_axis = chart.category_axis
+            category_axis.tick_labels.font.size = Pt(12)
+            value_axis = chart.value_axis
+            tick_labels = value_axis.tick_labels
+            tick_labels.font.size = Pt(12)
+
+        txt_box = slide.shapes.add_textbox(Inches(5.2), Inches(0.6), width, height)
+        tf = txt_box.text_frame
         for i in range(2, len(texts)):
             p = tf.add_paragraph()
             p.text = texts[i]
+            p.font.size = Pt(10)
+            if texts[i].startswith("Tier"):
+                p.font.bold = True
+
+    def add_top_three_small_table(self, scores, slide, is_max, category, left, top):
+        pos = [(0, '1'), (1, '2'), (2, '3')]
+        spacing = Inches(1.6)
+        val = min(3, len(scores))
+        for i, name in pos[0:val]:
+            tx_box = slide.shapes.add_textbox(left + spacing * i, top, spacing, Inches(0.7))
+            tf = tx_box.text_frame
+            tf.text = scores[i].name
+            p = tf.paragraphs[0]
+            p.font.size = Pt(18)
+            p.font.bold = True
+            p.alignment = PP_ALIGN.CENTER
+
+            tx_box = slide.shapes.add_textbox(left + spacing * i, top + Inches(1.3), spacing, Inches(0.7))
+            tf = tx_box.text_frame
+            if not isinstance(scores[i].score, str):
+                fmt = (category.max_format if is_max else category.avg_format) % scores[i].score
+            else:
+                fmt = scores[i].score
+            tf.text = "%s %s" % (fmt, category.unit)
+            p = tf.paragraphs[0]
             p.font.size = Pt(14)
+            p.alignment = PP_ALIGN.CENTER
+
+            pic_path = 'data/pics/%s.jpg' % self.players[scores[i].name]
+            if os.path.isfile(pic_path):
+                slide.shapes.add_picture(pic_path, left + Inches(0.4) + spacing * i, top + Inches(0.45),
+                                         height=Inches(0.8))
 
     def add_top_three_table(self, scores, slide, is_max, category, left, top):
         pos = [(0, '1st'), (1, '2nd'), (2, '3rd')]
@@ -545,7 +585,7 @@ class Slides:
             tx_box = slide.shapes.add_textbox(Inches(8), Inches(1.8), Inches(2), Inches(0.5))
             tf = tx_box.text_frame
             tf.text = "Vencedores"
-            for i in range(0,len(popular_vote_category['winner'])):
+            for i in range(0, len(popular_vote_category['winner'])):
                 pic_path = 'data/pics/%s.jpg' % self.players[popular_vote_category['winner'][i]]
                 if os.path.isfile(pic_path):
                     slide.shapes.add_picture(pic_path, Inches(8.3), Inches(2.3 + 1.55 * i), height=Inches(1))
