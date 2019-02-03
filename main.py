@@ -14,8 +14,10 @@ PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
 YEARS = [2019]
-MONTH = 1
+MONTH = None
 DOWNLOAD_PLAYERS = False
+
+# PnK monthly parameters: 4, 3, 4, 2, 2
 
 parameters = {
     PNK: {
@@ -161,8 +163,9 @@ if __name__ == '__main__':
     s.add_match_summary_by_player(p.match_summary_by_player, p.match_summary_by_team)
     s.add_comebacks_throws(p.top_comebacks, p.top_throws)
     s.add_win_rate_heroes(p.with_heroes, 'Playing')
-    s.add_most_played(p.most_played_heroes)
-    s.add_win_rate_heroes(p.against_heroes, 'Versus')
+    s.add_most_played([v for v in p.most_played_heroes if v['matches'] > 0], True)
+    s.add_most_played([v for v in p.most_played_heroes if v['matches'] == 0], False)
+    s.add_win_rate_heroes(p.against_heroes, 'Against')
     s.add_compositions(p.compositions)
     s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES))
     s.add_best_team_by_player(p.evaluate_best_team_by_hero_player(MIN_COUPLE_MATCHES/2))
@@ -208,8 +211,7 @@ if __name__ == '__main__':
                 tiers.append(tier_avg)
                 s.add_tier_slides(tier_avg, c)
             if c.has_max:
-                st = 'Maximum' if c.reverse else 'Minimum'
-                tier_max = Tier(c.weight, res_max, '%s %s in a single match' % (st, cat_name), reverse=c.reverse,
+                tier_max = Tier(c.weight, res_max, 'Maximum %s in a single match' % cat_name, reverse=c.reverse,
                                 is_max=True)
                 tier_max.print()
                 tiers.append(tier_max)

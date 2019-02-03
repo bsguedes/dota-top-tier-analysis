@@ -148,7 +148,8 @@ class Parser:
                   % (100 * v, self.team_name, k, wr_versus[inv_h[k]]['matches']))
         self.against_heroes = sorted([
             {'id': inv_h[k], 'name': k, 'matches': wr_versus[inv_h[k]]['matches'], 'wins': wr_versus[inv_h[k]]['wins'],
-             'wr': 100 * v} for k, v in s], key=lambda z: (-z['wr'], -z['wins'], z['matches']))
+             'wr': 100 * v, 'rating': rating(wr_versus[inv_h[k]]['wins'], matches=wr_versus[inv_h[k]]['matches'])} for
+            k, v in s], key=lambda z: (-z['rating'], -z['wr'], -z['wins'], z['matches']))
 
         print('')
         wr_with = {k: {'matches': 0, 'wins': 0} for k, v in self.heroes.items()}
@@ -165,7 +166,8 @@ class Parser:
                   % (100 * v, self.team_name, k, wr_with[inv_h[k]]['matches']))
         self.with_heroes = sorted([
             {'id': inv_h[k], 'name': k, 'matches': wr_with[inv_h[k]]['matches'], 'wins': wr_with[inv_h[k]]['wins'],
-             'wr': 100 * v} for k, v in ss], key=lambda z: (-z['wr'], -z['wins'], z['matches']))
+             'wr': 100 * v, 'rating': rating(wr_with[inv_h[k]]['wins'], matches=wr_with[inv_h[k]]['matches'])} for k, v
+            in ss], key=lambda z: (-z['rating'], -z['wr'], -z['wins'], z['matches']))
 
         print('')
         matches = {h: v['matches'] for h, v in wr_with.items()}
