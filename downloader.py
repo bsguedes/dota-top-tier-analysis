@@ -41,8 +41,8 @@ def download_player_data(players, override=True):
 def download_matches(unique_matches, override=False):
     print('')
     print('Found %s matches' % len(unique_matches))
-    if not os.path.exists('players'):
-        os.makedirs('players')
+    if not os.path.exists('matches'):
+        os.makedirs('matches')
     for match_id in unique_matches:
         file_name = 'matches/%s.json' % match_id
         if override or not os.path.isfile(file_name):

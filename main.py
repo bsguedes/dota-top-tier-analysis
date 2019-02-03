@@ -2,7 +2,7 @@
 
 from category import Category
 from code import Parser
-from tier import *
+from tier import Tier, T
 import downloader
 from slides import Slides
 from popular_vote import PopularVotePnK2018
@@ -20,16 +20,16 @@ DOWNLOAD_PLAYERS = False
 
 parameters = {
     PNK: {
-        'min_matches': 2,
-        'min_couple_matches': 2,
-        'min_party_size': 2,
+        'min_matches': 4,
+        'min_couple_matches': 3,
+        'min_party_size': 4,
         'full_party_matches': 2,
         'min_matches_with_hero': 2
     },
     BLAZING_DOTA: {
-        'min_matches': 10,
-        'min_couple_matches': 5,
-        'min_party_size': 2,
+        'min_matches': 4,
+        'min_couple_matches': 4,
+        'min_party_size': 4,
         'full_party_matches': 2,
         'min_matches_with_hero': 2
     }
@@ -63,7 +63,8 @@ player_list = {
         'Alpiona': 30320098,
         'Fallenzão': 396690444,
         'Maionese': 35304398,
-        'Kiddy': 32757138
+        'Kiddy': 32757138,
+        'Roshan': 151913285
     },
     BLAZING_DOTA: {
         'Pogo': 121639063,
@@ -109,6 +110,7 @@ categories = [
     Category(5, 'rune_pickups', unit='runes', text='runes picked up'),
     Category(8, 'obs_placed', unit='wards', text='observer wards placed'),
     Category(8, 'sen_placed', unit='sentries', text='sentry wards placed'),
+    Category(5, 'purchase', unit='bkbs', text='BKBs purchased', rule='black_king_bar', has_max=False),
     Category(2, 'purchase', unit='dusts', text='dusts purchased', rule='dust'),
     Category(2, 'purchase', unit='smokes', text='smokes purchased', rule='smoke_of_deceit'),
     Category(2, 'purchase', unit='gems', text='gems of true sight purchased', rule='gem'),
@@ -165,6 +167,8 @@ if __name__ == '__main__':
     s.add_most_played(p.most_played_heroes)
     s.add_win_rate_heroes(p.against_heroes, 'Versus')
     s.add_compositions(p.compositions)
+    s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES))
+    s.add_best_team_by_player(p.evaluate_best_team_by_hero_player(MIN_COUPLE_MATCHES/2))
 
     s.add_divider_slide("%s Players" % TEAM_NAME, 'Roles, Pairings and Most Played Heroes')
     for item in sorted(p.match_summary_by_team, key=lambda e: e['team_matches'], reverse=True):
@@ -172,12 +176,13 @@ if __name__ == '__main__':
             p_name = item['player']
             pid = players[p_name]
             roles = p.player_roles[pid]
-            player_heroes = p.player_heroes[pid]
+            player_heroes = p.player_wins_by_hero[pid]
             pairings = p.player_pairs[pid]
             s.add_player_slides(p_name, roles, player_heroes, pairings)
 
-    s.add_divider_slide("Individual Hero Statistics", 'Positions, Win Rate and Best Players at each Hero')
-    s.add_heroes(p.hero_statistics, MIN_MATCHES_WITH_HERO)
+    if MONTH is None:
+        s.add_divider_slide("Individual Hero Statistics", 'Positions, Win Rate and Best Players at each Hero')
+        s.add_heroes(p.hero_statistics, MIN_MATCHES_WITH_HERO)
 
     s.add_divider_slide("%s Technical Categories" % TEAM_NAME, 'Averages and Maximum for many statistics')
     tiers = []

@@ -25,8 +25,7 @@ class Tier:
 
     def get_tiers(self):
         values = [a.number for a in self.scores_array]
-        diff = np.array([abs(values[i + 1] - values[i]) for i in range(len(self.scores_array) - 1)])
-        print(diff)
+        diff = np.array([abs(values[i + 1] - values[i]) for i in range(len(self.scores_array) - 1)])        
         d1 = np.argmax(diff)
         diff[d1] = 0
         d2 = np.argmax(diff)
@@ -71,7 +70,7 @@ class Tier:
         points = {k: 0 for k, v in players.items()}
         for table in tier_list:
             level = 0
-            for tier_level, tier_items in table.tiers.items():
+            for _, tier_items in table.tiers.items():
                 for ti in tier_items:
                     p = (3 - level) * table.weight
                     points[ti.name] += p
@@ -88,11 +87,11 @@ class Tier:
         medals = {k: [0, 0, 0] for k, v in players.items()}
         for table in tier_list:
             level = 0
-            for tier_level, tier_items in table.tiers.items():
+            for _, tier_items in table.tiers.items():
                 for ti in tier_items:
                     medals[ti.name][level] += 1
                 level += 1
-        for name, pid in players.items():
+        for name, _ in players.items():
             medals[name] = (medals[name][0], medals[name][1], medals[name][2])
 
         print('')
