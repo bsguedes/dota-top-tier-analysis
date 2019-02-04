@@ -104,23 +104,39 @@ class Slides:
                 Slides.create_table(slide, hero['played_by'], headers, keys, formats, Inches(4.5), Inches(1.5),
                                     Inches(5), 1, 11, 15, widths=widths)
 
-    def add_player_slides(self, player_name, player_roles, heroes, pairs):
+    def add_player_slides(self, desc):
         slide = self.add_slide(5, 255, 229, 204)
         title_shape = slide.shapes.title
-        title_shape.text = '%s' % player_name
+        title_shape.text = desc['name']
         title_shape.text_frame.paragraphs[0].alignment = PP_ALIGN.LEFT
 
         tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.35), Inches(1.5), Inches(0.5))
         tf = tx_box.text_frame
         p = tf.paragraphs[0]
-        p.text = '%s played %s distinct heroes' % (player_name, len([x for x in heroes.values() if x['matches'] > 0]))
+        p.text = '%s played %s distinct heroes' % (
+            desc['name'], len([x for x in desc['heroes'].values() if x['matches'] > 0]))
 
         tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.7), Inches(1.5), Inches(0.5))
         tf = tx_box.text_frame
         p = tf.paragraphs[0]
-        p.text = '%s played %s matches' % (player_name, sum([x['matches'] for x in heroes.values()]))
+        p.text = '%s played %s matches' % (desc['name'], desc['matches'])
 
-        pic_path = 'data/pics/%s.jpg' % self.players[player_name]
+        tx_box = slide.shapes.add_textbox(Inches(6), Inches(0.3), Inches(1.75), Inches(0.5))
+        tf = tx_box.text_frame
+        p = tf.paragraphs[0]
+        p.text = '%.1f' % desc['rating']
+        p.font.bold = True
+        p.font.size = Pt(28)
+        p.alignment = PP_ALIGN.RIGHT
+
+        tx_box = slide.shapes.add_textbox(Inches(6), Inches(0.8), Inches(1.75), Inches(0.5))
+        tf = tx_box.text_frame
+        p = tf.paragraphs[0]
+        p.text = '%.2f %%' % (100 * desc['wins'] / desc['matches'])
+        p.font.size = Pt(22)
+        p.alignment = PP_ALIGN.RIGHT
+
+        pic_path = 'data/pics/%s.jpg' % desc['id']
         if os.path.isfile(pic_path):
             slide.shapes.add_picture(pic_path, Inches(8), Inches(0.2), height=Inches(1.1))
 
@@ -128,11 +144,11 @@ class Slides:
         keys = ['role', 'matches', 'wr']
         formats = ['%s', '%s', '%.2f %%']
         widths = [1.5, 1, 1]
-        Slides.create_table(slide, player_roles, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(3.5), 1, 12,
+        Slides.create_table(slide, desc['roles'], headers, keys, formats, Inches(0.5), Inches(1.5), Inches(3.5), 1, 12,
                             15,
                             widths=widths)
 
-        heroes = sorted(heroes.items(), key=lambda e: e[1]['rating'], reverse=True)
+        heroes = sorted(desc['heroes'].items(), key=lambda e: e[1]['rating'], reverse=True)
         for i in range(4):
             if heroes[i][1]['matches'] > 0:
                 pic_path = 'data/heroes/%s.jpg' % heroes[i][0]
@@ -152,8 +168,8 @@ class Slides:
         keys = ['name', 'matches', 'wins', 'wr']
         formats = ['%s', '%s', '%s', '%.2f %%']
         widths = [1.5, 1, 1, 1]
-        Slides.create_table(slide, pairs, headers, keys, formats, Inches(4.5), Inches(1.5), Inches(4.5), 1, 11, 15,
-                            widths=widths)
+        Slides.create_table(slide, desc['pairings'], headers, keys, formats, Inches(4.5), Inches(1.5), Inches(4.5), 1,
+                            11, 15, widths=widths)
 
     def add_intro_slide(self, match_count, min_player_count, min_matches, min_couples_matches):
         slide = self.add_slide(1, 152, 251, 152)

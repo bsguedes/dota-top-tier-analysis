@@ -16,6 +16,7 @@ TEAM_NAME = PNK
 YEARS = [2019]
 MONTH = None
 DOWNLOAD_PLAYERS = False
+PRINT_TIERS = False
 
 # PnK monthly parameters: 4, 3, 4, 2, 2
 
@@ -152,9 +153,30 @@ if __name__ == '__main__':
     downloader.download_player_data(players, override=DOWNLOAD_PLAYERS)
     unique_matches = p.get_matches(month=MONTH, ranked_only=False)
     downloader.download_matches(unique_matches)
-
     matches_json = Parser.load_matches(unique_matches)
     tier_positions = p.identify_heroes(matches_json, min_couple_matches=MIN_COUPLE_MATCHES)
+    tiers = []
+    for c in categories:
+        if c.rule == 'position':
+            tier = Tier(c.weight, tier_positions[c.parameter], 'Win rate as %s in %s matches'
+                        % (c.parameter, TEAM_NAME))
+            tiers.append((tier, c))
+        elif c.rule == 'versatility':
+            tier = Tier(c.weight, p.player_versatility(), 'Versatility in %s matches' % TEAM_NAME)
+            tiers.append((tier, c))
+        else:
+            res_avg, res_max = p.stat_counter(matches_json, c.parameter, text=c.text, unit=c.unit, tf=c.transform,
+                                              max_fmt=c.max_format, avg_fmt=c.avg_format,
+                                              reverse=c.reverse, has_max=c.has_max, rule=c.rule, has_avg=c.has_avg)
+            cat_name = c.text if c.text is not None else c.parameter
+            if c.has_avg:
+                tier_avg = Tier(c.weight, res_avg, 'Average %s in %s matches' % (cat_name, TEAM_NAME),
+                                reverse=c.reverse)
+                tiers.append((tier_avg, c))
+            if c.has_max:
+                tier_max = Tier(c.weight, res_max, 'Maximum %s in a single match' % cat_name, reverse=c.reverse,
+                                is_max=True)
+                tiers.append((tier_max, c))
 
     s.add_divider_slide("%s General Statistics" % TEAM_NAME, 'Win Rate, Comebacks, Throws, Heroes, Compositions, Pairs')
     s.add_intro_slide(len(unique_matches), MIN_PARTY_SIZE, MIN_MATCHES, MIN_COUPLE_MATCHES)
@@ -171,55 +193,22 @@ if __name__ == '__main__':
     s.add_best_team_by_player(p.evaluate_best_team_by_hero_player(MIN_COUPLE_MATCHES/2))
 
     s.add_divider_slide("%s Players" % TEAM_NAME, 'Roles, Pairings and Most Played Heroes')
-    for item in sorted(p.match_summary_by_team, key=lambda e: e['team_matches'], reverse=True):
-        if item['team_matches'] > 0:
-            p_name = item['player']
-            pid = players[p_name]
-            roles = p.player_roles[pid]
-            player_heroes = p.player_wins_by_hero[pid]
-            pairings = p.player_pairs[pid]
-            s.add_player_slides(p_name, roles, player_heroes, pairings)
+    for item in sorted(p.player_descriptor, key=lambda e: e['rating'], reverse=True):
+        if item['matches'] > 0:
+            s.add_player_slides(item)
+
+    s.add_divider_slide("%s Technical Categories" % TEAM_NAME, 'Averages and Maximum for many statistics')
+    for tier, category in tiers:
+        if PRINT_TIERS:
+            tier.print()
+        s.add_tier_slides(tier, category)
+    medals = Tier.show_results(players, [t for t, c in tiers])
+    points = Tier.show_results_weights(players, [t for t, c in tiers])
+    s.add_results_slides(medals, points)
 
     if MONTH is None:
         s.add_divider_slide("Individual Hero Statistics", 'Positions, Win Rate and Best Players at each Hero')
         s.add_heroes(p.hero_statistics, MIN_MATCHES_WITH_HERO)
-
-    s.add_divider_slide("%s Technical Categories" % TEAM_NAME, 'Averages and Maximum for many statistics')
-    tiers = []
-
-    for c in categories:
-        if c.rule == 'position':
-            tier = Tier(c.weight, tier_positions[c.parameter], 'Win rate as %s in %s matches'
-                        % (c.parameter, TEAM_NAME))
-            tier.print()
-            tiers.append(tier)
-            s.add_tier_slides(tier, c)
-        elif c.rule == 'versatility':
-            tier = Tier(c.weight, p.player_versatility(), 'Versatility in %s matches' % TEAM_NAME)
-            tier.print()
-            tiers.append(tier)
-            s.add_tier_slides(tier, c)
-        else:
-            res_avg, res_max = p.stat_counter(matches_json, c.parameter, text=c.text, unit=c.unit, tf=c.transform,
-                                              max_fmt=c.max_format, avg_fmt=c.avg_format,
-                                              reverse=c.reverse, has_max=c.has_max, rule=c.rule, has_avg=c.has_avg)
-            cat_name = c.text if c.text is not None else c.parameter
-            if c.has_avg:
-                tier_avg = Tier(c.weight, res_avg, 'Average %s in %s matches' % (cat_name, TEAM_NAME),
-                                reverse=c.reverse)
-                tier_avg.print()
-                tiers.append(tier_avg)
-                s.add_tier_slides(tier_avg, c)
-            if c.has_max:
-                tier_max = Tier(c.weight, res_max, 'Maximum %s in a single match' % cat_name, reverse=c.reverse,
-                                is_max=True)
-                tier_max.print()
-                tiers.append(tier_max)
-                s.add_tier_slides(tier_max, c)
-
-    medals = Tier.show_results(players, tiers)
-    points = Tier.show_results_weights(players, tiers)
-    s.add_results_slides(medals, points)
 
     if popular_vote is not None:
         s.add_divider_slide("%s Popular Vote" % TEAM_NAME, popular_vote.message)

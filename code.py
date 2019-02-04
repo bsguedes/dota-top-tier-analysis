@@ -37,6 +37,7 @@ class Parser:
         self.five_player_compositions = []
         self.hero_statistics = []
         self.player_heroes_in_match = {}
+        self.player_descriptor = []
 
     @staticmethod
     def load_matches(unique_matches):
@@ -73,7 +74,7 @@ class Parser:
             role_dict[r] = list()
         for hero in self.hero_statistics:
             for r in hero['roles']:
-                rtg = rating(r['wins'], r['matches'] - r['wins'])
+                rtg = rating(r['wins'], matches=r['matches'])
                 if rtg > 0 and r['matches'] >= min_matches:
                     role_dict[r['role']].append({'hero': hero['id'], 'rating': rtg})
         for _, r in roles().items():
@@ -115,25 +116,17 @@ class Parser:
         self.win_rate = 100 * len([x for x, y in match_summary.items() if y['win']]) / len(matches)
         print('%s Win Rate: %.2f %%' % (self.team_name, self.win_rate))
 
-        print('')
         list_comebacks = {m: v['comeback_throw'] for m, v in match_summary.items() if v['win'] > 0}
-        list_throws = {m: v['comeback_throw'] for m, v in match_summary.items() if v['win'] == 0}        
-        for k, v in sorted(list_comebacks.items(), key=lambda e: e[1], reverse=True)[:10]:            
-            print('%s came back from %s gold disadvantage in match id %i with team: %s'
-                  % (self.team_name, v, k, [x for x, y in self.players.items() if y in match_summary[k]['players']]))
+        list_throws = {m: v['comeback_throw'] for m, v in match_summary.items() if v['win'] == 0}
         self.top_comebacks = [
             {'match': m, 'gold': g,
              'players': ', '.join([x for x, y in self.players.items() if y in match_summary[m]['players']])}
             for m, g in sorted(list_comebacks.items(), key=lambda e: e[1], reverse=True)[:10]]
-        for k, v in sorted(list_throws.items(), key=lambda e: e[1], reverse=True)[:10]:            
-            print('%s threw a %s gold advantage in match id %i with team: %s'
-                  % (self.team_name, v, k, [x for x, y in self.players.items() if y in match_summary[k]['players']]))
         self.top_throws = [
             {'match': m, 'gold': g,
              'players': ', '.join([x for x, y in self.players.items() if y in match_summary[m]['players']])}
             for m, g in sorted(list_throws.items(), key=lambda e: e[1], reverse=True)[:10]]
 
-        print('')
         wr_versus = {k: {'matches': 0, 'wins': 0} for k, v in self.heroes.items()}
         for mid, v in match_summary.items():
             for enemy_hero in v['enemy_heroes']:
@@ -143,15 +136,11 @@ class Parser:
         avg = {v: 0 if wr_versus[k]['matches'] == 0 else wr_versus[k]['wins'] / wr_versus[k]['matches']
                for k, v in self.heroes.items()}
         s = sorted(avg.items(), key=lambda e: e[1], reverse=True)
-        for k, v in s:
-            print('%.2f %% %s win rate versus %s (%i matches)'
-                  % (100 * v, self.team_name, k, wr_versus[inv_h[k]]['matches']))
         self.against_heroes = sorted([
             {'id': inv_h[k], 'name': k, 'matches': wr_versus[inv_h[k]]['matches'], 'wins': wr_versus[inv_h[k]]['wins'],
              'wr': 100 * v, 'rating': rating(wr_versus[inv_h[k]]['wins'], matches=wr_versus[inv_h[k]]['matches'])} for
             k, v in s], key=lambda z: (-z['rating'], -z['wr'], -z['wins'], z['matches']))
 
-        print('')
         wr_with = {k: {'matches': 0, 'wins': 0} for k, v in self.heroes.items()}
         for mid, v in match_summary.items():
             for ally_hero in v['our_heroes']:
@@ -161,20 +150,13 @@ class Parser:
         avg = {v: 0 if wr_with[k]['matches'] == 0 else wr_with[k]['wins'] / wr_with[k]['matches']
                for k, v in self.heroes.items()}
         ss = sorted(avg.items(), key=lambda e: e[1], reverse=True)
-        for k, v in ss:
-            print('%.2f %% %s win rate playing %s (%i matches)'
-                  % (100 * v, self.team_name, k, wr_with[inv_h[k]]['matches']))
         self.with_heroes = sorted([
             {'id': inv_h[k], 'name': k, 'matches': wr_with[inv_h[k]]['matches'], 'wins': wr_with[inv_h[k]]['wins'],
              'wr': 100 * v, 'rating': rating(wr_with[inv_h[k]]['wins'], matches=wr_with[inv_h[k]]['matches'])} for k, v
             in ss], key=lambda z: (-z['rating'], -z['wr'], -z['wins'], z['matches']))
 
-        print('')
         matches = {h: v['matches'] for h, v in wr_with.items()}
         s = sorted(matches.items(), key=lambda e: e[1], reverse=True)
-        for k, v in s:
-            print('%s played %s for a total of %i matches'
-                  % (self.team_name, self.heroes[k], v))
         self.most_played_heroes = [{'id': k, 'name': self.heroes[k], 'matches': v} for k, v in s]
 
         print('')
@@ -332,9 +314,20 @@ class Parser:
                 self.player_pairs[self.players[k[1]]].append(
                     {'name': k[0], 'wins': couples_win[self.players[k[0]]][self.players[k[1]]], 'wr': 100 * v,
                      'matches': couples_matches[self.players[k[0]]][self.players[k[1]]]})
-                print('%.2f %% win rate for %s (%i wins in %i matches)'
-                      % (100 * v, k, couples_win[self.players[k[0]]][self.players[k[1]]],
-                         couples_matches[self.players[k[0]]][self.players[k[1]]]))
+
+        self.player_descriptor = [
+            {
+                'name': player_name,
+                'id': pid,
+                'roles': self.player_roles[pid],
+                'heroes': self.player_wins_by_hero[pid],
+                'pairings': self.player_pairs[pid],
+                'matches': sum([w['matches'] for h, w in self.player_wins_by_hero[pid].items()]),
+                'wins': sum([w['wins'] for h, w in self.player_wins_by_hero[pid].items()]),
+                'rating': rating(sum([w['wins'] for h, w in self.player_wins_by_hero[pid].items()]),
+                                 matches=sum([w['matches'] for h, w in self.player_wins_by_hero[pid].items()]))
+            } for player_name, pid in self.players.items()]
+
         return tier_dict
 
     def stat_counter(self, matches, parameter, reverse=True, has_avg=True, unit=None, max_fmt=None, avg_fmt=None,
