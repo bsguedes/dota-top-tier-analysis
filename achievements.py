@@ -146,32 +146,32 @@ class AchievementBase:
     def get_achievements(self):
         return self.achievement_list
 
-    def append_achievement(self, achievement):
+    def add_ach(self, achievement):
         self.achievement_list.append(achievement)
 
 
 class PnKAchievements(AchievementBase):
     def __init__(self, matches):
         AchievementBase.__init__(self, matches)
-        self.append_achievement(WinWithPlayerAchievement('Toxic Couple', ['Baco', 'Alidio']))
-        self.append_achievement(WinWithPlayerAchievement('Forever Archon', ['Scrider', 'Older', 'tchepo']))
-        self.append_achievement(WinWithPlayerAchievement('Feldmann Brothers', ['Lotus', 'Pringles']))
-        self.append_achievement(WinWithoutPlayerAchievement('Cap is missing!', 'Zé'))
-        self.append_achievement(WinCarriedByAchievement('Best hooks for enemy team', 'Cristian', 'Pudge'))
-        self.append_achievement(WinCarriedByAchievement('Mid Lina', 'Nuvah', 'Lina'))
-        self.append_achievement(WinCarriedByAchievement('Worst hero in Dota', 'Alidio', 'Wraith King'))
-        self.append_achievement(WinCarriedByAchievement('New ranged offlane', 'Chuvisco', 'Necrophos'))
-        self.append_achievement(ItemAchievement('Next lebel Farming', 'radiance', 2))
-        self.append_achievement(ItemAchievement('Multiple Midas', 'midas', 3))
-        self.append_achievement(ItemAchievement('Maximum Blink', 'blink', 4))
-        self.append_achievement(ComeBackFromMegaCreepsAchievement('Overwhelming Odds'))
-        self.append_achievement(WinBattleCupPartyAchievement('Battle Cup Winners'))
-        self.append_achievement(PlayerOnLowestParameterAchievement('Naked Baco', 'Baco', 'total_gold'))
-        self.append_achievement(PlayerOnHeroAchievement('Brainless Baco', 'Baco', UNDEAD_HEROES))
-        self.append_achievement(PlayerOnHeroAchievement('Mustache Baco', 'Baco', MUSTACHE_HEROES))
-        self.append_achievement(WinWithHeroAchievement('Girl Power', FEMALE_HEROES))
-        self.append_achievement(WinWithHeroAchievement('Melee Only', MELEE_HEROES))
-        self.append_achievement(WinWithHeroAchievement('No Disables', NO_DISABLE_HEROES))
+        self.add_ach(WinWithPlayerAchievement('Toxic Couple', ['Baco', 'Alidio']))
+        self.add_ach(WinWithPlayerAchievement('Forever Archon', ['Scrider', 'Older', 'tchepo']))
+        self.add_ach(WinWithPlayerAchievement('Feldmann Brothers', ['Lotus', 'Pringles']))
+        self.add_ach(WinWithoutPlayerAchievement('Captain Replacement!', ['Zé']))
+        self.add_ach(WinCarriedByAchievement('Best Hooks for Enemy Team', 'Cristian', 'Pudge'))
+        self.add_ach(WinCarriedByAchievement('Pushing Far From Your Friends', 'Nuvah', 'Lina'))
+        self.add_ach(WinCarriedByAchievement('Heavier than a Black Hole', 'Alidio', 'Wraith King'))
+        self.add_ach(WinCarriedByAchievement('What is a Hero Pool?', 'Chuvisco', 'Necrophos'))
+        self.add_ach(ItemAchievement('Next Lebel Farming', 'radiance', 'Radiance', 2))
+        self.add_ach(ItemAchievement('Multiple Midas', 'hand_of_midas', 'Hand of Midas', 3))
+        self.add_ach(ItemAchievement('Maximum Blink', 'blink_dagger', 'Blink Dagger', 4))
+        self.add_ach(ComeBackFromMegaCreepsAchievement('Overwhelming Odds'))
+        self.add_ach(WinBattleCupPartyAchievement('Battle Cup Winners'))
+        self.add_ach(PlayerOnLowestParameterAchievement('Naked Baco', 'Baco', 'total_gold'))
+        self.add_ach(PlayerOnHeroAchievement('Brainless Baco', 'Baco', UNDEAD_HEROES))
+        self.add_ach(PlayerOnHeroAchievement('Mustache Baco', 'Baco', MUSTACHE_HEROES, 'a hero with a mustache'))
+        self.add_ach(WinWithHeroAchievement('Girl Power', FEMALE_HEROES, 'are female heroes'))
+        self.add_ach(WinWithHeroAchievement('Melee Only', MELEE_HEROES, 'are melee heroes'))
+        self.add_ach(WinWithHeroAchievement('No Disables', NO_DISABLE_HEROES, 'have no reliable stuns'))
 
 
 class Achievement:
@@ -181,11 +181,12 @@ class Achievement:
 
 
 class ItemAchievement(Achievement):
-    def __init__(self, name, item_name, amount):
+    def __init__(self, name, item_code, item_name, amount):
         Achievement.__init__(self, name)
+        self.item_code = item_code
         self.item_name = item_name
         self.amount = amount
-        self.description = 'Win a game with %i %s on your team' % (item_name, amount)
+        self.description = 'Win a game with %i %s on your team' % (amount, item_name)
 
 
 class WinWithPlayerAchievement(Achievement):
@@ -196,10 +197,13 @@ class WinWithPlayerAchievement(Achievement):
 
 
 class WinWithHeroAchievement(Achievement):
-    def __init__(self, name, heroes):
+    def __init__(self, name, heroes, msg=None):
         Achievement.__init__(self, name)
         self.heroes = heroes
-        self.description = 'Win a game with %s on your team' % sequence(heroes)
+        if msg is None:
+            self.description = 'Win a game with %s on your team' % sequence(heroes)
+        else:
+            self.description = 'Win a game where all heroes %s' % msg
 
 
 class WinBattleCupPartyAchievement(Achievement):
@@ -217,11 +221,14 @@ class PlayerOnLowestParameterAchievement(Achievement):
 
 
 class PlayerOnHeroAchievement(Achievement):
-    def __init__(self, name, player, heroes):
+    def __init__(self, name, player, heroes, msg=None):
         Achievement.__init__(self, name)
         self.player = player
         self.heroes = heroes
-        self.description = 'Win a game with %s playing one of %s' % (player, sequence(heroes))
+        if msg is None:
+            self.description = 'Win a game with %s playing one of %s' % (player, sequence(heroes))
+        else:
+            self.description = 'Win a game with %s playing %s' % (player, msg)
 
 
 class WinCarriedByAchievement(Achievement):

@@ -585,6 +585,21 @@ class Slides:
         Slides.create_table(slide, [x for x in scores if x['points'] > 0], headers, keys, formats, Inches(3),
                             Inches(1.5), Inches(3), 1, 11, 14)
 
+    def add_achievement_slide(self, achievement):
+        slide = self.add_slide(6, 0xCC, 0xCC, 0x66)
+        left = top = width = height = Inches(0.4)
+        txt_box = slide.shapes.add_textbox(left, top, width, height)
+        tf = txt_box.text_frame
+        tf.text = achievement.name
+        tf.paragraphs[0].font.size = Pt(20)
+        tf.paragraphs[0].font.bold = True
+
+        txt_box = slide.shapes.add_textbox(left, Inches(0.9), width, height)
+        tf = txt_box.text_frame
+        tf.text = achievement.description
+        tf.paragraphs[0].font.size = Pt(18)
+        tf.paragraphs[0].font.color.rgb = RGBColor(155, 155, 155)
+
     def add_popular_vote_category_slides(self, popular_vote_category):
         slide = self.add_slide(1, 221, 160, 221)
         shapes = slide.shapes
