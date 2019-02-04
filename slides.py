@@ -104,23 +104,39 @@ class Slides:
                 Slides.create_table(slide, hero['played_by'], headers, keys, formats, Inches(4.5), Inches(1.5),
                                     Inches(5), 1, 11, 15, widths=widths)
 
-    def add_player_slides(self, player_name, player_roles, heroes, pairs):
+    def add_player_slides(self, desc):
         slide = self.add_slide(5, 255, 229, 204)
         title_shape = slide.shapes.title
-        title_shape.text = '%s' % player_name
+        title_shape.text = desc['name']
         title_shape.text_frame.paragraphs[0].alignment = PP_ALIGN.LEFT
 
         tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.35), Inches(1.5), Inches(0.5))
         tf = tx_box.text_frame
         p = tf.paragraphs[0]
-        p.text = '%s played %s distinct heroes' % (player_name, len([x for x in heroes.values() if x['matches'] > 0]))
+        p.text = '%s played %s distinct heroes' % (
+            desc['name'], len([x for x in desc['heroes'].values() if x['matches'] > 0]))
 
         tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.7), Inches(1.5), Inches(0.5))
         tf = tx_box.text_frame
         p = tf.paragraphs[0]
-        p.text = '%s played %s matches' % (player_name, sum([x['matches'] for x in heroes.values()]))
+        p.text = '%s played %s matches' % (desc['name'], desc['matches'])
 
-        pic_path = 'data/pics/%s.jpg' % self.players[player_name]
+        tx_box = slide.shapes.add_textbox(Inches(6), Inches(0.3), Inches(1.75), Inches(0.5))
+        tf = tx_box.text_frame
+        p = tf.paragraphs[0]
+        p.text = '%.1f' % desc['rating']
+        p.font.bold = True
+        p.font.size = Pt(28)
+        p.alignment = PP_ALIGN.RIGHT
+
+        tx_box = slide.shapes.add_textbox(Inches(6), Inches(0.8), Inches(1.75), Inches(0.5))
+        tf = tx_box.text_frame
+        p = tf.paragraphs[0]
+        p.text = '%.2f %%' % (100 * desc['wins'] / desc['matches'])
+        p.font.size = Pt(22)
+        p.alignment = PP_ALIGN.RIGHT
+
+        pic_path = 'data/pics/%s.jpg' % desc['id']
         if os.path.isfile(pic_path):
             slide.shapes.add_picture(pic_path, Inches(8), Inches(0.2), height=Inches(1.1))
 
@@ -128,10 +144,11 @@ class Slides:
         keys = ['role', 'matches', 'wr']
         formats = ['%s', '%s', '%.2f %%']
         widths = [1.5, 1, 1]
-        Slides.create_table(slide, player_roles, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(3.5), 1, 12, 15,
+        Slides.create_table(slide, desc['roles'], headers, keys, formats, Inches(0.5), Inches(1.5), Inches(3.5), 1, 12,
+                            15,
                             widths=widths)
 
-        heroes = sorted(heroes.items(), key=lambda e: e[1]['rating'], reverse=True)
+        heroes = sorted(desc['heroes'].items(), key=lambda e: e[1]['rating'], reverse=True)
         for i in range(4):
             if heroes[i][1]['matches'] > 0:
                 pic_path = 'data/heroes/%s.jpg' % heroes[i][0]
@@ -151,8 +168,8 @@ class Slides:
         keys = ['name', 'matches', 'wins', 'wr']
         formats = ['%s', '%s', '%s', '%.2f %%']
         widths = [1.5, 1, 1, 1]
-        Slides.create_table(slide, pairs, headers, keys, formats, Inches(4.5), Inches(1.5), Inches(4.5), 1, 11, 15,
-                            widths=widths)
+        Slides.create_table(slide, desc['pairings'], headers, keys, formats, Inches(4.5), Inches(1.5), Inches(4.5), 1,
+                            11, 15, widths=widths)
 
     def add_intro_slide(self, match_count, min_player_count, min_matches, min_couples_matches):
         slide = self.add_slide(1, 152, 251, 152)
@@ -244,7 +261,7 @@ class Slides:
         for c in range(math.ceil(len(versus)/14)):
             slide = self.add_slide(5, 204, 255, 204)
             title_shape = slide.shapes.title
-            title_shape.text = '%s Win Rate %s Heroes [%i]' % (self.team_name, text, c + 1)
+            title_shape.text = '%s Performance %s Heroes' % (self.team_name, text)
             for y in range(2):
                 for x in range(7):
                     index = c*14 + y*7 + x
@@ -253,53 +270,65 @@ class Slides:
                         pic_path = 'data/heroes/%s.jpg' % hero['id']
                         slide.shapes.add_picture(pic_path, Inches(0.5) + y * Inches(5), Inches(1.8) + x * Inches(0.8),
                                                  height=Inches(0.7))
-                        tx_box = slide.shapes.add_textbox(Inches(0.5) + y * Inches(5) + Inches(2),
-                                                          Inches(1.65) + x * Inches(0.8), Inches(1.5), Inches(0.5))
+                        tx_box = slide.shapes.add_textbox(Inches(0.5) + y * Inches(5) + Inches(1.5),
+                                                          Inches(1.9) + x * Inches(0.8), Inches(1), Inches(0.4))
+                        tf = tx_box.text_frame
+                        tf.text = '%.1f' % hero['rating']
+                        tf.paragraphs[0].font.bold = True
+                        tf.paragraphs[0].font.size = Pt(24)
+
+                        tx_box = slide.shapes.add_textbox(Inches(0.5) + y * Inches(5) + Inches(2.3),
+                                                          Inches(2) + x * Inches(0.8), Inches(1.5),
+                                                          Inches(0.5))
                         tf = tx_box.text_frame
                         p = tf.paragraphs[0]
                         p.text = '%i-%i (%.2f %% wr)' % (hero['wins'], hero['matches'] - hero['wins'], hero['wr'])
-                        p.font.size = Pt(22)
-                        p.alignment = PP_ALIGN.CENTER
-                        tx_box = slide.shapes.add_textbox(Inches(0.5) + y * Inches(5) + Inches(2),
-                                                          Inches(1.65) + x * Inches(0.8) + Inches(0.5), Inches(1.5),
+                        p.font.size = Pt(16)
+
+                        tx_box = slide.shapes.add_textbox(Inches(0.5) + y * Inches(5) + Inches(2.3),
+                                                          Inches(1.8) + x * Inches(0.8), Inches(1.5),
                                                           Inches(0.5))
                         tf = tx_box.text_frame
                         p = tf.paragraphs[0]
                         p.text = hero['name']
                         p.font.size = Pt(12)
                         p.font.bold = True
-                        p.alignment = PP_ALIGN.CENTER
 
-    def add_most_played(self, heroes):
-        heroes = [v for v in heroes if v['matches'] > 0]
-        for c in range(math.ceil(len(heroes)/14)):
-            slide = self.add_slide(5, 255, 204, 255)
+    def add_most_played(self, heroes, most_played):
+        if not most_played and len(heroes) == 0:
+            return None
+        rows = 7
+        columns = 2 if most_played else 6
+        for c in range(math.ceil(len(heroes)/(columns*rows))):
+            slide = self.add_slide(5, 176, 255, 176) if most_played else self.add_slide(5, 140, 255, 140)
             title_shape = slide.shapes.title
-            title_shape.text = '%s\'s Most Played Heroes [%i]' % (self.team_name, c + 1)
-            for y in range(2):
-                for x in range(7):
-                    index = c*14 + y*7 + x
+            title_shape.text = '%s\'s %s Heroes' % (self.team_name, 'Most Played' if most_played else 'Not Played')
+            for y in range(columns):
+                for x in range(rows):
+                    index = c*(columns * rows) + y*rows + x
                     if len(heroes) > index:
                         hero = heroes[index]
                         pic_path = 'data/heroes/%s.jpg' % hero['id']
-                        slide.shapes.add_picture(pic_path, Inches(0.5) + y * Inches(5), Inches(1.8) + x * Inches(0.8),
+                        slide.shapes.add_picture(pic_path, Inches(0.5) + y * Inches(10 / columns),
+                                                 Inches(1.8) + x * Inches(0.8),
                                                  height=Inches(0.7))
-                        tx_box = slide.shapes.add_textbox(Inches(0.5) + y * Inches(5) + Inches(2),
-                                                          Inches(1.65) + x * Inches(0.8), Inches(1.5), Inches(0.5))
-                        tf = tx_box.text_frame
-                        p = tf.paragraphs[0]
-                        p.text = '%s matches' % (hero['matches'])
-                        p.font.size = Pt(22)
-                        p.alignment = PP_ALIGN.CENTER
-                        tx_box = slide.shapes.add_textbox(Inches(0.5) + y * Inches(5) + Inches(2),
-                                                          Inches(1.65) + x * Inches(0.8) + Inches(0.5), Inches(1.5),
-                                                          Inches(0.5))
-                        tf = tx_box.text_frame
-                        p = tf.paragraphs[0]
-                        p.text = hero['name']
-                        p.font.size = Pt(12)
-                        p.font.bold = True
-                        p.alignment = PP_ALIGN.CENTER
+                        if most_played:
+                            tx_box = slide.shapes.add_textbox(Inches(0.5) + y * Inches(5) + Inches(2),
+                                                              Inches(1.7) + x * Inches(0.8), Inches(1.5), Inches(0.5))
+                            tf = tx_box.text_frame
+                            p = tf.paragraphs[0]
+                            p.text = '%s matches' % (hero['matches'])
+                            p.font.size = Pt(22)
+                            p.alignment = PP_ALIGN.CENTER
+                            tx_box = slide.shapes.add_textbox(Inches(0.5) + y * Inches(5) + Inches(2),
+                                                              Inches(1.65) + x * Inches(0.8) + Inches(0.5), Inches(1.5),
+                                                              Inches(0.5))
+                            tf = tx_box.text_frame
+                            p = tf.paragraphs[0]
+                            p.text = hero['name']
+                            p.font.size = Pt(12)
+                            p.font.bold = True
+                            p.alignment = PP_ALIGN.CENTER
 
     def add_match_summary_by_player(self, summary, team):
         cat = Category(0, '', unit='matches')
@@ -328,32 +357,71 @@ class Slides:
     def add_tier_slides(self, tier, category):
         texts = tier.list_to_print()
 
-        slide = self.add_slide(5, 255, 255, 224)
-        title_shape = slide.shapes.title
-        title_shape.text = texts[1]
-        scores = tier.get_top_three()
-        self.add_top_three_table(scores, slide, tier.is_max, category, Inches(0.7), Inches(1.8))
-
-        if len(tier.scores_array) > 0:
-            slide = self.add_slide(5, 255, 255, 224)
-            title_shape = slide.shapes.title
-            title_shape.text = texts[1]
-            chart_data = CategoryChartData()
-            chart_data.categories = [x.name for x in tier.scores_array]
-            chart_data.add_series(texts[1], [x.score for x in tier.scores_array])
-            x, y, cx, cy = Inches(1), Inches(1.6), Inches(8), Inches(5)
-            slide.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, x, y, cx, cy, chart_data)
-
         slide = self.add_slide(6, 255, 255, 224)
         left = top = width = height = Inches(0.4)
         txt_box = slide.shapes.add_textbox(left, top, width, height)
         tf = txt_box.text_frame
-        tf.text = "%s - weights %s points" % (texts[1], tier.weight)
+        tf.text = texts[1]
         tf.paragraphs[0].font.bold = True
+        tf.paragraphs[0].font.size = Pt(22)
+
+        txt_box = slide.shapes.add_textbox(Inches(8.5), top, width, height)
+        tf = txt_box.text_frame
+        tf.text = "Tier points: %s" % tier.weight
+        tf.paragraphs[0].font.size = Pt(14)
+
+        scores = tier.get_top_three()
+        self.add_top_three_small_table(scores, slide, tier.is_max, category, Inches(0.3), Inches(1))
+
+        if len(tier.scores_array) > 0:
+            chart_data = CategoryChartData()
+            chart_data.categories = [x.name for x in tier.scores_array]
+            chart_data.add_series(texts[1], [x.score for x in tier.scores_array])
+            x, y, cx, cy = Inches(0.1), Inches(2.8), Inches(5), Inches(4.7)
+            chart = slide.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, x, y, cx, cy, chart_data).chart
+            category_axis = chart.category_axis
+            category_axis.tick_labels.font.size = Pt(12)
+            value_axis = chart.value_axis
+            tick_labels = value_axis.tick_labels
+            tick_labels.font.size = Pt(12)
+
+        txt_box = slide.shapes.add_textbox(Inches(5.2), Inches(0.6), width, height)
+        tf = txt_box.text_frame
         for i in range(2, len(texts)):
             p = tf.add_paragraph()
             p.text = texts[i]
+            p.font.size = Pt(10)
+            if texts[i].startswith("Tier"):
+                p.font.bold = True
+
+    def add_top_three_small_table(self, scores, slide, is_max, category, left, top):
+        pos = [(0, '1'), (1, '2'), (2, '3')]
+        spacing = Inches(1.6)
+        val = min(3, len(scores))
+        for i, name in pos[0:val]:
+            tx_box = slide.shapes.add_textbox(left + spacing * i, top, spacing, Inches(0.7))
+            tf = tx_box.text_frame
+            tf.text = scores[i].name
+            p = tf.paragraphs[0]
+            p.font.size = Pt(18)
+            p.font.bold = True
+            p.alignment = PP_ALIGN.CENTER
+
+            tx_box = slide.shapes.add_textbox(left + spacing * i, top + Inches(1.3), spacing, Inches(0.7))
+            tf = tx_box.text_frame
+            if not isinstance(scores[i].score, str):
+                fmt = (category.max_format if is_max else category.avg_format) % scores[i].score
+            else:
+                fmt = scores[i].score
+            tf.text = "%s %s" % (fmt, category.unit)
+            p = tf.paragraphs[0]
             p.font.size = Pt(14)
+            p.alignment = PP_ALIGN.CENTER
+
+            pic_path = 'data/pics/%s.jpg' % self.players[scores[i].name]
+            if os.path.isfile(pic_path):
+                slide.shapes.add_picture(pic_path, left + Inches(0.4) + spacing * i, top + Inches(0.45),
+                                         height=Inches(0.8))
 
     def add_top_three_table(self, scores, slide, is_max, category, left, top):
         pos = [(0, '1st'), (1, '2nd'), (2, '3rd')]
@@ -533,7 +601,7 @@ class Slides:
             tx_box = slide.shapes.add_textbox(Inches(8), Inches(1.8), Inches(2), Inches(0.5))
             tf = tx_box.text_frame
             tf.text = "Vencedores"
-            for i in range(0,len(popular_vote_category['winner'])):
+            for i in range(0, len(popular_vote_category['winner'])):
                 pic_path = 'data/pics/%s.jpg' % self.players[popular_vote_category['winner'][i]]
                 if os.path.isfile(pic_path):
                     slide.shapes.add_picture(pic_path, Inches(8.3), Inches(2.3 + 1.55 * i), height=Inches(1))
