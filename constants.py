@@ -21,6 +21,20 @@ def roles():
     }
 
 
+def items():
+    return {
+        'black_king_bar': 'Black King Bar',
+        'blink': 'Blink Dagger',
+        'vladmir': 'Vladmir\'s Offering',
+        'radiance': 'Radiance',
+        'magic_wand': 'Magic Wand',
+        'magic_stick': 'Magic Stick',
+        'bottle': 'Bottle',
+        'ultimate_scepter': 'Aghanim\'s Scepter',
+        'hand_of_midas': 'Hand of Midas'
+    }
+
+
 def rating(win, loss=None, matches=None):
     if matches is not None:
         loss = matches - win
