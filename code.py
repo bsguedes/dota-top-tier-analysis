@@ -5,6 +5,7 @@ import json
 import calendar
 import operator
 import itertools
+import items
 from time import gmtime
 from tier import TierItem
 from roles import Roles
@@ -22,6 +23,7 @@ class Parser:
         self.min_party_size = min_party_size
         self.full_party_matches = full_party
         self.matches_by_party_size = []
+        self.match_summary = {}
         self.match_summary_by_player = []
         self.match_summary_by_team = []
         self.top_comebacks = []
@@ -41,11 +43,8 @@ class Parser:
 
     @staticmethod
     def load_matches(unique_matches):
-        matches = {}
-        for match_id, _ in unique_matches.items():
-            content = open('matches/%i.json' % match_id, 'r', encoding='utf-8').read()
-            matches[match_id] = json.loads(content)
-        return matches
+        return {match_id: json.loads(open('matches/%i.json' % match_id, 'r', encoding='utf-8').read()) for
+                match_id, match_players in unique_matches.items()}
 
     def evaluate_best_team_by_hero_player(self, min_matches):
         role_dict = {}
@@ -93,12 +92,20 @@ class Parser:
         inv_h = {h['localized_name']: h['id'] for h in hs_json}
         inv_p = {v: k for k, v in self.players.items()}
         account_ids = [v for k, v in self.players.items()]
-        match_summary = {k: {'our_heroes': [], 'enemy_heroes': [], 'players': []} for k, v in matches.items()}
+        match_summary = {k: {
+                               'our_heroes': [],
+                               'enemy_heroes': [],
+                               'our_team_heroes': [],
+                               'players': [],
+                               'player_desc': {}} for k, v in matches.items()}
         for match_id, obj in matches.items():
             for p in obj['players']:
                 if p['account_id'] in account_ids:
+                    match_summary[match_id]['lobby_type'] = lobby_type()[obj['lobby_type']]
                     match_summary[match_id]['our_heroes'].append(p['hero_id'])
                     match_summary[match_id]['players'].append(p['account_id'])
+                    match_summary[match_id]['player_desc'][p['account_id']] = {'hero': self.heroes[p['hero_id']],
+                                                                               'total_gold': p['total_gold']}
                     match_summary[match_id]['win'] = p['win'] > 0
                     match_summary[match_id]['is_radiant'] = p['isRadiant']
                     gold_adv = [] if obj['radiant_gold_adv'] is None else obj['radiant_gold_adv']                  
@@ -108,9 +115,15 @@ class Parser:
                     match_summary[match_id]['comeback_throw'] = obj['comeback'] if p['win'] > 0 else obj['throw']   
             if 'lane_role' in obj['players'][0]:
                 match_summary[match_id]['roles'] = Roles.evaluate_roles(match_summary[match_id], obj['players'])
+            match_summary[match_id]['items'] = items.evaluate_items([x for x in obj['players'] if
+                                                                    x['account_id'] in account_ids])
             for p in obj['players']:
                 if p['isRadiant'] != match_summary[match_id]['is_radiant']:
                     match_summary[match_id]['enemy_heroes'].append(p['hero_id'])
+                else:
+                    match_summary[match_id]['our_team_heroes'].append(self.heroes[p['hero_id']])
+
+        self.match_summary = match_summary
 
         print('')
         self.win_rate = 100 * len([x for x, y in match_summary.items() if y['win']]) / len(matches)
@@ -462,7 +475,6 @@ class Parser:
         return {k: v for k, v in matches.items() if len(v) >= self.min_party_size}
 
     def player_versatility(self):
-        tier = []
         inv_p = {v: k for k, v in self.players.items()}
         versatility_dict = dict()
         for pid, hero_dict in self.player_heroes.items():
@@ -470,10 +482,7 @@ class Parser:
             if versatility > 0:
                 versatility_dict[inv_p[pid]] = versatility
         s = sorted(versatility_dict.items(), key=lambda e: e[1], reverse=True)
-        for k, v in s:
-            txt = '%s versatility: %.3f' % (k, v)
-            tier.append(TierItem(k, v, txt))
-        return tier
+        return [TierItem(k, v, '%s versatility: %.3f' % (k, v)) for k, v in s]
 
     def versatility(self, values):
         count = len([x for x in values if x > 0])

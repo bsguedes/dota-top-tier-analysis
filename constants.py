@@ -21,19 +21,19 @@ def roles():
     }
 
 
-def items():
-    return {
-        'black_king_bar': 'Black King Bar',
-        'blink': 'Blink Dagger',
-        'vladmir': 'Vladmir\'s Offering',
-        'radiance': 'Radiance',
-        'magic_wand': 'Magic Wand',
-        'magic_stick': 'Magic Stick',
-        'bottle': 'Bottle',
-        'ultimate_scepter': 'Aghanim\'s Scepter',
-        'hand_of_midas': 'Hand of Midas'
-    }
-
+def lobby_type():
+    return [
+        'normal',
+        'practice',
+        'tournament',
+        'tutorial',
+        'bots',
+        'ranked_team',
+        'ranked_solo',
+        'ranked',
+        'mid',
+        'battle_cup'
+    ]
 
 def rating(win, loss=None, matches=None):
     if matches is not None:

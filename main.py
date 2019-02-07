@@ -6,6 +6,7 @@ from tier import Tier, T
 import downloader
 from slides import Slides
 from popular_vote import PopularVotePnK2018
+from achievements import PnKAchievements
 import time
 import calendar
 
@@ -13,7 +14,7 @@ import calendar
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
-YEARS = [2019]
+YEARS = [2018]
 MONTH = None
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
@@ -82,6 +83,8 @@ player_list = {
 popular_vote = None
 if TEAM_NAME == PNK and 2018 in YEARS:
     popular_vote = PopularVotePnK2018()
+
+achievements = None
 
 categories = [
     Category(20, 'win', unit='%', text='wins', has_max=False, apply_transform=T.percentage),
@@ -209,6 +212,15 @@ if __name__ == '__main__':
     if MONTH is None:
         s.add_divider_slide("Individual Hero Statistics", 'Positions, Win Rate and Best Players at each Hero')
         s.add_heroes(p.hero_statistics, MIN_MATCHES_WITH_HERO)
+
+    if TEAM_NAME == PNK:
+        achievements = PnKAchievements(players, p.match_summary)
+
+    if achievements is not None:
+        s.add_divider_slide("%s Achievements" % TEAM_NAME, '')
+        for achievement in achievements.get_achievements():
+            print(achievement.name, achievement.evaluate())
+            s.add_achievement_slide(achievement)
 
     if popular_vote is not None:
         s.add_divider_slide("%s Popular Vote" % TEAM_NAME, popular_vote.message)
