@@ -38,7 +38,7 @@ def download_player_data(players, override=True):
             open(file_name, 'wb').write(r.content)
 
 
-def download_matches(unique_matches, override=False):
+def download_matches(unique_matches, override=False, download_again=False):
     print('')
     print('Found %s matches' % len(unique_matches))
     if not os.path.exists('matches'):
@@ -50,3 +50,14 @@ def download_matches(unique_matches, override=False):
             url = 'https://api.opendota.com/api/matches/%i' % match_id
             r = requests.get(url, allow_redirects=True)
             open(file_name, 'wb').write(r.content)
+        if os.path.getsize(file_name) < 35000 and download_again:
+            os.remove(file_name)
+            print('Downloading again match %i data' % match_id)
+            url = 'https://api.opendota.com/api/matches/%i' % match_id
+            r = requests.get(url, allow_redirects=True)
+            open(file_name, 'wb').write(r.content)
+    for match_id in unique_matches:
+        file_name = 'matches/%s.json' % match_id
+        if os.path.getsize(file_name) < 35000:
+            print("Should re-parse match %i on OpenDota" % match_id)
+

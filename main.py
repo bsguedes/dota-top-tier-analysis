@@ -14,7 +14,7 @@ import calendar
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
-YEARS = [2019]
+YEARS = [2018]
 MONTH = None
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
@@ -214,11 +214,12 @@ if __name__ == '__main__':
         s.add_heroes(p.hero_statistics, MIN_MATCHES_WITH_HERO)
 
     if TEAM_NAME == PNK:
-        achievements = PnKAchievements(unique_matches)
+        achievements = PnKAchievements(players, p.match_summary)
 
     if achievements is not None:
         s.add_divider_slide("%s Achievements" % TEAM_NAME, '')
         for achievement in achievements.get_achievements():
+            print(achievement.name, achievement.evaluate())
             s.add_achievement_slide(achievement)
 
     if popular_vote is not None:
