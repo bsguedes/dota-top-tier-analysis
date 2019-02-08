@@ -358,6 +358,13 @@ class ComeBackFromMegaCreepsAchievement(Achievement):
         self.description = 'Win a game against Mega Creeps'
 
     def evaluate(self):
+        for match_id, data in self.match_list.items():
+            if data['barracks'] == 0:
+                self.games += 1
+                if data['win']:
+                    self.wins += 1
+                    for player_id in data['players']:
+                        self.winners[player_id].append(match_id)
         return super(ComeBackFromMegaCreepsAchievement, self).evaluate()
 
 

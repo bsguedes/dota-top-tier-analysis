@@ -117,6 +117,8 @@ class Parser:
                 match_summary[match_id]['roles'] = Roles.evaluate_roles(match_summary[match_id], obj['players'])
             match_summary[match_id]['items'] = items.evaluate_items([x for x in obj['players'] if
                                                                     x['account_id'] in account_ids])
+            match_summary[match_id]['barracks'] = obj[
+                'barracks_status_radiant' if match_summary[match_id]['is_radiant'] else 'barracks_status_dire']
             for p in obj['players']:
                 if p['isRadiant'] != match_summary[match_id]['is_radiant']:
                     match_summary[match_id]['enemy_heroes'].append(p['hero_id'])
