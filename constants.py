@@ -35,6 +35,7 @@ def lobby_type():
         'battle_cup'
     ]
 
+
 def rating(win, loss=None, matches=None):
     if matches is not None:
         loss = matches - win
@@ -44,3 +45,10 @@ def rating(win, loss=None, matches=None):
     ex = 1 - math.exp(-(win + loss)/2)
     sg = 1 / (1 + math.exp(-(win-loss)/3))
     return 3 * wr * ex + 7 * sg
+
+
+def sequence(strings, maximum=None):
+    if maximum is None or len(strings) <= 5:
+        return '%s and %s' % (', '.join(strings[:-1]), strings[-1]) if len(strings) > 1 else strings[0]
+    else:
+        return "%s, ..." % ', '.join(strings[:5])

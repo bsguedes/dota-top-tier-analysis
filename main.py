@@ -217,10 +217,10 @@ if __name__ == '__main__':
         achievements = PnKAchievements(players, p.match_summary)
 
     if achievements is not None:
-        s.add_divider_slide("%s Achievements" % TEAM_NAME, '')
+        s.add_divider_slide("%s Achievements" % TEAM_NAME, 'Awarded to the most exquisite accomplishments')
         for achievement in achievements.get_achievements():
-            print(achievement.name, achievement.evaluate())
-            s.add_achievement_slide(achievement)
+            result = achievement.evaluate()
+            s.add_achievement_slide(achievement, result)
 
     if popular_vote is not None:
         s.add_divider_slide("%s Popular Vote" % TEAM_NAME, popular_vote.message)

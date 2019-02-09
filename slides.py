@@ -13,6 +13,7 @@ from pptx.chart.data import ChartData
 from pptx.chart.data import CategoryChartData
 from pptx.dml.color import RGBColor
 from constants import roles
+from constants import sequence
 import calendar
 
 
@@ -28,6 +29,9 @@ class Slides:
     def add_slide(self, layout, r, g, b):
         slide_layout = self.presentation.slide_layouts[layout]
         slide = self.presentation.slides.add_slide(slide_layout)
+        if layout == 5:
+            title_shape = slide.shapes.title
+            title_shape.text_frame.paragraphs[0].font.size = Pt(40)
         Slides.change_slide_color(slide, r, g, b)
         return slide
 
@@ -585,7 +589,8 @@ class Slides:
         Slides.create_table(slide, [x for x in scores if x['points'] > 0], headers, keys, formats, Inches(3),
                             Inches(1.5), Inches(3), 1, 11, 14)
 
-    def add_achievement_slide(self, achievement):
+    def add_achievement_slide(self, achievement, result):
+        inv_p = {v: k for k, v in self.players.items()}
         slide = self.add_slide(6, 0xCC, 0xCC, 0x66)
         left = top = width = height = Inches(0.4)
         txt_box = slide.shapes.add_textbox(left, top, width, height)
@@ -598,7 +603,52 @@ class Slides:
         tf = txt_box.text_frame
         tf.text = achievement.description
         tf.paragraphs[0].font.size = Pt(18)
-        tf.paragraphs[0].font.color.rgb = RGBColor(155, 155, 155)
+        tf.paragraphs[0].font.color.rgb = RGBColor(255, 255, 255)
+
+        txt_box = slide.shapes.add_textbox(left, Inches(1.3), width, height)
+        tf = txt_box.text_frame
+        tf.text = 'Achievement rate: %.2f %% (%i times in %i matches)' % (
+                                            result['wr'], result['wins'], result['matches'])
+        tf.paragraphs[0].font.size = Pt(12)
+
+        if result['wins'] > 0:
+            txt_box = slide.shapes.add_textbox(left + Inches(0.45), Inches(1.8), width, height)
+            tf = txt_box.text_frame
+            tf.text = 'Player'
+            tf.paragraphs[0].font.size = Pt(12)
+            txt_box = slide.shapes.add_textbox(left + Inches(1.8), Inches(1.8), width, height)
+            tf = txt_box.text_frame
+            tf.text = '⭐'
+            tf.paragraphs[0].font.size = Pt(14)
+            txt_box = slide.shapes.add_textbox(left + Inches(2.5), Inches(1.8), width, height)
+            tf = txt_box.text_frame
+            tf.text = 'Match List'
+            tf.paragraphs[0].font.size = Pt(12)
+            i = 0
+            for player_id, matches in sorted([(k, v) for k, v in result['winners'].items() if len(v) > 0],
+                                             key=lambda e: len(e[1]), reverse=True)[:10]:
+                pic_path = 'data/pics/%s.jpg' % player_id
+                if os.path.isfile(pic_path):
+                    slide.shapes.add_picture(pic_path, left, Inches(2.3 + 0.45 * i), height=Inches(0.4))
+                txt_box = slide.shapes.add_textbox(left + Inches(0.45), Inches(2.3 + 0.45 * i), width, height)
+                tf = txt_box.text_frame
+                tf.text = inv_p[player_id]
+                tf.paragraphs[0].font.size = Pt(16)
+                txt_box = slide.shapes.add_textbox(left + Inches(1.8), Inches(2.3 + 0.45 * i), width, height)
+                tf = txt_box.text_frame
+                tf.text = '%i' % len(matches)
+                tf.paragraphs[0].font.size = Pt(18)
+                tf.paragraphs[0].font.bold = True
+                txt_box = slide.shapes.add_textbox(left + Inches(2.5), Inches(2.35 + 0.45 * i), width, height)
+                tf = txt_box.text_frame
+                tf.text = sequence(['%s' % i for i in matches], 5)
+                tf.paragraphs[0].font.size = Pt(12)
+                i += 1
+        else:
+            txt_box = slide.shapes.add_textbox(left + Inches(0.45), Inches(2.5), width, height)
+            tf = txt_box.text_frame
+            tf.text = 'No player earned this achievement.'
+            tf.paragraphs[0].font.size = Pt(16)
 
     def add_popular_vote_category_slides(self, popular_vote_category):
         slide = self.add_slide(1, 221, 160, 221)

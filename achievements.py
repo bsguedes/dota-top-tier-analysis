@@ -1,4 +1,5 @@
 import abc
+from constants import *
 
 NO_DISABLE_HEROES = [
     'Abbadon',
@@ -154,26 +155,27 @@ class AchievementBase:
 
     def initialize_achievements(self):
         for ach in self.achievement_list:
-            ach.init(self.player_list, self.match_list)
+            ach.initialize(self.player_list, self.match_list)
 
 
 class PnKAchievements(AchievementBase):
     def __init__(self, players, matches):
         AchievementBase.__init__(self, players, matches)
         self.add_ach(WinWithPlayerAchievement('Toxic Couple', ['Baco', 'Alidio']))
-        self.add_ach(WinWithPlayerAchievement('Forever Archon', ['Scrider', 'Older', 'tchepo']))
+        self.add_ach(WinWithPlayerAchievement('I AM ARCHON', ['Scrider', 'Older', 'tchepo']))
         self.add_ach(WinWithPlayerAchievement('Feldmann Brothers', ['Lotus', 'Pringles']))
-        self.add_ach(WinWithoutPlayerAchievement('Captain Replacement!', ['Zé']))
+        self.add_ach(WinWithoutPlayerAchievement('Subs Captain', ['Zé']))
         self.add_ach(WinCarriedByAchievement('Best Hooks for Enemy Team', 'Cristian', 'Pudge'))
         self.add_ach(WinCarriedByAchievement('Pushing Far From Your Friends', 'Nuvah', 'Lina'))
         self.add_ach(WinCarriedByAchievement('Heavier than a Black Hole', 'Alidio', 'Wraith King'))
         self.add_ach(WinCarriedByAchievement('What is a Hero Pool?', 'Chuvisco', 'Necrophos'))
+        self.add_ach(ItemAchievement('Trump Card', 'rapier', 'Divine Rapier', 1))
         self.add_ach(ItemAchievement('Next Lebel Farming', 'radiance', 'Radiance', 2))
         self.add_ach(ItemAchievement('Multiple Midas', 'hand_of_midas', 'Hand of Midas', 3))
         self.add_ach(ItemAchievement('Maximum Blink', 'blink', 'Blink Dagger', 5))
         self.add_ach(ComeBackFromMegaCreepsAchievement('Overwhelming Odds'))
         self.add_ach(WinBattleCupPartyAchievement('Battle Cup Winners'))
-        self.add_ach(PlayerOnLowestParameterAchievement('Naked Baco', 'Baco', 'total_gold'))
+        self.add_ach(PlayerOnLowestParameterAchievement('Naked Baco', 'Baco', 'total_gold', 'net worth'))
         self.add_ach(PlayerOnHeroAchievement('Brainless Baco', 'Baco', UNDEAD_HEROES))
         self.add_ach(PlayerOnHeroAchievement('Mustache Baco', 'Baco', MUSTACHE_HEROES, 'a hero with a mustache'))
         self.add_ach(WinWithHeroAchievement('Girl Power', FEMALE_HEROES, 'are female heroes'))
@@ -196,9 +198,10 @@ class Achievement:
 
     @abc.abstractmethod
     def evaluate(self):
-        return {'matches': self.games, 'wins': self.wins, 'winners': self.winners}
+        return {'matches': self.games, 'wins': self.wins, 'winners': self.winners,
+                'wr': 0 if self.games == 0 else 100 * self.wins / self.games}
 
-    def init(self, players, matches):
+    def initialize(self, players, matches):
         self.player_list = players
         self.match_list = matches
         self.winners = {i: [] for p, i in self.player_list.items()}
@@ -289,11 +292,11 @@ class WinBattleCupPartyAchievement(Achievement):
 
 
 class PlayerOnLowestParameterAchievement(Achievement):
-    def __init__(self, name, player, parameter):
+    def __init__(self, name, player, parameter, parameter_name):
         Achievement.__init__(self, name)
         self.player = player
         self.parameter = parameter
-        self.description = 'Win a game with %s having lowest %s' % (player, parameter)
+        self.description = 'Win a game with %s having lowest %s' % (player, parameter_name)
 
     def evaluate(self):
         for match_id, data in self.match_list.items():
@@ -387,7 +390,3 @@ class WinWithoutPlayerAchievement(Achievement):
                     for player_id in data['players']:
                         self.winners[player_id].append(match_id)
         return super(WinWithoutPlayerAchievement, self).evaluate()
-
-
-def sequence(strings):
-    return '%s and %s' % (', '.join(strings[:-1]), strings[-1]) if len(strings) > 1 else strings[0]
