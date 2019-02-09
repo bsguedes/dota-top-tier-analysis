@@ -42,6 +42,39 @@ class Slides:
         title.text = text
         subtitle.text = sub_text
 
+    def add_item_slides(self, item_data):
+        for data in item_data:
+            slide = self.add_slide(5, 214, 187, 242)
+            title_shape = slide.shapes.title
+            title_shape.text = data['item_name']
+            title_shape.text_frame.paragraphs[0].alignment = PP_ALIGN.LEFT
+            pic_path = 'data/items/%s.jpg' % data['item_internal_name']
+            slide.shapes.add_picture(pic_path, Inches(7.5), Inches(0.2), height=Inches(1.1))
+            headers = ['Amount', 'Wins', 'Losses', 'Matches', 'Win Rate']
+            keys = ['amount', 'wins', 'losses', 'matches', 'wr']
+            formats = ['%s', '%s', '%s', '%s', '%.2f %%']
+            table_data = [{'amount': a, 'wins': b, 'losses': c, 'matches': d, 'wr': e} for a, b, c, d, e in
+                          zip(data['counts'], data['wins'], data['losses'], data['matches'], data['wr'])]
+            Slides.create_table(slide, table_data, headers, keys, formats, Inches(2), Inches(1.8), Inches(6),
+                                1, 12, 15)
+            chart_data = ChartData()
+            chart_data.categories = data['counts']
+            chart_data.add_series('Wins', data['wins'])
+            chart_data.add_series('Losses', data['losses'])
+            graphic_frame = slide.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, Inches(0.5), Inches(4.2), Inches(9),
+                                                   Inches(3.2),
+                                                   chart_data)
+            chart = graphic_frame.chart
+            plot = chart.plots[0]
+            plot.has_data_labels = True
+            data_labels = plot.data_labels
+            data_labels.font.size = Pt(10)
+            data_labels.font.color.rgb = RGBColor(0x0A, 0x42, 0x80)
+            data_labels.position = XL_LABEL_POSITION.INSIDE_END
+            chart.has_legend = True
+            chart.legend.position = XL_LEGEND_POSITION.RIGHT
+            chart.legend.include_in_layout = False
+
     def add_heroes(self, hero_stats, min_matches_with_hero):
         for hero in hero_stats:
             if hero['matches'] > 0:

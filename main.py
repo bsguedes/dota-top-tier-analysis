@@ -213,6 +213,9 @@ if __name__ == '__main__':
         s.add_divider_slide("Individual Hero Statistics", 'Positions, Win Rate and Best Players at each Hero')
         s.add_heroes(p.hero_statistics, MIN_MATCHES_WITH_HERO)
 
+    s.add_divider_slide("%s Items" % TEAM_NAME, 'Win rate based on items purchased')
+    s.add_item_slides(p.generate_item_statistics())
+
     if TEAM_NAME == PNK:
         achievements = PnKAchievements(players, p.match_summary)
 

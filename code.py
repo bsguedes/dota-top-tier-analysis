@@ -85,6 +85,36 @@ class Parser:
                                        'role': r})
         return result_dict
 
+    def generate_item_statistics(self):
+        ret = []
+        for item, name in items.item_list().items():
+            counts = dict()
+            for match_id, summary in self.match_summary.items():
+                s = sum([k for p, k in summary['items'][item].items()])
+                if s not in counts:
+                    counts[s] = {'wins': 0, 'matches': 0, 'wr': 0.0}
+                counts[s]['matches'] += 1
+                if summary['win']:
+                    counts[s]['wins'] += 1
+            min_count = min(counts.keys())
+            max_count = max(counts.keys())
+            for i in range(min_count, max_count+1):
+                if i not in counts:
+                    counts[i] = {'wins': 0, 'matches': 0, 'wr': 0.0}
+                else:
+                    counts[i]['wr'] = 100 * counts[i]['wins'] / counts[i]['matches']
+            ss = sorted(counts.items(), key=lambda e: e[0])
+            ret.append({
+                'item_name': name,
+                'item_internal_name': item,
+                'counts': [i[0] for i in ss],
+                'wins': [i[1]['wins'] for i in ss],
+                'matches': [i[1]['matches'] for i in ss],
+                'losses': [i[1]['matches'] - i[1]['wins'] for i in ss],
+                'wr': [i[1]['wr'] for i in ss]
+            })
+        return ret
+
     def identify_heroes(self, matches, min_couple_matches=10):
         hs = open('data/heroes.json', 'r', encoding='utf-8').read()
         hs_json = json.loads(hs)
@@ -92,12 +122,11 @@ class Parser:
         inv_h = {h['localized_name']: h['id'] for h in hs_json}
         inv_p = {v: k for k, v in self.players.items()}
         account_ids = [v for k, v in self.players.items()]
-        match_summary = {k: {
-                               'our_heroes': [],
-                               'enemy_heroes': [],
-                               'our_team_heroes': [],
-                               'players': [],
-                               'player_desc': {}} for k, v in matches.items()}
+        match_summary = {k: {'our_heroes': [],
+                             'enemy_heroes': [],
+                             'our_team_heroes': [],
+                             'players': [],
+                             'player_desc': {}} for k, v in matches.items()}
         for match_id, obj in matches.items():
             for p in obj['players']:
                 if p['account_id'] in account_ids:
