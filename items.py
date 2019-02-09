@@ -16,6 +16,10 @@ def item_list():
     return {
         'black_king_bar': 'Black King Bar',
         'blink': 'Blink Dagger',
+        'force_staff': 'Force Staff',
+        'gem': 'Gem of True Sight',
+        'crimson_guard': 'Crimson Guard',
+        'ancient_janggo': 'Drum of Endurance',
         'vladmir': 'Vladmir\'s Offering',
         'radiance': 'Radiance',
         'magic_wand': 'Magic Wand',
