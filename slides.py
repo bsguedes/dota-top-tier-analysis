@@ -644,6 +644,18 @@ class Slides:
                                             result['wr'], result['wins'], result['matches'])
         tf.paragraphs[0].font.size = Pt(12)
 
+        if achievement.img_path is not None:
+            pic_path = 'data/achievements/%s' % achievement.img_path
+            if os.path.isfile(pic_path):
+                slide.shapes.add_picture(pic_path, Inches(7.5), Inches(0.25), height=Inches(1.5))
+        if achievement.special_description:
+            txt_box = slide.shapes.add_textbox(Inches(0.2), Inches(6.7), Inches(9.5), height)
+            tf = txt_box.text_frame
+            print(achievement.heroes)
+            tf.text = 'Hero list: %s' % sequence(achievement.heroes)
+            tf.word_wrap = True
+            tf.paragraphs[0].font.size = Pt(10)
+
         if result['wins'] > 0:
             txt_box = slide.shapes.add_textbox(left + Inches(0.45), Inches(1.8), width, height)
             tf = txt_box.text_frame
@@ -662,17 +674,17 @@ class Slides:
                                              key=lambda e: len(e[1]), reverse=True)[:10]:
                 pic_path = 'data/pics/%s.jpg' % player_id
                 if os.path.isfile(pic_path):
-                    slide.shapes.add_picture(pic_path, left, Inches(2.3 + 0.45 * i), height=Inches(0.4))
-                txt_box = slide.shapes.add_textbox(left + Inches(0.45), Inches(2.3 + 0.45 * i), width, height)
+                    slide.shapes.add_picture(pic_path, left, Inches(2.3 + 0.42 * i), height=Inches(0.4))
+                txt_box = slide.shapes.add_textbox(left + Inches(0.45), Inches(2.3 + 0.42 * i), width, height)
                 tf = txt_box.text_frame
                 tf.text = inv_p[player_id]
                 tf.paragraphs[0].font.size = Pt(16)
-                txt_box = slide.shapes.add_textbox(left + Inches(1.8), Inches(2.3 + 0.45 * i), width, height)
+                txt_box = slide.shapes.add_textbox(left + Inches(1.8), Inches(2.3 + 0.42 * i), width, height)
                 tf = txt_box.text_frame
                 tf.text = '%i' % len(matches)
                 tf.paragraphs[0].font.size = Pt(18)
                 tf.paragraphs[0].font.bold = True
-                txt_box = slide.shapes.add_textbox(left + Inches(2.5), Inches(2.35 + 0.45 * i), width, height)
+                txt_box = slide.shapes.add_textbox(left + Inches(2.5), Inches(2.35 + 0.42 * i), width, height)
                 tf = txt_box.text_frame
                 tf.text = sequence(['%s' % i for i in matches], 5)
                 tf.paragraphs[0].font.size = Pt(12)

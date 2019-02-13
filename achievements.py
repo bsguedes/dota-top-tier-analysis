@@ -101,7 +101,10 @@ UNDEAD_HEROES = [
     'Undying',
     'Lich',
     'Wraith King',
-    'Death Prophet'
+    'Death Prophet',
+    'Pugna',
+    'Clinkz',
+    'Necrophos'
 ]
 
 MUSTACHE_HEROES = [
@@ -175,9 +178,12 @@ class PnKAchievements(AchievementBase):
         self.add_ach(ItemAchievement('Maximum Blink', 'blink', 'Blink Dagger', 5))
         self.add_ach(ComeBackFromMegaCreepsAchievement('Overwhelming Odds'))
         self.add_ach(WinBattleCupPartyAchievement('Battle Cup Winners'))
-        self.add_ach(PlayerOnLowestParameterAchievement('Naked Baco', 'Baco', 'total_gold', 'net worth'))
-        self.add_ach(PlayerOnHeroAchievement('Brainless Baco', 'Baco', UNDEAD_HEROES))
-        self.add_ach(PlayerOnHeroAchievement('Mustache Baco', 'Baco', MUSTACHE_HEROES, 'a hero with a mustache'))
+        self.add_ach(PlayerOnLowestParameterAchievement('Naked Baco', 'Baco', 'total_gold', 'net worth',
+                                                        img='naked_baco.png'))
+        self.add_ach(PlayerOnHeroAchievement('Brainless Baco', 'Baco', UNDEAD_HEROES, 'an undead hero',
+                                             img='brainless_baco.png'))
+        self.add_ach(PlayerOnHeroAchievement('Mustache Baco', 'Baco', MUSTACHE_HEROES, 'a hero with a mustache',
+                                             img='mustache_baco.png'))
         self.add_ach(WinWithHeroAchievement('Girl Power', FEMALE_HEROES, 'are female heroes'))
         self.add_ach(WinWithHeroAchievement('Melee Only', MELEE_HEROES, 'are melee heroes'))
         self.add_ach(WinWithHeroAchievement('No Disables', NO_DISABLE_HEROES, 'have no reliable stuns'))
@@ -187,14 +193,16 @@ class PnKAchievements(AchievementBase):
 class Achievement:
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, name):
+    def __init__(self, name, img=None):
         self.name = name
+        self.img_path = img
         self.description = ''
         self.games = 0
         self.wins = 0
         self.player_list = None
         self.match_list = None
         self.winners = None
+        self.special_description = False
 
     @abc.abstractmethod
     def evaluate(self):
@@ -258,6 +266,7 @@ class WinWithHeroAchievement(Achievement):
             self.description = 'Win a game with %s on your team' % sequence(heroes)
         else:
             self.description = 'Win a game where all heroes %s' % msg
+            self.special_description = True
 
     def evaluate(self):
         for match_id, data in self.match_list.items():
@@ -292,8 +301,8 @@ class WinBattleCupPartyAchievement(Achievement):
 
 
 class PlayerOnLowestParameterAchievement(Achievement):
-    def __init__(self, name, player, parameter, parameter_name):
-        Achievement.__init__(self, name)
+    def __init__(self, name, player, parameter, parameter_name, img=None):
+        Achievement.__init__(self, name, img=img)
         self.player = player
         self.parameter = parameter
         self.description = 'Win a game with %s having lowest %s' % (player, parameter_name)
@@ -312,14 +321,15 @@ class PlayerOnLowestParameterAchievement(Achievement):
 
 
 class PlayerOnHeroAchievement(Achievement):
-    def __init__(self, name, player, heroes, msg=None):
-        Achievement.__init__(self, name)
+    def __init__(self, name, player, heroes, msg=None, img=None):
+        Achievement.__init__(self, name, img=img)
         self.player = player
         self.heroes = heroes
         if msg is None:
             self.description = 'Win a game with %s playing one of %s' % (player, sequence(heroes))
         else:
             self.description = 'Win a game with %s playing %s' % (player, msg)
+            self.special_description = True
 
     def evaluate(self):
         for match_id, data in self.match_list.items():

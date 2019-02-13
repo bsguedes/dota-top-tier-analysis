@@ -15,18 +15,20 @@ def evaluate_items(players):
 def item_list():
     return {
         'black_king_bar': 'Black King Bar',
+        'ultimate_scepter': 'Aghanim\'s Scepter',
         'blink': 'Blink Dagger',
         'force_staff': 'Force Staff',
-        'gem': 'Gem of True Sight',
+        'urn_of_shadows': 'Urn of Shadows',
+        'spirit_vessel': 'Spirit Vessel',
         'crimson_guard': 'Crimson Guard',
-        'ancient_janggo': 'Drum of Endurance',
         'vladmir': 'Vladmir\'s Offering',
+        'ancient_janggo': 'Drum of Endurance',
         'radiance': 'Radiance',
-        'magic_wand': 'Magic Wand',
         'magic_stick': 'Magic Stick',
+        'magic_wand': 'Magic Wand',
         'bottle': 'Bottle',
-        'ultimate_scepter': 'Aghanim\'s Scepter',
         'hand_of_midas': 'Hand of Midas',
+        'gem': 'Gem of True Sight',
         'rapier': 'Divine Rapier'
     }
 
