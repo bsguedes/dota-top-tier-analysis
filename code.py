@@ -475,7 +475,7 @@ class Parser:
                 y = gmtime(int(o['start_time'])).tm_year                
                 if ((last_days is not None and (calendar.timegm(gmtime()) - int(o['start_time'])) < last_days * 86400)
                         or (last_days is None and month is not None and y in self.years and m == month)
-                        or (last_days is None and y in self.years)
+                        or (last_days is None and month is None and y in self.years)
                         and (not ranked_only or o['lobby_type'] in [5, 6, 7])):
                     total_matches[name] += 1
                     if not o['match_id'] in matches:

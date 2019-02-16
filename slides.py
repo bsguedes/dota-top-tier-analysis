@@ -346,7 +346,7 @@ class Slides:
                     if len(heroes) > index:
                         hero = heroes[index]
                         pic_path = 'data/heroes/%s.jpg' % hero['id']
-                        slide.shapes.add_picture(pic_path, Inches(0.5) + y * Inches(10 / columns),
+                        slide.shapes.add_picture(pic_path, Inches(0.5) + y * Inches(9 / columns),
                                                  Inches(1.8) + x * Inches(0.8),
                                                  height=Inches(0.7))
                         if most_played:
@@ -499,36 +499,37 @@ class Slides:
         slide.shapes.title.text = "Best Team by Hero Performance"
         i = 0
         for r in roles().values():
-            pic_path = 'data/heroes/%s.jpg' % best_team[r][0]['hero_id']
-            slide.shapes.add_picture(pic_path, Inches(0.5 + 1.8 * i), Inches(2), height=Inches(0.8))
-            tx_box = slide.shapes.add_textbox(Inches(0.5 + 1.8 * i), Inches(3), Inches(1.6), Inches(0.4))
-            tf = tx_box.text_frame
-            tf.text = best_team[r][0]['hero_name']
-            tf.paragraphs[0].alignment = PP_ALIGN.CENTER
-            tf.paragraphs[0].font.size = Pt(18)
-            tx_box = slide.shapes.add_textbox(Inches(0.5 + 1.8 * i), Inches(3.6), Inches(1.6), Inches(0.4))
-            tf = tx_box.text_frame
-            tf.text = '%.1f' % best_team[r][0]['rating']
-            tf.paragraphs[0].font.bold = True
-            tf.paragraphs[0].font.size = Pt(24)
-            tf.paragraphs[0].alignment = PP_ALIGN.CENTER
-            tx_box = slide.shapes.add_textbox(Inches(0.5 + 1.8 * i), Inches(1.5), Inches(1.6), Inches(0.4))
-            tf = tx_box.text_frame
-            tf.text = '%s' % best_team[r][0]['role']
-            tf.paragraphs[0].font.bold = True
-            tf.paragraphs[0].font.size = Pt(18)
-            tf.paragraphs[0].alignment = PP_ALIGN.CENTER
-            for j in range(1, min(len(best_team[r]), 5)):
-                pic_path = 'data/heroes/%s.jpg' % best_team[r][j]['hero_id']
-                slide.shapes.add_picture(pic_path, Inches(0.5 + 1.8 * i), Inches(4.5 + (j - 1) * 0.7),
-                                         height=Inches(0.5))
-                tx_box = slide.shapes.add_textbox(Inches(1.6 + 1.8 * i), Inches(4.5 + (j - 1) * 0.7), Inches(1.6),
-                                                  Inches(0.4))
+            if len(best_team[r]) < 0:
+                pic_path = 'data/heroes/%s.jpg' % best_team[r][0]['hero_id']
+                slide.shapes.add_picture(pic_path, Inches(0.5 + 1.8 * i), Inches(2), height=Inches(0.8))
+                tx_box = slide.shapes.add_textbox(Inches(0.5 + 1.8 * i), Inches(3), Inches(1.6), Inches(0.4))
                 tf = tx_box.text_frame
-                tf.text = '%.1f' % best_team[r][j]['rating']
+                tf.text = best_team[r][0]['hero_name']
+                tf.paragraphs[0].alignment = PP_ALIGN.CENTER
+                tf.paragraphs[0].font.size = Pt(18)
+                tx_box = slide.shapes.add_textbox(Inches(0.5 + 1.8 * i), Inches(3.6), Inches(1.6), Inches(0.4))
+                tf = tx_box.text_frame
+                tf.text = '%.1f' % best_team[r][0]['rating']
                 tf.paragraphs[0].font.bold = True
-                tf.paragraphs[0].font.size = Pt(16)
-                tf.paragraphs[0].alignment = PP_ALIGN.LEFT
+                tf.paragraphs[0].font.size = Pt(24)
+                tf.paragraphs[0].alignment = PP_ALIGN.CENTER
+                tx_box = slide.shapes.add_textbox(Inches(0.5 + 1.8 * i), Inches(1.5), Inches(1.6), Inches(0.4))
+                tf = tx_box.text_frame
+                tf.text = '%s' % best_team[r][0]['role']
+                tf.paragraphs[0].font.bold = True
+                tf.paragraphs[0].font.size = Pt(18)
+                tf.paragraphs[0].alignment = PP_ALIGN.CENTER
+                for j in range(1, min(len(best_team[r]), 5)):
+                    pic_path = 'data/heroes/%s.jpg' % best_team[r][j]['hero_id']
+                    slide.shapes.add_picture(pic_path, Inches(0.5 + 1.8 * i), Inches(4.5 + (j - 1) * 0.7),
+                                             height=Inches(0.5))
+                    tx_box = slide.shapes.add_textbox(Inches(1.6 + 1.8 * i), Inches(4.5 + (j - 1) * 0.7), Inches(1.6),
+                                                      Inches(0.4))
+                    tf = tx_box.text_frame
+                    tf.text = '%.1f' % best_team[r][j]['rating']
+                    tf.paragraphs[0].font.bold = True
+                    tf.paragraphs[0].font.size = Pt(16)
+                    tf.paragraphs[0].alignment = PP_ALIGN.LEFT
             i += 1
 
     def add_best_team_by_player(self, best_team):
@@ -536,54 +537,55 @@ class Slides:
         slide.shapes.title.text = "Best Player/Hero by Position"
         i = 0
         for r in roles().values():
-            tx_box = slide.shapes.add_textbox(Inches(0.5 + 1.8 * i), Inches(1.5), Inches(1.6), Inches(0.4))
-            tf = tx_box.text_frame
-            tf.text = '%s' % best_team[r][0]['role']
-            tf.paragraphs[0].font.bold = True
-            tf.paragraphs[0].font.size = Pt(18)
-            tf.paragraphs[0].alignment = PP_ALIGN.CENTER
-
-            pic_path = 'data/heroes/%s.jpg' % best_team[r][0]['hero_id']
-            slide.shapes.add_picture(pic_path, Inches(0.5 + 1.8 * i), Inches(2), height=Inches(0.8))
-
-            tx_box = slide.shapes.add_textbox(Inches(0.5 + 1.8 * i), Inches(3), Inches(1.6), Inches(0.4))
-            tf = tx_box.text_frame
-            tf.text = best_team[r][0]['hero_name']
-            tf.paragraphs[0].alignment = PP_ALIGN.CENTER
-            tf.paragraphs[0].font.size = Pt(18)
-
-            pic_path = 'data/pics/%s.jpg' % best_team[r][0]['player_id']
-            if os.path.isfile(pic_path):
-                slide.shapes.add_picture(pic_path, Inches(0.8 + 1.8 * i), Inches(3.45), height=Inches(1))
-
-            tx_box = slide.shapes.add_textbox(Inches(0.5 + 1.8 * i), Inches(4.4), Inches(1.6), Inches(0.4))
-            tf = tx_box.text_frame
-            tf.text = best_team[r][0]['player_name']
-            tf.paragraphs[0].alignment = PP_ALIGN.CENTER
-            tf.paragraphs[0].font.size = Pt(18)
-
-            tx_box = slide.shapes.add_textbox(Inches(0.5 + 1.8 * i), Inches(4.85), Inches(1.6), Inches(0.4))
-            tf = tx_box.text_frame
-            tf.text = '%.1f' % best_team[r][0]['rating']
-            tf.paragraphs[0].font.bold = True
-            tf.paragraphs[0].font.size = Pt(24)
-            tf.paragraphs[0].alignment = PP_ALIGN.CENTER
-
-            for j in range(1, min(len(best_team[r]), 5)):
-                pic_path = 'data/heroes/%s.jpg' % best_team[r][j]['hero_id']
-                slide.shapes.add_picture(pic_path, Inches(0.5 + 1.8 * i), Inches(5.6 + (j - 1) * 0.45),
-                                         height=Inches(0.35))
-                pic_path = 'data/pics/%s.jpg' % best_team[r][j]['player_id']
-                if os.path.isfile(pic_path):
-                    slide.shapes.add_picture(pic_path, Inches(1.2 + 1.8 * i), Inches(5.6 + (j - 1) * 0.45),
-                                             height=Inches(0.35))
-                tx_box = slide.shapes.add_textbox(Inches(1.6 + 1.8 * i), Inches(5.6 + (j - 1) * 0.45), Inches(1.6),
-                                                  Inches(0.4))
+            if len(best_team[r]) > 0:
+                tx_box = slide.shapes.add_textbox(Inches(0.5 + 1.8 * i), Inches(1.5), Inches(1.6), Inches(0.4))
                 tf = tx_box.text_frame
-                tf.text = '%.1f' % best_team[r][j]['rating']
+                tf.text = '%s' % best_team[r][0]['role']
                 tf.paragraphs[0].font.bold = True
-                tf.paragraphs[0].font.size = Pt(16)
-                tf.paragraphs[0].alignment = PP_ALIGN.LEFT
+                tf.paragraphs[0].font.size = Pt(18)
+                tf.paragraphs[0].alignment = PP_ALIGN.CENTER
+
+                pic_path = 'data/heroes/%s.jpg' % best_team[r][0]['hero_id']
+                slide.shapes.add_picture(pic_path, Inches(0.5 + 1.8 * i), Inches(2), height=Inches(0.8))
+
+                tx_box = slide.shapes.add_textbox(Inches(0.5 + 1.8 * i), Inches(3), Inches(1.6), Inches(0.4))
+                tf = tx_box.text_frame
+                tf.text = best_team[r][0]['hero_name']
+                tf.paragraphs[0].alignment = PP_ALIGN.CENTER
+                tf.paragraphs[0].font.size = Pt(18)
+
+                pic_path = 'data/pics/%s.jpg' % best_team[r][0]['player_id']
+                if os.path.isfile(pic_path):
+                    slide.shapes.add_picture(pic_path, Inches(0.8 + 1.8 * i), Inches(3.45), height=Inches(1))
+
+                tx_box = slide.shapes.add_textbox(Inches(0.5 + 1.8 * i), Inches(4.4), Inches(1.6), Inches(0.4))
+                tf = tx_box.text_frame
+                tf.text = best_team[r][0]['player_name']
+                tf.paragraphs[0].alignment = PP_ALIGN.CENTER
+                tf.paragraphs[0].font.size = Pt(18)
+
+                tx_box = slide.shapes.add_textbox(Inches(0.5 + 1.8 * i), Inches(4.85), Inches(1.6), Inches(0.4))
+                tf = tx_box.text_frame
+                tf.text = '%.1f' % best_team[r][0]['rating']
+                tf.paragraphs[0].font.bold = True
+                tf.paragraphs[0].font.size = Pt(24)
+                tf.paragraphs[0].alignment = PP_ALIGN.CENTER
+
+                for j in range(1, min(len(best_team[r]), 5)):
+                    pic_path = 'data/heroes/%s.jpg' % best_team[r][j]['hero_id']
+                    slide.shapes.add_picture(pic_path, Inches(0.5 + 1.8 * i), Inches(5.6 + (j - 1) * 0.45),
+                                             height=Inches(0.35))
+                    pic_path = 'data/pics/%s.jpg' % best_team[r][j]['player_id']
+                    if os.path.isfile(pic_path):
+                        slide.shapes.add_picture(pic_path, Inches(1.2 + 1.8 * i), Inches(5.6 + (j - 1) * 0.45),
+                                                 height=Inches(0.35))
+                    tx_box = slide.shapes.add_textbox(Inches(1.6 + 1.8 * i), Inches(5.6 + (j - 1) * 0.45), Inches(1.6),
+                                                      Inches(0.4))
+                    tf = tx_box.text_frame
+                    tf.text = '%.1f' % best_team[r][j]['rating']
+                    tf.paragraphs[0].font.bold = True
+                    tf.paragraphs[0].font.size = Pt(16)
+                    tf.paragraphs[0].alignment = PP_ALIGN.LEFT
             i += 1
 
     def add_results_slides(self, medals, points):

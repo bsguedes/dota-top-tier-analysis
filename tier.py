@@ -24,27 +24,22 @@ class Tier:
         self.tiers = self.get_tiers()
 
     def get_tiers(self):
-        values = [a.number for a in self.scores_array]
-        diff = np.array([abs(values[i + 1] - values[i]) for i in range(len(self.scores_array) - 1)])        
-        d1 = np.argmax(diff)
-        diff[d1] = 0
-        d2 = np.argmax(diff)
-        d1 += 0.5
-        d2 += 0.5
-
         tiers = dict()
-        tier = 0
-        tiers[tier] = list()
-        for i in range(len(self.scores_array)):
-            if i > d1:
-                tier += 1
-                tiers[tier] = list()
-                d1 = 1000
-            if i > d2:
-                tier += 1
-                tiers[tier] = list()
-                d2 = 1000
-            tiers[tier].append(self.scores_array[i])
+        count = 0
+        for i in range(0, self.NUMBER_OF_TIERS):
+            tiers[i] = list()
+            for j in range(count, min(int((i + 1) * self.tier_size), self.player_count)):
+                tiers[i].append(self.scores_array[j])
+                count += 1
+            if i < self.NUMBER_OF_TIERS - 1:
+                while count < len(self.scores_array) and len(tiers[i]) > 0 \
+                        and self.scores_array[count].score == tiers[i][-1].score:
+                    tiers[i].append(self.scores_array[count])
+                    count += 1
+        for i in range(1, self.NUMBER_OF_TIERS):
+            if len(tiers[i - 1]) == 0:
+                tiers[i - 1] = tiers[i]
+                tiers[i] = list()
         return tiers
 
     def list_to_print(self):
@@ -54,8 +49,9 @@ class Tier:
         for i in range(self.NUMBER_OF_TIERS):
             lst.append('')
             lst.append('Tier %i:' % (i + 1))
-            for item in self.tiers[i]:
-                lst.append(item.text)
+            if i in self.tiers:
+                for item in self.tiers[i]:
+                    lst.append(item.text)
         return lst
 
     def print(self):
