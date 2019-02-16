@@ -172,6 +172,8 @@ class PnKAchievements(AchievementBase):
         self.add_ach(WinCarriedByAchievement('Pushing Far From Your Friends', 'Nuvah', 'Lina'))
         self.add_ach(WinCarriedByAchievement('Heavier than a Black Hole', 'Alidio', 'Wraith King'))
         self.add_ach(WinCarriedByAchievement('What is a Hero Pool?', 'Chuvisco', 'Necrophos'))
+        self.add_ach(StreakAchievement('All Green Profile', 8))
+        self.add_ach(StreakAchievement('All Red Profile', -8))
         self.add_ach(ItemAchievement('Trump Card', 'rapier', 'Divine Rapier', 1))
         self.add_ach(ItemAchievement('Next Lebel Farming', 'radiance', 'Radiance', 2))
         self.add_ach(ItemAchievement('Multiple Midas', 'hand_of_midas', 'Hand of Midas', 3))
@@ -213,6 +215,28 @@ class Achievement:
         self.player_list = players
         self.match_list = matches
         self.winners = {i: [] for p, i in self.player_list.items()}
+
+
+class StreakAchievement(Achievement):
+    def __init__(self, name, amount):
+        Achievement.__init__(self, name)
+        self.amount = amount
+        self.description = 'Get a %s Streak of %i Matches' % ('Win' if amount > 0 else 'Loss', abs(amount))
+
+    def evaluate(self):
+        player_count = {i: 0 for p, i in self.player_list.items()}
+        for match_id, data in self.match_list.items():
+            self.games += 1
+            if (data['win'] and self.amount > 0) or (self.amount < 0 and not data['win']):
+                for player in data['players']:
+                    player_count[player] += 1
+                    if player_count[player] == abs(self.amount):
+                        self.winners[player].append(match_id)
+            else:
+                for player in data['players']:
+                    player_count[player] = 0
+        self.wins = sum([len(w) for p, w in self.winners.items()])
+        return super(StreakAchievement, self).evaluate()
 
 
 class ItemAchievement(Achievement):

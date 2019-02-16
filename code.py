@@ -43,8 +43,12 @@ class Parser:
 
     @staticmethod
     def load_matches(unique_matches):
-        return {match_id: json.loads(open('matches/%i.json' % match_id, 'r', encoding='utf-8').read()) for
-                match_id, match_players in unique_matches.items()}
+        matches = list()
+        for match_id, _ in unique_matches.items():
+            content = open('matches/%i.json' % match_id, 'r', encoding='utf-8').read()
+            content = json.loads(content)
+            matches.append({'id': match_id, 'content': content, 'date': content['start_time']})
+        return sorted(matches, key=lambda e: e['date'])
 
     def evaluate_best_team_by_hero_player(self, min_matches):
         role_dict = {}
@@ -116,6 +120,7 @@ class Parser:
         return ret
 
     def identify_heroes(self, matches, min_couple_matches=10):
+        matches = {o['id']: o['content'] for o in matches}
         hs = open('data/heroes.json', 'r', encoding='utf-8').read()
         hs_json = json.loads(hs)
         self.heroes = {h['id']: h['localized_name'] for h in hs_json}
@@ -376,6 +381,7 @@ class Parser:
 
     def stat_counter(self, matches, parameter, reverse=True, has_avg=True, unit=None, max_fmt=None, avg_fmt=None,
                      text=None, has_max=True, tf=None, rule=None):
+        matches = {o['id']: o['content'] for o in matches}
         text = parameter if text is None else text
 
         account_ids = [v for k, v in self.players.items()]

@@ -499,7 +499,7 @@ class Slides:
         slide.shapes.title.text = "Best Team by Hero Performance"
         i = 0
         for r in roles().values():
-            if len(best_team[r]) < 0:
+            if len(best_team[r]) > 0:
                 pic_path = 'data/heroes/%s.jpg' % best_team[r][0]['hero_id']
                 slide.shapes.add_picture(pic_path, Inches(0.5 + 1.8 * i), Inches(2), height=Inches(0.8))
                 tx_box = slide.shapes.add_textbox(Inches(0.5 + 1.8 * i), Inches(3), Inches(1.6), Inches(0.4))
@@ -653,7 +653,6 @@ class Slides:
         if achievement.special_description:
             txt_box = slide.shapes.add_textbox(Inches(0.2), Inches(6.7), Inches(9.5), height)
             tf = txt_box.text_frame
-            print(achievement.heroes)
             tf.text = 'Hero list: %s' % sequence(achievement.heroes)
             tf.word_wrap = True
             tf.paragraphs[0].font.size = Pt(10)
