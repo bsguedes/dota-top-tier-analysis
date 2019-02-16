@@ -193,13 +193,17 @@ if __name__ == '__main__':
     s.add_most_played([v for v in p.most_played_heroes if v['matches'] == 0], False)
     s.add_win_rate_heroes(p.against_heroes, 'Against')
     s.add_compositions(p.compositions)
+    s.add_win_rate_by_date(p.win_rate_by_weekday, 'Weekday')
+    if MONTH is None:
+        s.add_win_rate_by_date(p.win_rate_by_month, 'Month')
     s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES))
     s.add_best_team_by_player(p.evaluate_best_team_by_hero_player(MIN_COUPLE_MATCHES/2))
 
     s.add_divider_slide("%s Players" % TEAM_NAME, 'Roles, Pairings and Most Played Heroes')
     for item in sorted(p.player_descriptor, key=lambda e: e['rating'], reverse=True):
         if item['matches'] > 0:
-            s.add_player_slides(item)
+            s.add_player_data_slide(item)
+            s.add_player_tables_slide(item)
 
     s.add_divider_slide("%s Technical Categories" % TEAM_NAME, 'Averages and Maximum for many statistics')
     for tier, category in tiers:

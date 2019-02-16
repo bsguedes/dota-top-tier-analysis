@@ -32,6 +32,8 @@ class Parser:
         self.with_heroes = []
         self.most_played_heroes = []
         self.compositions = []
+        self.win_rate_by_weekday = {}
+        self.win_rate_by_month = {}
         self.player_roles = {}
         self.player_heroes = {}
         self.player_wins_by_hero = {}
@@ -132,6 +134,8 @@ class Parser:
                              'our_team_heroes': [],
                              'players': [],
                              'player_desc': {}} for k, v in matches.items()}
+        self.win_rate_by_weekday = {i: {'wins': 0, 'losses': 0, 'matches': 0, 'wr': 0} for i in calendar.day_abbr}
+        self.win_rate_by_month = {i: {'wins': 0, 'losses': 0, 'matches': 0, 'wr': 0} for i in calendar.month_abbr[1:]}
         for match_id, obj in matches.items():
             for p in obj['players']:
                 if p['account_id'] in account_ids:
@@ -153,12 +157,25 @@ class Parser:
                                                                     x['account_id'] in account_ids])
             match_summary[match_id]['barracks'] = obj[
                 'barracks_status_radiant' if match_summary[match_id]['is_radiant'] else 'barracks_status_dire']
+            c_month = calendar.month_abbr[gmtime(int(obj['start_time'])).tm_mon]
+            c_weekday = calendar.day_abbr[gmtime(int(obj['start_time'])).tm_wday]
+            self.win_rate_by_weekday[c_weekday]['matches'] += 1
+            self.win_rate_by_month[c_month]['matches'] += 1
+            if match_summary[match_id]['win']:
+                self.win_rate_by_weekday[c_weekday]['wins'] += 1
+                self.win_rate_by_month[c_month]['wins'] += 1
+            else:
+                self.win_rate_by_weekday[c_weekday]['losses'] += 1
+                self.win_rate_by_month[c_month]['losses'] += 1
             for p in obj['players']:
                 if p['isRadiant'] != match_summary[match_id]['is_radiant']:
                     match_summary[match_id]['enemy_heroes'].append(p['hero_id'])
                 else:
                     match_summary[match_id]['our_team_heroes'].append(self.heroes[p['hero_id']])
-
+        for wd, o in self.win_rate_by_weekday.items():
+            self.win_rate_by_weekday[wd]['wr'] = 100 * o['wins'] / o['matches'] if o['matches'] > 0 else 0
+        for wd, o in self.win_rate_by_month.items():
+            self.win_rate_by_month[wd]['wr'] = 100 * o['wins'] / o['matches'] if o['matches'] > 0 else 0
         self.match_summary = match_summary
 
         print('')
@@ -211,7 +228,10 @@ class Parser:
         print('')
         player_hero_in_match = dict()
         players_heroes = {i: {h: 0 for h, n in self.heroes.items()} for p, i in self.players.items()}
-        phd = {i: {h: {'wins': 0, 'matches': 0} for h, n in self.heroes.items()} for p, i in self.players.items()}
+        phd = {i: {h: {'wins': 0,
+                       'matches': 0,
+                       'wins_against': 0,
+                       'matches_against': 0} for h, n in self.heroes.items()} for p, i in self.players.items()}
         for mid, v in match_summary.items():
             player_hero_in_match[mid] = dict()
             for ally_hero, player in zip(v['our_heroes'], v['players']):
@@ -220,6 +240,11 @@ class Parser:
                 phd[player][ally_hero]['matches'] += 1
                 if v['win']:
                     phd[player][ally_hero]['wins'] += 1
+            for player in v['players']:
+                for enemy_hero in v['enemy_heroes']:
+                    phd[player][enemy_hero]['matches_against'] += 1
+                    if v['win']:
+                        phd[player][enemy_hero]['wins_against'] += 1
         for p, _ in self.players.items():
             pl = players_heroes[self.players[p]]
             m = max(pl.items(), key=operator.itemgetter(1))
@@ -231,6 +256,8 @@ class Parser:
         for pid, v in phd.items():
             for hid, s in v.items():
                 phd[pid][hid]['rating'] = rating(phd[pid][hid]['wins'], matches=phd[pid][hid]['matches'])
+                phd[pid][hid]['inv_rating'] = rating(phd[pid][hid]['matches_against'] - phd[pid][hid]['wins_against'],
+                                                     matches=phd[pid][hid]['matches_against'])
         self.player_wins_by_hero = phd
 
         print('')
@@ -374,7 +401,8 @@ class Parser:
                 'matches': sum([w['matches'] for h, w in self.player_wins_by_hero[pid].items()]),
                 'wins': sum([w['wins'] for h, w in self.player_wins_by_hero[pid].items()]),
                 'rating': rating(sum([w['wins'] for h, w in self.player_wins_by_hero[pid].items()]),
-                                 matches=sum([w['matches'] for h, w in self.player_wins_by_hero[pid].items()]))
+                                 matches=sum([w['matches'] for h, w in self.player_wins_by_hero[pid].items()])),
+                'versatility': self.versatility([w['matches'] for h, w in self.player_wins_by_hero[pid].items()])
             } for player_name, pid in self.players.items()]
 
         return tier_dict
