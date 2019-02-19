@@ -121,7 +121,7 @@ class Parser:
             })
         return ret
 
-    def identify_heroes(self, matches, min_couple_matches=10):
+    def identify_heroes(self, rep, matches, min_couple_matches=10):
         matches = {o['id']: o['content'] for o in matches}
         hs = open('data/heroes.json', 'r', encoding='utf-8').read()
         hs_json = json.loads(hs)
@@ -129,6 +129,7 @@ class Parser:
         inv_h = {h['localized_name']: h['id'] for h in hs_json}
         inv_p = {v: k for k, v in self.players.items()}
         account_ids = [v for k, v in self.players.items()]
+        replacements = {v: k for k, v in rep.items()} if rep is not None else {}
         match_summary = {k: {'our_heroes': [],
                              'enemy_heroes': [],
                              'our_team_heroes': [],
@@ -138,6 +139,8 @@ class Parser:
         self.win_rate_by_month = {i: {'wins': 0, 'losses': 0, 'matches': 0, 'wr': 0} for i in calendar.month_abbr[1:]}
         for match_id, obj in matches.items():
             for p in obj['players']:
+                if p['account_id'] in replacements:
+                    p['account_id'] = self.players[replacements[p['account_id']]]
                 if p['account_id'] in account_ids:
                     match_summary[match_id]['lobby_type'] = lobby_type()[obj['lobby_type']]
                     match_summary[match_id]['our_heroes'].append(p['hero_id'])
@@ -497,7 +500,7 @@ class Parser:
 
         return results_avg, results_max
 
-    def get_matches(self, month=None, last_days=None, ranked_only=False):
+    def get_matches(self, replacement, month=None, last_days=None, ranked_only=False):
         matches = dict()
         total_matches = {n: 0 for n, pid in self.players.items()}
         for name, _ in self.players.items():
@@ -515,6 +518,24 @@ class Parser:
                     if not o['match_id'] in matches:
                         matches[o['match_id']] = []
                     matches[o['match_id']].append(name)
+        if replacement is not None:
+            for name, _ in replacement.items():
+                content = open('players/%s_matches_r.json' % name, 'r').read()
+                obj = json.loads(content)
+                if name not in total_matches:
+                    total_matches[name] = 0
+                for o in obj:
+                    m = gmtime(int(o['start_time'])).tm_mon
+                    y = gmtime(int(o['start_time'])).tm_year
+                    if ((last_days is not None
+                            and (calendar.timegm(gmtime()) - int(o['start_time'])) < last_days * 86400)
+                            or (last_days is None and month is not None and y in self.years and m == month)
+                            or (last_days is None and month is None and y in self.years)
+                            and (not ranked_only or o['lobby_type'] in [5, 6, 7])):
+                        total_matches[name] += 1
+                        if not o['match_id'] in matches:
+                            matches[o['match_id']] = []
+                        matches[o['match_id']].append(name)
         for i in range(5):
             self.matches_by_party_size.append(len({k: v for k, v in matches.items() if len(v) == i + 1}))
             print('Matches played by party of size %i: %s' % (i + 1, self.matches_by_party_size[i]))

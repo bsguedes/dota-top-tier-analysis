@@ -14,8 +14,8 @@ import calendar
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
-YEARS = [2018]
-MONTH = None
+YEARS = [2019]
+MONTH = 2
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
 
@@ -24,11 +24,11 @@ PRINT_TIERS = False
 
 parameters = {
     PNK: {
-        'min_matches': 30,
-        'min_couple_matches': 10,
+        'min_matches': 4,
+        'min_couple_matches': 3,
         'min_party_size': 4,
-        'full_party_matches': 5,
-        'min_matches_with_hero': 3
+        'full_party_matches': 2,
+        'min_matches_with_hero': 2
     },
     BLAZING_DOTA: {
         'min_matches': 4,
@@ -44,6 +44,13 @@ MIN_MATCHES = parameters[TEAM_NAME]['min_matches']
 MIN_COUPLE_MATCHES = parameters[TEAM_NAME]['min_couple_matches']
 FULL_PARTY_MATCHES = parameters[TEAM_NAME]['full_party_matches']
 MIN_MATCHES_WITH_HERO = parameters[TEAM_NAME]['min_matches_with_hero']
+
+replacement_list = {
+    PNK: {
+        'Fallenzão': 331461200,
+        'kkz': 116647196
+    }
+}
 
 player_list = {
     PNK: {
@@ -150,15 +157,16 @@ def get_subtitle():
 if __name__ == '__main__':
     start = time.time()
     players = player_list[TEAM_NAME]
+    replacements = replacement_list[TEAM_NAME] if TEAM_NAME in replacement_list else None
     s = Slides(TEAM_NAME, YEARS, get_title(), get_subtitle(), players, month=MONTH)
     p = Parser(TEAM_NAME, YEARS, players, MIN_MATCHES, MIN_PARTY_SIZE, FULL_PARTY_MATCHES)
 
     downloader.download_heroes()
-    downloader.download_player_data(players, override=DOWNLOAD_PLAYERS)
-    unique_matches = p.get_matches(month=MONTH, ranked_only=False)
+    downloader.download_player_data(players, replacements, override=DOWNLOAD_PLAYERS)
+    unique_matches = p.get_matches(replacements, month=MONTH, ranked_only=False)
     downloader.download_matches(unique_matches)
     matches_json = Parser.load_matches(unique_matches)
-    tier_positions = p.identify_heroes(matches_json, min_couple_matches=MIN_COUPLE_MATCHES)
+    tier_positions = p.identify_heroes(replacements, matches_json, min_couple_matches=MIN_COUPLE_MATCHES)
     tiers = []
     for c in categories:
         if c.rule == 'position':

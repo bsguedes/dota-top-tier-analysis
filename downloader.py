@@ -26,7 +26,7 @@ def download_heroes():
                     break
 
 
-def download_player_data(players, override=True):
+def download_player_data(players, replacements, override=True):
     if not os.path.exists('players'):
         os.makedirs('players')
     for name, pid in players.items():
@@ -36,6 +36,14 @@ def download_player_data(players, override=True):
             url = 'https://api.opendota.com/api/players/%s/matches?project=start_time' % pid
             r = requests.get(url, allow_redirects=True)
             open(file_name, 'wb').write(r.content)
+    if replacements is not None:
+        for name, pid in replacements.items():
+            file_name = 'players/%s_matches_r.json' % name
+            if override or not os.path.isfile(file_name):
+                print('Downloading %s replacement data' % name)
+                url = 'https://api.opendota.com/api/players/%s/matches?project=start_time' % pid
+                r = requests.get(url, allow_redirects=True)
+                open(file_name, 'wb').write(r.content)
 
 
 def download_matches(unique_matches, override=False, download_again=False):
