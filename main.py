@@ -14,21 +14,22 @@ import calendar
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
-YEARS = [2019]
-MONTH = 2
+YEARS = [2018]
+MONTH = None
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
+REDOWNLOAD_SMALL_FILES = False
 
 # PnK monthly parameters: 4, 3, 4, 2, 2
 # Year parameters: 30, 10, 4, 5, 3
 
 parameters = {
     PNK: {
-        'min_matches': 4,
-        'min_couple_matches': 3,
+        'min_matches': 30,
+        'min_couple_matches': 10,
         'min_party_size': 4,
-        'full_party_matches': 2,
-        'min_matches_with_hero': 2
+        'full_party_matches': 5,
+        'min_matches_with_hero': 3
     },
     BLAZING_DOTA: {
         'min_matches': 4,
@@ -133,6 +134,8 @@ categories = [
     Category(2, 'purchase', unit='tomes', text='tomes of knowledge purchased', rule='tome_of_knowledge'),
     Category(5, 'stuns', unit='seconds', text='stun duration dealt', max_format='%.2f'),
     Category(5, 'pings', unit='pings'),
+    Category(8, 'win_streak', unit='matches', text='win streak', rule='win_streak', avg_format='%s'),
+    Category(8, 'loss_streak', unit='matches', text='loss streak', rule='loss_streak', reverse=False, avg_format='%s'),
     Category(4, 'lane_efficiency_pct', unit='%', text='lane efficiency at 10min'),
     Category(2, 'buyback_count', unit='buybacks', text='buybacks'),
     Category(2, 'kill_streaks', unit='streaks', text='beyond godlike streaks', rule='beyond_godlike', has_max=False),
@@ -164,7 +167,7 @@ if __name__ == '__main__':
     downloader.download_heroes()
     downloader.download_player_data(players, replacements, override=DOWNLOAD_PLAYERS)
     unique_matches = p.get_matches(replacements, month=MONTH, ranked_only=False)
-    downloader.download_matches(unique_matches)
+    downloader.download_matches(unique_matches, download_again=REDOWNLOAD_SMALL_FILES)
     matches_json = Parser.load_matches(unique_matches)
     tier_positions = p.identify_heroes(replacements, matches_json, min_couple_matches=MIN_COUPLE_MATCHES)
     tiers = []
@@ -175,6 +178,12 @@ if __name__ == '__main__':
             tiers.append((tier, c))
         elif c.rule == 'versatility':
             tier = Tier(c.weight, p.player_versatility(), 'Versatility in %s matches' % TEAM_NAME)
+            tiers.append((tier, c))
+        elif c.rule == 'win_streak':
+            tier = Tier(c.weight, p.win_streak(), 'Best win streak in %s matches' % TEAM_NAME)
+            tiers.append((tier, c))
+        elif c.rule == 'loss_streak':
+            tier = Tier(c.weight, p.loss_streak(), 'Worst loss streak in %s matches' % TEAM_NAME)
             tiers.append((tier, c))
         else:
             res_avg, res_max = p.stat_counter(matches_json, c.parameter, text=c.text, unit=c.unit, tf=c.transform,

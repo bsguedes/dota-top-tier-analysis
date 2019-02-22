@@ -99,7 +99,7 @@ class Slides:
                 p = tf.paragraphs[0]
                 p.text = '%s has %s matches' % (hero['name'], hero['matches'])
 
-                s = sorted([x for x in hero['played_by'] if x['matches'] >= min_matches_with_hero],
+                s = sorted([x for x in hero['played_by'] if x['matches'] >= min_matches_with_hero and x['rating'] > 0],
                            key=lambda e: (e['rating'], e['matches']),
                            reverse=True)
                 if len(s) > 0:
@@ -201,6 +201,30 @@ class Slides:
         p = tf.paragraphs[0]
         p.text = 'Versatility:'
 
+        tx_box = slide.shapes.add_textbox(Inches(3.6), Inches(1.6), Inches(1.5), Inches(0.5))
+        tf = tx_box.text_frame
+        p = tf.paragraphs[0]
+        p.text = 'Best Win Streak:'
+
+        tx_box = slide.shapes.add_textbox(Inches(3.6), Inches(2), Inches(1.5), Inches(0.5))
+        tf = tx_box.text_frame
+        p = tf.paragraphs[0]
+        p.text = 'Worst Loss Streak:'
+
+        tx_box = slide.shapes.add_textbox(Inches(4.5), Inches(1.55), Inches(1.75), Inches(0.5))
+        tf = tx_box.text_frame
+        p = tf.paragraphs[0]
+        p.text = '%s' % max(0, max(desc['streaks']))
+        p.font.size = Pt(22)
+        p.alignment = PP_ALIGN.RIGHT
+
+        tx_box = slide.shapes.add_textbox(Inches(4.5), Inches(1.95), Inches(1.75), Inches(0.5))
+        tf = tx_box.text_frame
+        p = tf.paragraphs[0]
+        p.text = '%s' % abs(min(0, min(desc['streaks'])))
+        p.font.size = Pt(22)
+        p.alignment = PP_ALIGN.RIGHT
+
         tx_box = slide.shapes.add_textbox(Inches(1.6), Inches(1.5), Inches(1.75), Inches(0.5))
         tf = tx_box.text_frame
         p = tf.paragraphs[0]
@@ -238,11 +262,17 @@ class Slides:
                 tf.text = '%.1f' % heroes[i][1]['rating']
                 tf.paragraphs[0].font.bold = True
                 tf.paragraphs[0].font.size = Pt(24)
-                tx_box = slide.shapes.add_textbox(Inches(2.6), Inches(4.4) + i * Inches(0.8), Inches(1.5), Inches(0.5))
+                tx_box = slide.shapes.add_textbox(Inches(2.6), Inches(4.2) + i * Inches(0.8), Inches(1.5), Inches(0.5))
                 tf = tx_box.text_frame
                 p = tf.paragraphs[0]
                 p.text = '%s matches' % heroes[i][1]['matches']
                 p.font.size = Pt(16)
+                tx_box = slide.shapes.add_textbox(Inches(2.6), Inches(4.45) + i * Inches(0.8), Inches(1), Inches(0.5))
+                tf = tx_box.text_frame
+                p = tf.paragraphs[0]
+                p.text = '%s - %s' % (heroes[i][1]['wins'], heroes[i][1]['matches'] - heroes[i][1]['wins'])
+                p.font.size = Pt(13)
+                p.alignment = PP_ALIGN.CENTER
 
         tx_box = slide.shapes.add_textbox(Inches(4), Inches(3.7), Inches(1.5), Inches(0.5))
         tf = tx_box.text_frame
@@ -263,7 +293,7 @@ class Slides:
         tx_box = slide.shapes.add_textbox(Inches(6.5), Inches(3.7), Inches(1.5), Inches(0.5))
         tf = tx_box.text_frame
         p = tf.paragraphs[0]
-        p.text = 'Worst rating when against'
+        p.text = 'Worst rating against'
         p.font.size = Pt(16)
         s = sorted(heroes, key=lambda e: e[1]['inv_rating'], reverse=True)
         for i in range(4):
@@ -275,11 +305,17 @@ class Slides:
                 tf.text = '%.1f' % s[i][1]['inv_rating']
                 tf.paragraphs[0].font.bold = True
                 tf.paragraphs[0].font.size = Pt(24)
-                tx_box = slide.shapes.add_textbox(Inches(8.6), Inches(4.4) + i * Inches(0.8), Inches(1.5), Inches(0.5))
+                tx_box = slide.shapes.add_textbox(Inches(8.6), Inches(4.2) + i * Inches(0.8), Inches(1.5), Inches(0.5))
                 tf = tx_box.text_frame
                 p = tf.paragraphs[0]
                 p.text = '%s matches' % s[i][1]['matches_against']
                 p.font.size = Pt(16)
+                tx_box = slide.shapes.add_textbox(Inches(8.6), Inches(4.45) + i * Inches(0.8), Inches(1), Inches(0.5))
+                tf = tx_box.text_frame
+                p = tf.paragraphs[0]
+                p.text = '%s - %s' % (s[i][1]['wins_against'], s[i][1]['matches_against'] - s[i][1]['wins_against'])
+                p.font.size = Pt(13)
+                p.alignment = PP_ALIGN.CENTER
 
     def add_intro_slide(self, match_count, min_player_count, min_matches, min_couples_matches):
         slide = self.add_slide(1, 152, 251, 152)
@@ -490,7 +526,9 @@ class Slides:
         headers = ['Player', 'Total Matches', 'Matches with %s' % self.team_name, '%% with %s' % self.team_name]
         keys = ['player', 'matches', 'team_matches', 'perc_with_team']
         formats = ['%s', '%s', '%s', '%.2f %%']
-        Slides.create_table(slide, [x for x in summary if x['team_matches'] > 0], headers, keys, formats, Inches(0.5),
+        Slides.create_table(slide,
+                            sorted([x for x in summary if x['team_matches'] > 0], key=lambda e: e['team_matches'],
+                                   reverse=True), headers, keys, formats, Inches(0.5),
                             Inches(1.5), Inches(9), 1, 11, 14)
 
     def add_tier_slides(self, tier, category):

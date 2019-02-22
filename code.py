@@ -402,6 +402,7 @@ class Parser:
                 'heroes': self.player_wins_by_hero[pid],
                 'pairings': self.player_pairs[pid],
                 'matches': sum([w['matches'] for h, w in self.player_wins_by_hero[pid].items()]),
+                'streaks': self.calculate_streaks(pid, match_summary),
                 'wins': sum([w['wins'] for h, w in self.player_wins_by_hero[pid].items()]),
                 'rating': rating(sum([w['wins'] for h, w in self.player_wins_by_hero[pid].items()]),
                                  matches=sum([w['matches'] for h, w in self.player_wins_by_hero[pid].items()])),
@@ -409,6 +410,29 @@ class Parser:
             } for player_name, pid in self.players.items()]
 
         return tier_dict
+
+    def calculate_streaks(self, pid, matches):
+        streaks = list()
+        streak = 0
+        for mid, data in matches.items():
+            if pid in data['players']:
+                if streak == 0:
+                    streak += 1 if data['win'] else -1
+                elif streak > 0:
+                    if data['win']:
+                        streak += 1
+                    else:
+                        streaks.append(streak)
+                        streak = -1
+                elif streak < 0:
+                    if data['win']:
+                        streaks.append(streak)
+                        streak = 1
+                    else:
+                        streak -= 1
+        if streak != 0:
+            streaks.append(streak)
+        return streaks
 
     def stat_counter(self, matches, parameter, reverse=True, has_avg=True, unit=None, max_fmt=None, avg_fmt=None,
                      text=None, has_max=True, tf=None, rule=None):
@@ -569,6 +593,18 @@ class Parser:
                 versatility_dict[inv_p[pid]] = versatility
         s = sorted(versatility_dict.items(), key=lambda e: e[1], reverse=True)
         return [TierItem(k, v, '%s versatility: %.3f' % (k, v)) for k, v in s]
+
+    def win_streak(self):
+        return sorted([TierItem(p['name'], max(0, max(p['streaks'])),
+                                '%s best win streak: %s matches' % (p['name'], max(0, max(p['streaks'])))) for p in
+                       self.player_descriptor if len(p['streaks']) > 0 and p['matches'] > self.min_matches],
+                      key=lambda e: e.score, reverse=True)
+
+    def loss_streak(self):
+        return sorted([TierItem(p['name'], abs(min(0, min(p['streaks']))),
+                                '%s worst loss streak: %s matches' % (p['name'], abs(min(0, min(p['streaks']))))) for p
+                       in self.player_descriptor if len(p['streaks']) > 0 and p['matches'] > self.min_matches],
+                      key=lambda e: e.score)
 
     def versatility(self, values):
         count = len([x for x in values if x > 0])
