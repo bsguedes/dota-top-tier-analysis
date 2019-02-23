@@ -644,6 +644,41 @@ class Slides:
                     tf.paragraphs[0].alignment = PP_ALIGN.LEFT
             i += 1
 
+    def add_couples(self, couples, text):
+        inv_p = {v: k for k, v in self.players.items()}
+        slide = self.add_slide(5, 255, 105, 180)
+        slide.shapes.title.text = "%s %s Couples" % (self.team_name, text)
+        y = 5
+        x = 2
+        left = 0.6
+        player_size = 1
+        pic_size = 0.8
+        spacing = 2
+        top = 1.2
+        column_width = 4.8
+        for i in range(x):
+            for j in range(y):
+                c = couples[i * y + j]
+                Slides.text_box(slide, inv_p[c['p1']], left + column_width * i, top * (1 + j),
+                                width=player_size, font_size=14, alignment=PP_ALIGN.CENTER, bold=True)
+                Slides.text_box(slide, inv_p[c['p2']], left + player_size + spacing + column_width * i, top * (1 + j),
+                                width=player_size, font_size=14, alignment=PP_ALIGN.CENTER, bold=True)
+                pic_path = 'data/pics/%s.jpg' % c['p1']
+                if os.path.isfile(pic_path):
+                    slide.shapes.add_picture(pic_path, Inches(left + 0.1 + column_width * i),
+                                             Inches(top * (1 + j) + 0.35),  height=Inches(pic_size))
+                pic_path = 'data/pics/%s.jpg' % c['p2']
+                if os.path.isfile(pic_path):
+                    slide.shapes.add_picture(pic_path, Inches(left + 0.1 + player_size + spacing + column_width * i),
+                                             Inches(top * (1 + j) + 0.35), height=Inches(pic_size))
+                Slides.text_box(slide, '%.1f' % c['rating'], left + column_width * i + player_size, top * (1 + j),
+                                width=spacing, alignment=PP_ALIGN.CENTER, font_size=24, bold=True)
+                Slides.text_box(slide, '%.2f %%' % c['wr'], left + column_width * i + player_size, top * (1 + j) + 0.5,
+                                width=spacing, alignment=PP_ALIGN.CENTER, font_size=16)
+                Slides.text_box(slide, '%s matches (%s - %s)' % (c['matches'], c['wins'], c['matches'] - c['wins']),
+                                left + column_width * i + player_size, top * (1 + j) + 0.9,
+                                width=spacing, alignment=PP_ALIGN.CENTER, font_size=12)
+
     def add_best_team_by_player(self, best_team):
         slide = self.add_slide(5, 152, 251, 152)
         slide.shapes.title.text = "Best Player/Hero by Position"
@@ -717,8 +752,8 @@ class Slides:
         keys = ['player', 'gold', 'silver', 'bronze']
         scores = [{'player': k, 'gold': v[0], 'silver': v[1], 'bronze': v[2]} for k, v in medals]
         formats = ['%s', '%s', '%s', '%s']
-        Slides.create_table(slide, [x for x in scores if x['gold'] + x['silver'] + x['bronze'] > 0], headers, keys,
-                            formats, Inches(2), Inches(1.5), Inches(6), 1, 11, 14)
+        Slides.create_table_with_text_boxes(slide, [x for x in scores if x['gold'] + x['silver'] + x['bronze'] > 0],
+                                            headers, keys, formats, 2, 1.5, 6, 11, 14)
 
         slide = self.add_slide(5, 255, 255, 224)
         title_shape = slide.shapes.title
@@ -733,8 +768,8 @@ class Slides:
         keys = ['player', 'points']
         scores = [{'player': k, 'points': v} for k, v in points]
         formats = ['%s', '%s']
-        Slides.create_table(slide, [x for x in scores if x['points'] > 0], headers, keys, formats, Inches(3),
-                            Inches(1.5), Inches(3), 1, 11, 14)
+        Slides.create_table_with_text_boxes(slide, [x for x in scores if x['points'] > 0], headers, keys, formats, 3,
+                                            1.5, 3, 11, 14)
 
     def add_achievement_slide(self, achievement, result):
         inv_p = {v: k for k, v in self.players.items()}

@@ -38,6 +38,7 @@ class Parser:
         self.player_heroes = {}
         self.player_wins_by_hero = {}
         self.player_pairs = {}
+        self.player_couples = []
         self.five_player_compositions = []
         self.hero_statistics = []
         self.player_heroes_in_match = {}
@@ -292,7 +293,8 @@ class Parser:
                 if v['win']:
                     five_player[comp_sum]['wins'] += 1
         while True:
-            avg = [{'key': k, 'wr': v['wins'] / v['matches'], 'matches': v['matches']} for k, v in five_player.items() if
+            avg = [{'key': k, 'wr': v['wins'] / v['matches'], 'matches': v['matches']} for k, v in five_player.items()
+                   if
                    v['matches'] >= self.full_party_matches]
             if len(avg) <= 17:
                 break
@@ -412,6 +414,14 @@ class Parser:
                 self.player_pairs[self.players[k[1]]].append(
                     {'name': k[0], 'wins': couples_win[self.players[k[0]]][self.players[k[1]]], 'wr': 100 * v,
                      'matches': couples_matches[self.players[k[0]]][self.players[k[1]]]})
+                self.player_couples.append({'p1': self.players[k[0]], 'p2': self.players[k[1]], 'wr': 100 * v,
+                                            'rating': rating(couples_win[self.players[k[0]]][self.players[k[1]]],
+                                                             matches=couples_matches[self.players[k[0]]][
+                                                                 self.players[k[1]]]),
+                                            'wins': couples_win[self.players[k[0]]][self.players[k[1]]],
+                                            'matches': couples_matches[self.players[k[0]]][self.players[k[1]]]})
+
+        self.player_couples = sorted(self.player_couples, key=lambda e: e['rating'], reverse=True)
 
         self.player_descriptor = [
             {
@@ -421,7 +431,7 @@ class Parser:
                 'heroes': self.player_wins_by_hero[pid],
                 'pairings': self.player_pairs[pid],
                 'matches': sum([w['matches'] for h, w in self.player_wins_by_hero[pid].items()]),
-                'streaks': self.calculate_streaks(pid, match_summary),
+                'streaks': Parser.calculate_streaks(pid, match_summary),
                 'radiant_wr': 0 if len(
                     [1 for _, d in match_summary.items() if
                      pid in d['players'] and d['is_radiant']]) == 0 else 100 * len(
@@ -439,29 +449,6 @@ class Parser:
                 'versatility': self.versatility([w['matches'] for h, w in self.player_wins_by_hero[pid].items()])
             } for player_name, pid in self.players.items()]
         return tier_dict
-
-    def calculate_streaks(self, pid, matches):
-        streaks = list()
-        streak = 0
-        for mid, data in matches.items():
-            if pid in data['players']:
-                if streak == 0:
-                    streak += 1 if data['win'] else -1
-                elif streak > 0:
-                    if data['win']:
-                        streak += 1
-                    else:
-                        streaks.append(streak)
-                        streak = -1
-                elif streak < 0:
-                    if data['win']:
-                        streaks.append(streak)
-                        streak = 1
-                    else:
-                        streak -= 1
-        if streak != 0:
-            streaks.append(streak)
-        return streaks
 
     def stat_counter(self, matches, parameter, reverse=True, has_avg=True, unit=None, max_fmt=None, avg_fmt=None,
                      text=None, has_max=True, tf=None, rule=None):
@@ -645,3 +632,27 @@ class Parser:
         norm = statistics.stdev(values) / mean
         variance_factor = math.exp(-norm / 2)
         return math.sqrt(matches_factor * variance_factor)
+
+    @staticmethod
+    def calculate_streaks(pid, matches):
+        streaks = list()
+        streak = 0
+        for mid, data in matches.items():
+            if pid in data['players']:
+                if streak == 0:
+                    streak += 1 if data['win'] else -1
+                elif streak > 0:
+                    if data['win']:
+                        streak += 1
+                    else:
+                        streaks.append(streak)
+                        streak = -1
+                elif streak < 0:
+                    if data['win']:
+                        streaks.append(streak)
+                        streak = 1
+                    else:
+                        streak -= 1
+        if streak != 0:
+            streaks.append(streak)
+        return streaks
