@@ -722,13 +722,13 @@ class Slides:
 
         slide = self.add_slide(5, 255, 255, 224)
         title_shape = slide.shapes.title
-        title_shape.text = 'Top Tier Weighted Points'
+        title_shape.text = 'Top Tier Weighed Points'
         scores = [TierItem(points[i][0], str(points[i][1]), '') for i in range(3)]
         self.add_top_three_table(scores, slide, True, cat, Inches(0.7), Inches(1.8))
 
         slide = self.add_slide(5, 255, 255, 224)
         title_shape = slide.shapes.title
-        title_shape.text = 'Top Tier Weighted Points'
+        title_shape.text = 'Top Tier Weighed Points'
         headers = ['Player', 'Points']
         keys = ['player', 'points']
         scores = [{'player': k, 'points': v} for k, v in points]
