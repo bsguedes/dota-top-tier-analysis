@@ -43,8 +43,9 @@ def rating(win, loss=None, matches=None):
         return 0
     wr = win / (win + loss)
     ex = 1 - math.exp(-(win + loss)/2)
+    ex2 = 1 - math.exp(-((win + loss)**2))
     sg = 1 / (1 + math.exp(-(win-loss)/3))
-    return 8 * wr * ex + 2 * math.sqrt(sg)
+    return 7 * wr * ex + 2 * math.sqrt(sg) + ex2
 
 
 def sequence(strings, maximum=None):

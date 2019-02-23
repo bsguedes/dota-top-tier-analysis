@@ -13,29 +13,27 @@ import calendar
 
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
-TEAM_NAME = BLAZING_DOTA
-YEARS = [2018, 2019]
+TEAM_NAME = PNK
+YEARS = [2017, 2018, 2019]
 MONTH = None
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
 REDOWNLOAD_SMALL_FILES = False
 
-# PnK monthly parameters: 4, 3, 4, 2, 2
-# Year parameters: 30, 10, 4, 5, 3
+# PnK monthly parameters: 4, 3, 4, 2
+# Year parameters: 30, 10, 4, 3
 
 parameters = {
     PNK: {
         'min_matches': 30,
         'min_couple_matches': 10,
         'min_party_size': 4,
-        'full_party_matches': 5,
         'min_matches_with_hero': 3
     },
     BLAZING_DOTA: {
         'min_matches': 4,
         'min_couple_matches': 4,
         'min_party_size': 2,
-        'full_party_matches': 2,
         'min_matches_with_hero': 2
     }
 }
@@ -43,7 +41,6 @@ parameters = {
 MIN_PARTY_SIZE = parameters[TEAM_NAME]['min_party_size']
 MIN_MATCHES = parameters[TEAM_NAME]['min_matches']
 MIN_COUPLE_MATCHES = parameters[TEAM_NAME]['min_couple_matches']
-FULL_PARTY_MATCHES = parameters[TEAM_NAME]['full_party_matches']
 MIN_MATCHES_WITH_HERO = parameters[TEAM_NAME]['min_matches_with_hero']
 
 replacement_list = {
@@ -76,7 +73,10 @@ player_list = {
         'Fallenzão': 396690444,
         'Maionese': 35304398,
         'Kiddy': 32757138,
-        'Roshan': 151913285
+        'Roshan': 151913285,
+        'deliri019': 88091172,
+        'Pogo': 121639063,
+        'darkkside': 112645060
     },
     BLAZING_DOTA: {
         'Pogo': 121639063,
@@ -162,7 +162,7 @@ if __name__ == '__main__':
     players = player_list[TEAM_NAME]
     replacements = replacement_list[TEAM_NAME] if TEAM_NAME in replacement_list else None
     s = Slides(TEAM_NAME, YEARS, get_title(), get_subtitle(), players, month=MONTH)
-    p = Parser(TEAM_NAME, YEARS, players, MIN_MATCHES, MIN_PARTY_SIZE, FULL_PARTY_MATCHES)
+    p = Parser(TEAM_NAME, YEARS, players, MIN_MATCHES, MIN_PARTY_SIZE)
 
     downloader.download_heroes()
     downloader.download_player_data(players, replacements, override=DOWNLOAD_PLAYERS)
@@ -202,7 +202,7 @@ if __name__ == '__main__':
     s.add_divider_slide("%s General Statistics" % TEAM_NAME, 'Win Rate, Comebacks, Throws, Heroes, Compositions, Pairs')
     s.add_intro_slide(len(unique_matches), MIN_PARTY_SIZE, MIN_MATCHES, MIN_COUPLE_MATCHES)
     s.add_win_rate_slide(p.win_rate, len(unique_matches), p.matches_by_party_size, p.factions)
-    s.add_five_player_compositions(p.five_player_compositions, FULL_PARTY_MATCHES)
+    s.add_five_player_compositions(p.five_player_compositions, p.full_party_matches)
     s.add_match_summary_by_player(p.match_summary_by_player, p.match_summary_by_team)
     s.add_comebacks_throws(p.top_comebacks, p.top_throws)
     s.add_win_rate_heroes(p.with_heroes, 'Playing')

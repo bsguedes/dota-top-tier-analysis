@@ -509,10 +509,10 @@ class Slides:
         headers = ['Player', 'Total Matches', 'Matches with %s' % self.team_name, '%% with %s' % self.team_name]
         keys = ['player', 'matches', 'team_matches', 'perc_with_team']
         formats = ['%s', '%s', '%s', '%.2f %%']
-        Slides.create_table(slide,
-                            sorted([x for x in summary if x['team_matches'] > 0], key=lambda e: e['team_matches'],
-                                   reverse=True), headers, keys, formats, Inches(0.5),
-                            Inches(1.5), Inches(9), 1, 11, 14)
+        Slides.create_table_with_text_boxes(slide,
+                                            sorted([x for x in summary if x['team_matches'] > 0],
+                                                   key=lambda e: e['team_matches'], reverse=True),
+                                            headers, keys, formats, 0.5, 1.35, 9, 11, 14, line_spacing=0.225)
 
     def add_tier_slides(self, tier, category):
         texts = tier.list_to_print()
@@ -916,6 +916,18 @@ class Slides:
         if widths is not None:
             for i in range(len(widths)):
                 table.columns[i].width = Inches(widths[i])
+
+    @staticmethod
+    def create_table_with_text_boxes(slide, data, headers, keys, formats, left, top, width, font_size,
+                                     header_size, widths=None, line_spacing=0.25):
+        if widths is None:
+            widths = [width / len(headers) for _ in range(len(headers))]
+        for i in range(len(headers)):
+            Slides.text_box(slide, headers[i], left + sum(widths[:i]), top, widths[i], font_size=header_size, bold=True)
+        for i in range(len(data)):
+            for j in range(len(keys)):
+                Slides.text_box(slide, formats[j] % data[i][keys[j]], left + sum(widths[:j]) + 0.05,
+                                top + 0.1 + line_spacing * (i + 1), widths[j], font_size=font_size)
 
     @staticmethod
     def iter_cells(table):

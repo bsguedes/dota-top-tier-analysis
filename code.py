@@ -13,7 +13,7 @@ from constants import *
 
 
 class Parser:
-    def __init__(self, team_name, years, players, min_matches, min_party_size, full_party):
+    def __init__(self, team_name, years, players, min_matches, min_party_size):
         self.team_name = team_name
         self.years = years
         self.players = players
@@ -21,7 +21,7 @@ class Parser:
         self.win_rate = 0
         self.min_matches = min_matches
         self.min_party_size = min_party_size
-        self.full_party_matches = full_party
+        self.full_party_matches = 2
         self.matches_by_party_size = []
         self.match_summary = {}
         self.match_summary_by_player = []
@@ -291,8 +291,13 @@ class Parser:
                 five_player[comp_sum]['matches'] += 1
                 if v['win']:
                     five_player[comp_sum]['wins'] += 1
-        avg = [{'key': k, 'wr': v['wins'] / v['matches'], 'matches': v['matches']} for k, v in five_player.items() if
-               v['matches'] >= self.full_party_matches]
+        while True:
+            avg = [{'key': k, 'wr': v['wins'] / v['matches'], 'matches': v['matches']} for k, v in five_player.items() if
+                   v['matches'] >= self.full_party_matches]
+            if len(avg) <= 17:
+                break
+            else:
+                self.full_party_matches += 1
         s = sorted(avg, key=lambda e: (e['wr'], e['matches']), reverse=True)
         for k in s:
             five_player[k['key']]['wr'] = k['wr'] * 100
