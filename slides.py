@@ -176,54 +176,27 @@ class Slides:
         if os.path.isfile(pic_path):
             slide.shapes.add_picture(pic_path, Inches(8), Inches(0.2), height=Inches(1.1))
 
-        tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(2.8), Inches(1.5), Inches(0.5))
-        tf = tx_box.text_frame
-        p = tf.paragraphs[0]
-        p.text = '%s distinct heroes' % len([x for x in desc['heroes'].values() if x['matches'] > 0])
+        Slides.text_box(slide, 'Rating:', 0.5, 1.6, 1.5)
+        Slides.text_box(slide, 'Win Rate:', 0.5, 2, 1.5)
+        Slides.text_box(slide, 'Versatility:', 0.5, 2.4, 1.5)
+        Slides.text_box(slide, 'Distinct heroes:', 0.5, 2.8, 1.5)
+        Slides.text_box(slide, 'Matches played:', 0.5, 3.2, 1.5)
 
-        tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.2), Inches(1.5), Inches(0.5))
-        tf = tx_box.text_frame
-        p = tf.paragraphs[0]
-        p.text = '%s matches played' % desc['matches']
+        Slides.text_box(slide, str(len([x for x in desc['heroes'].values() if x['matches'] > 0])), 1.6, 2.75, 1.75,
+                        alignment=PP_ALIGN.RIGHT, font_size=22)
+        Slides.text_box(slide, str(desc['matches']), 1.6, 3.15, 1.75, alignment=PP_ALIGN.RIGHT, font_size=22)
 
-        tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(1.6), Inches(1.5), Inches(0.5))
-        tf = tx_box.text_frame
-        p = tf.paragraphs[0]
-        p.text = 'Rating:'
+        Slides.text_box(slide, 'Best Win Streak:', 3.6, 1.6, 1.5)
+        Slides.text_box(slide, 'Worst Loss Streak:', 3.6, 2, 1.5)
+        Slides.text_box(slide, 'Radiant Wins:', 3.6, 2.8, 1.5)
+        Slides.text_box(slide, 'Dire Wins:', 3.6, 3.2, 1.5)
 
-        tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(2), Inches(1.5), Inches(0.5))
-        tf = tx_box.text_frame
-        p = tf.paragraphs[0]
-        p.text = 'Win rate:'
-
-        tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(2.4), Inches(1.5), Inches(0.5))
-        tf = tx_box.text_frame
-        p = tf.paragraphs[0]
-        p.text = 'Versatility:'
-
-        tx_box = slide.shapes.add_textbox(Inches(3.6), Inches(1.6), Inches(1.5), Inches(0.5))
-        tf = tx_box.text_frame
-        p = tf.paragraphs[0]
-        p.text = 'Best Win Streak:'
-
-        tx_box = slide.shapes.add_textbox(Inches(3.6), Inches(2), Inches(1.5), Inches(0.5))
-        tf = tx_box.text_frame
-        p = tf.paragraphs[0]
-        p.text = 'Worst Loss Streak:'
-
-        tx_box = slide.shapes.add_textbox(Inches(4.5), Inches(1.55), Inches(1.75), Inches(0.5))
-        tf = tx_box.text_frame
-        p = tf.paragraphs[0]
-        p.text = '%s' % max(0, max(desc['streaks']))
-        p.font.size = Pt(22)
-        p.alignment = PP_ALIGN.RIGHT
-
-        tx_box = slide.shapes.add_textbox(Inches(4.5), Inches(1.95), Inches(1.75), Inches(0.5))
-        tf = tx_box.text_frame
-        p = tf.paragraphs[0]
-        p.text = '%s' % abs(min(0, min(desc['streaks'])))
-        p.font.size = Pt(22)
-        p.alignment = PP_ALIGN.RIGHT
+        Slides.text_box(slide, str(max(0, max(desc['streaks']))), 4.8, 1.55, 1.75, alignment=PP_ALIGN.RIGHT,
+                        font_size=22)
+        Slides.text_box(slide, str(abs(min(0, min(desc['streaks'])))), 4.8, 1.95, 1.75, alignment=PP_ALIGN.RIGHT,
+                        font_size=22)
+        Slides.text_box(slide, '%.2f %%' % desc['radiant_wr'], 4.8, 2.75, 1.75, alignment=PP_ALIGN.RIGHT, font_size=22)
+        Slides.text_box(slide, '%.2f %%' % desc['dire_wr'], 4.8, 3.15, 1.75, alignment=PP_ALIGN.RIGHT, font_size=22)
 
         tx_box = slide.shapes.add_textbox(Inches(1.6), Inches(1.5), Inches(1.75), Inches(0.5))
         tf = tx_box.text_frame
@@ -233,14 +206,14 @@ class Slides:
         p.font.size = Pt(28)
         p.alignment = PP_ALIGN.RIGHT
 
-        tx_box = slide.shapes.add_textbox(Inches(1.6), Inches(2), Inches(1.75), Inches(0.5))
+        tx_box = slide.shapes.add_textbox(Inches(1.6), Inches(1.95), Inches(1.75), Inches(0.5))
         tf = tx_box.text_frame
         p = tf.paragraphs[0]
         p.text = '%.2f %%' % (100 * desc['wins'] / desc['matches'])
         p.font.size = Pt(22)
         p.alignment = PP_ALIGN.RIGHT
 
-        tx_box = slide.shapes.add_textbox(Inches(1.6), Inches(2.4), Inches(1.75), Inches(0.5))
+        tx_box = slide.shapes.add_textbox(Inches(1.6), Inches(2.35), Inches(1.75), Inches(0.5))
         tf = tx_box.text_frame
         p = tf.paragraphs[0]
         p.text = '%.3f' % desc['versatility']
@@ -361,19 +334,29 @@ class Slides:
         Slides.create_table(slide, comp, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
                             widths=widths)
 
-    def add_win_rate_slide(self, win_rate, match_count, party_size):
+    def add_win_rate_slide(self, win_rate, match_count, party_size, faction):
         slide = self.add_slide(1, 152, 251, 152)
         shapes = slide.shapes
         title_shape = shapes.title
         body_shape = shapes.placeholders[1]
-        title_shape.text = '%s Win Rate' % self.team_name
+        title_shape.text = '%s Summary' % self.team_name
         tf = body_shape.text_frame
         tf.text = 'Win rate: %.2f %%' % win_rate
         p = tf.add_paragraph()
         p.text = 'Match count: %s' % match_count
         tf.add_paragraph()
+        p = tf.add_paragraph()
+        p.font.size = Pt(24)
+        p.text = 'Radiant: %.2f %%   %s matches (%s-%s)' % (
+            faction['r_wr'], faction['r_win'] + faction['r_loss'], faction['r_win'], faction['r_loss'])
+        p = tf.add_paragraph()
+        p.font.size = Pt(24)
+        p.text = 'Dire:       %.2f %%   %s matches (%s-%s)' % (
+            faction['d_wr'], faction['d_win'] + faction['d_loss'], faction['d_win'], faction['d_loss'])
+        tf.add_paragraph()
         for i in range(1, 6):
             p = tf.add_paragraph()
+            p.font.size = Pt(20)
             p.text = '%s matches with party size = %i' % (party_size[i-1], i)
 
     def add_comebacks_throws(self, comebacks, throws):
@@ -548,7 +531,7 @@ class Slides:
         tf.paragraphs[0].font.size = Pt(14)
 
         scores = tier.get_top_three()
-        self.add_top_three_small_table(scores, slide, tier.is_max, category, Inches(0.3), Inches(1))
+        self.add_top_three_small_table(scores, slide, tier.is_max, category, 0.3, 1)
 
         if len(tier.scores_array) > 0:
             chart_data = CategoryChartData()
@@ -573,31 +556,20 @@ class Slides:
 
     def add_top_three_small_table(self, scores, slide, is_max, category, left, top):
         pos = [(0, '1'), (1, '2'), (2, '3')]
-        spacing = Inches(1.6)
+        spacing = 1.6
         val = min(3, len(scores))
         for i, name in pos[0:val]:
-            tx_box = slide.shapes.add_textbox(left + spacing * i, top, spacing, Inches(0.7))
-            tf = tx_box.text_frame
-            tf.text = scores[i].name
-            p = tf.paragraphs[0]
-            p.font.size = Pt(18)
-            p.font.bold = True
-            p.alignment = PP_ALIGN.CENTER
-
-            tx_box = slide.shapes.add_textbox(left + spacing * i, top + Inches(1.3), spacing, Inches(0.7))
-            tf = tx_box.text_frame
+            Slides.text_box(slide, scores[i].name, left + spacing * i, top, spacing,
+                            font_size=18, alignment=PP_ALIGN.CENTER, bold=True)
             if not isinstance(scores[i].score, str):
                 fmt = (category.max_format if is_max else category.avg_format) % scores[i].score
             else:
                 fmt = scores[i].score
-            tf.text = "%s %s" % (fmt, category.unit)
-            p = tf.paragraphs[0]
-            p.font.size = Pt(14)
-            p.alignment = PP_ALIGN.CENTER
-
+            Slides.text_box(slide, "%s %s" % (fmt, category.unit), left + spacing * i, top + 1.3, spacing,
+                            font_size=14, alignment=PP_ALIGN.CENTER)
             pic_path = 'data/pics/%s.jpg' % self.players[scores[i].name]
             if os.path.isfile(pic_path):
-                slide.shapes.add_picture(pic_path, left + Inches(0.4) + spacing * i, top + Inches(0.45),
+                slide.shapes.add_picture(pic_path, Inches(left + 0.4 + spacing * i), Inches(top + 0.45),
                                          height=Inches(0.8))
 
     def add_top_three_table(self, scores, slide, is_max, category, left, top):
@@ -915,6 +887,18 @@ class Slides:
         fill = slide.background.fill
         fill.solid()
         fill.fore_color.rgb = RGBColor(r, g, b)
+
+    @staticmethod
+    def text_box(slide, text, left, top, width=None, font_size=None, alignment=None, bold=False):
+        width = width if width is not None else 1
+        tx_box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(0.4))
+        tf = tx_box.text_frame
+        tf.text = text
+        tf.paragraphs[0].font.bold = bold
+        if font_size is not None:
+            tf.paragraphs[0].font.size = Pt(font_size)
+        if alignment is not None:
+            tf.paragraphs[0].alignment = alignment
 
     @staticmethod
     def create_table(slide, data, headers, keys, formats, left, top, width, height, font_size, header_size,

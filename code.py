@@ -42,6 +42,7 @@ class Parser:
         self.hero_statistics = []
         self.player_heroes_in_match = {}
         self.player_descriptor = []
+        self.factions = {}
 
     @staticmethod
     def load_matches(unique_matches):
@@ -180,6 +181,19 @@ class Parser:
         for wd, o in self.win_rate_by_month.items():
             self.win_rate_by_month[wd]['wr'] = 100 * o['wins'] / o['matches'] if o['matches'] > 0 else 0
         self.match_summary = match_summary
+
+        r_wins = sum([1 for mid, data in self.match_summary.items() if data['is_radiant'] and data['win']])
+        r_matches = sum([1 for mid, data in self.match_summary.items() if data['is_radiant']])
+        d_wins = sum([1 for mid, data in self.match_summary.items() if not data['is_radiant'] and data['win']])
+        d_matches = sum([1 for mid, data in self.match_summary.items() if not data['is_radiant']])
+        self.factions = {
+            'r_wr': 100 * r_wins / r_matches,
+            'r_win': r_wins,
+            'r_loss': r_matches - r_wins,
+            'd_wr': 100 * d_wins / d_matches,
+            'd_win': d_wins,
+            'd_loss': d_matches - d_wins,
+        }
 
         print('')
         self.win_rate = 100 * len([x for x, y in match_summary.items() if y['win']]) / len(matches)
@@ -403,12 +417,22 @@ class Parser:
                 'pairings': self.player_pairs[pid],
                 'matches': sum([w['matches'] for h, w in self.player_wins_by_hero[pid].items()]),
                 'streaks': self.calculate_streaks(pid, match_summary),
+                'radiant_wr': 0 if len(
+                    [1 for _, d in match_summary.items() if
+                     pid in d['players'] and d['is_radiant']]) == 0 else 100 * len(
+                    [1 for _, d in match_summary.items() if
+                     pid in d['players'] and d['win'] and d['is_radiant']]) / len(
+                    [1 for _, d in match_summary.items() if pid in d['players'] and d['is_radiant']]),
+                'dire_wr': 0 if len([1 for _, d in match_summary.items() if
+                                     pid in d['players'] and not d['is_radiant']]) == 0 else 100 * len(
+                    [1 for _, d in match_summary.items() if
+                     pid in d['players'] and d['win'] and not d['is_radiant']]) / len(
+                    [1 for _, d in match_summary.items() if pid in d['players'] and not d['is_radiant']]),
                 'wins': sum([w['wins'] for h, w in self.player_wins_by_hero[pid].items()]),
                 'rating': rating(sum([w['wins'] for h, w in self.player_wins_by_hero[pid].items()]),
                                  matches=sum([w['matches'] for h, w in self.player_wins_by_hero[pid].items()])),
                 'versatility': self.versatility([w['matches'] for h, w in self.player_wins_by_hero[pid].items()])
             } for player_name, pid in self.players.items()]
-
         return tier_dict
 
     def calculate_streaks(self, pid, matches):

@@ -201,7 +201,7 @@ if __name__ == '__main__':
 
     s.add_divider_slide("%s General Statistics" % TEAM_NAME, 'Win Rate, Comebacks, Throws, Heroes, Compositions, Pairs')
     s.add_intro_slide(len(unique_matches), MIN_PARTY_SIZE, MIN_MATCHES, MIN_COUPLE_MATCHES)
-    s.add_win_rate_slide(p.win_rate, len(unique_matches), p.matches_by_party_size)
+    s.add_win_rate_slide(p.win_rate, len(unique_matches), p.matches_by_party_size, p.factions)
     s.add_five_player_compositions(p.five_player_compositions, FULL_PARTY_MATCHES)
     s.add_match_summary_by_player(p.match_summary_by_player, p.match_summary_by_team)
     s.add_comebacks_throws(p.top_comebacks, p.top_throws)
