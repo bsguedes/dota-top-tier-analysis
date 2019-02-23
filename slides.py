@@ -658,26 +658,30 @@ class Slides:
         column_width = 4.8
         for i in range(x):
             for j in range(y):
-                c = couples[i * y + j]
-                Slides.text_box(slide, inv_p[c['p1']], left + column_width * i, top * (1 + j),
-                                width=player_size, font_size=14, alignment=PP_ALIGN.CENTER, bold=True)
-                Slides.text_box(slide, inv_p[c['p2']], left + player_size + spacing + column_width * i, top * (1 + j),
-                                width=player_size, font_size=14, alignment=PP_ALIGN.CENTER, bold=True)
-                pic_path = 'data/pics/%s.jpg' % c['p1']
-                if os.path.isfile(pic_path):
-                    slide.shapes.add_picture(pic_path, Inches(left + 0.1 + column_width * i),
-                                             Inches(top * (1 + j) + 0.35),  height=Inches(pic_size))
-                pic_path = 'data/pics/%s.jpg' % c['p2']
-                if os.path.isfile(pic_path):
-                    slide.shapes.add_picture(pic_path, Inches(left + 0.1 + player_size + spacing + column_width * i),
-                                             Inches(top * (1 + j) + 0.35), height=Inches(pic_size))
-                Slides.text_box(slide, '%.1f' % c['rating'], left + column_width * i + player_size, top * (1 + j),
-                                width=spacing, alignment=PP_ALIGN.CENTER, font_size=24, bold=True)
-                Slides.text_box(slide, '%.2f %%' % c['wr'], left + column_width * i + player_size, top * (1 + j) + 0.5,
-                                width=spacing, alignment=PP_ALIGN.CENTER, font_size=16)
-                Slides.text_box(slide, '%s matches (%s - %s)' % (c['matches'], c['wins'], c['matches'] - c['wins']),
-                                left + column_width * i + player_size, top * (1 + j) + 0.9,
-                                width=spacing, alignment=PP_ALIGN.CENTER, font_size=12)
+                if i * y + j < len(couples):
+                    c = couples[i * y + j]
+                    Slides.text_box(slide, inv_p[c['p1']], left + column_width * i, top * (1 + j),
+                                    width=player_size, font_size=14, alignment=PP_ALIGN.CENTER, bold=True)
+                    Slides.text_box(slide, inv_p[c['p2']], left + player_size + spacing + column_width * i,
+                                    top * (1 + j),
+                                    width=player_size, font_size=14, alignment=PP_ALIGN.CENTER, bold=True)
+                    pic_path = 'data/pics/%s.jpg' % c['p1']
+                    if os.path.isfile(pic_path):
+                        slide.shapes.add_picture(pic_path, Inches(left + 0.1 + column_width * i),
+                                                 Inches(top * (1 + j) + 0.35), height=Inches(pic_size))
+                    pic_path = 'data/pics/%s.jpg' % c['p2']
+                    if os.path.isfile(pic_path):
+                        slide.shapes.add_picture(pic_path,
+                                                 Inches(left + 0.1 + player_size + spacing + column_width * i),
+                                                 Inches(top * (1 + j) + 0.35), height=Inches(pic_size))
+                    Slides.text_box(slide, '%.1f' % c['rating'], left + column_width * i + player_size, top * (1 + j),
+                                    width=spacing, alignment=PP_ALIGN.CENTER, font_size=24, bold=True)
+                    Slides.text_box(slide, '%.2f %%' % c['wr'], left + column_width * i + player_size,
+                                    top * (1 + j) + 0.5,
+                                    width=spacing, alignment=PP_ALIGN.CENTER, font_size=16)
+                    Slides.text_box(slide, '%s matches (%s - %s)' % (c['matches'], c['wins'], c['matches'] - c['wins']),
+                                    left + column_width * i + player_size, top * (1 + j) + 0.9,
+                                    width=spacing, alignment=PP_ALIGN.CENTER, font_size=12)
 
     def add_best_team_by_player(self, best_team):
         slide = self.add_slide(5, 152, 251, 152)
