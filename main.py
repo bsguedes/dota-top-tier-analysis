@@ -122,10 +122,10 @@ categories = [
     Category(5, 'rune_pickups', unit='runes', text='runes picked up'),
     Category(8, 'obs_placed', unit='wards', text='observer wards placed'),
     Category(8, 'sen_placed', unit='sentries', text='sentry wards placed'),
-    Category(2, 'multi_kills', unit='double kills', text='double kills', rule='2', has_max=False),
-    Category(3, 'multi_kills', unit='triple kills', text='triple kills', rule='3', has_max=False),
-    Category(4, 'multi_kills', unit='ultra kills', text='ultra kills', rule='4', has_max=False),
-    Category(5, 'multi_kills', unit='rampages', text='rampages', rule='5', has_max=False),
+    Category(2, 'multi_kills', unit='double kills', text='double kills', rule='2', has_max=False, avg_format='%.3f'),
+    Category(3, 'multi_kills', unit='triple kills', text='triple kills', rule='3', has_max=False, avg_format='%.3f'),
+    Category(4, 'multi_kills', unit='ultra kills', text='ultra kills', rule='4', has_max=False, avg_format='%.3f'),
+    Category(5, 'multi_kills', unit='rampages', text='rampages', rule='5', has_max=False, avg_format='%.3f'),
     Category(5, 'purchase', unit='bkbs', text='BKBs purchased', rule='black_king_bar', has_max=False),
     Category(2, 'purchase', unit='dusts', text='dusts purchased', rule='dust'),
     Category(2, 'purchase', unit='smokes', text='smokes purchased', rule='smoke_of_deceit'),
@@ -133,7 +133,7 @@ categories = [
     Category(5, 'purchase', unit='gold', text='gold in support items', rule='support_gold'),
     Category(5, 'creeps_stacked', unit='creeps', text='creeps stacked'),
     Category(4, 'observer_kills', unit='wards', text='wards removed', rule='ward_kill'),
-    Category(2, 'courier_kills', unit='couriers', text='couriers killed'),
+    Category(2, 'courier_kills', unit='couriers', text='couriers killed', avg_format='%.3f'),
     Category(2, 'purchase_tpscroll', unit='TPs', text='TPs purchased'),
     Category(2, 'purchase', unit='tomes', text='tomes of knowledge purchased', rule='tome_of_knowledge'),
     Category(5, 'stuns', unit='seconds', text='stun duration dealt', max_format='%.2f'),
@@ -188,7 +188,7 @@ if __name__ == '__main__':
             tier = Tier(c.weight, p.win_streak(), 'Best win streak in %s matches' % TEAM_NAME)
             tiers.append((tier, c))
         elif c.rule == 'loss_streak':
-            tier = Tier(c.weight, p.loss_streak(), 'Worst loss streak in %s matches' % TEAM_NAME)
+            tier = Tier(c.weight, p.loss_streak(), 'Worst loss streak in %s matches' % TEAM_NAME, reverse=False)
             tiers.append((tier, c))
         else:
             res_avg, res_max = p.stat_counter(matches_json, c.parameter, text=c.text, unit=c.unit, tf=c.transform,

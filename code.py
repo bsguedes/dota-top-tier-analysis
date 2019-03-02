@@ -528,7 +528,7 @@ class Parser:
                     vl = avg_fmt % tf(averages[name])
                     avg_block = ('(avg %s %s)' % (vl, unit)) if len(unit) > 0 else ('(avg %s)' % vl)
                     txt = '%s has %i %s in %i matches %s' % (name, totals[name], text, matches_played[name], avg_block)
-                    results_avg.append(TierItem(name, vl, txt))
+                    results_avg.append(TierItem(name, vl, txt, tf(averages[name])))
             if not has_max:
                 return results_avg, None
 

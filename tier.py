@@ -17,7 +17,8 @@ class Tier:
         self.weight = weight / 4 if is_max else weight
         self.scores_array = sorted_scores
         self.player_count = len(self.scores_array)
-        self.tier_size = math.ceil(self.player_count / self.NUMBER_OF_TIERS)
+        self.unique_elements = len(set([x.score for x in self.scores_array]))
+        self.tier_size = math.ceil(self.unique_elements / self.NUMBER_OF_TIERS)
         self.message = message
         self.is_max = is_max
         self.reverse = reverse
@@ -25,21 +26,27 @@ class Tier:
 
     def get_tiers(self):
         tiers = dict()
-        count = 0
+        grouped_values = self.group(
+            list(set([x.number if x.number is not None else x.score for x in self.scores_array])))
         for i in range(0, self.NUMBER_OF_TIERS):
             tiers[i] = list()
-            for j in range(count, min(int((i + 1) * self.tier_size), self.player_count)):
-                tiers[i].append(self.scores_array[j])
-                count += 1
-            if i < self.NUMBER_OF_TIERS - 1:
-                while count < len(self.scores_array) and len(tiers[i]) > 0 \
-                        and self.scores_array[count].score == tiers[i][-1].score:
-                    tiers[i].append(self.scores_array[count])
-                    count += 1
-        for i in range(1, self.NUMBER_OF_TIERS):
-            if len(tiers[i - 1]) == 0:
-                tiers[i - 1] = tiers[i]
-                tiers[i] = list()
+            for tier_item in self.scores_array:
+                if tier_item.number is not None and tier_item.number in grouped_values[i] or tier_item.score in \
+                        grouped_values[i]:
+                    tiers[i].append(tier_item)
+        return tiers
+
+    def group(self, unique_values):
+        tiers = {i: [] for i in range(self.NUMBER_OF_TIERS)}
+        unique_values = sorted(unique_values, reverse=self.reverse)
+        divs = [len(unique_values)/self.NUMBER_OF_TIERS, len(unique_values)*2/self.NUMBER_OF_TIERS]
+        for j in range(len(unique_values)):
+            if j < divs[0]:
+                tiers[0].append(unique_values[j])
+            elif j < divs[1]:
+                tiers[1].append(unique_values[j])
+            else:
+                tiers[2].append(unique_values[j])
         return tiers
 
     def list_to_print(self):
