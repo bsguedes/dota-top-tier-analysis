@@ -227,7 +227,7 @@ class Slides:
         p.font.size = Pt(16)
         heroes = sorted(desc['heroes'].items(), key=lambda e: e[1]['rating'], reverse=True)
         for i in range(4):
-            if heroes[i][1]['matches'] > 0:
+            if heroes[i][1]['rating'] > 0:
                 pic_path = 'data/heroes/%s.jpg' % heroes[i][0]
                 slide.shapes.add_picture(pic_path, Inches(0.5), Inches(4.2) + i * Inches(0.8), height=Inches(0.7))
                 tx_box = slide.shapes.add_textbox(Inches(2), Inches(4.3) + i * Inches(0.8), Inches(1.6), Inches(0.4))
