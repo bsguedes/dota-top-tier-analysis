@@ -188,6 +188,7 @@ class PnKAchievements(AchievementBase):
         self.add_ach(ItemAchievement('Next Lebel Farming', 'radiance', 'Radiance', 2))
         self.add_ach(ItemAchievement('Multiple Midas', 'hand_of_midas', 'Hand of Midas', 3))
         self.add_ach(ItemAchievement('Maximum Blink', 'blink', 'Blink Dagger', 5))
+        self.add_ach(MultiKillAchievement('RAMPAGE!', '5'))
         self.add_ach(ComeBackFromMegaCreepsAchievement('Overwhelming Odds'))
         self.add_ach(WinBattleCupPartyAchievement('Battle Cup Winners'))
         self.add_ach(PlayerOnLowestParameterAchievement('Naked Baco', 'Baco', 'total_gold', 'net worth',
@@ -225,6 +226,23 @@ class Achievement:
         self.player_list = players
         self.match_list = matches
         self.winners = {i: [] for p, i in self.player_list.items()}
+
+
+class MultiKillAchievement(Achievement):
+    def __init__(self, name, amount):
+        Achievement.__init__(self, name)
+        self.amount = amount
+        self.description = 'Get a multi-kill streak of %s kills' % amount
+
+    def evaluate(self):
+        for match_id, data in self.match_list.items():
+            self.games += 1
+            for player in data['players']:
+                if self.amount in data['multi_kills'][player]:
+                    self.wins += data['multi_kills'][player][self.amount]
+                    for i in range(data['multi_kills'][player][self.amount]):
+                        self.winners[player].append(match_id)
+        return super(MultiKillAchievement, self).evaluate()
 
 
 class StreakAchievement(Achievement):

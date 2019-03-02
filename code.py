@@ -166,6 +166,11 @@ class Parser:
             c_weekday = calendar.day_abbr[gmtime(int(obj['start_time'])).tm_wday]
             self.win_rate_by_weekday[c_weekday]['matches'] += 1
             self.win_rate_by_month[c_month]['matches'] += 1
+            match_summary[match_id]['multi_kills'] = {}
+            for p in match_summary[match_id]['players']:
+                po = [o for o in obj['players'] if o['account_id'] == p][0]
+                match_summary[match_id]['multi_kills'][p] = po['multi_kills'] if 'multi_kills' in po and po[
+                    'multi_kills'] is not None else {}
             if match_summary[match_id]['win']:
                 self.win_rate_by_weekday[c_weekday]['wins'] += 1
                 self.win_rate_by_month[c_month]['wins'] += 1
@@ -475,6 +480,8 @@ class Parser:
                         value = (p['kills'] + p['assists']) / (p['deaths'] + 1)
                     elif rule == 'beyond_godlike':
                         value = 0 if "10" not in p[parameter] else p[parameter]["10"]
+                    elif rule == 'max_streak':
+                        value = max([int(k) for k, v in p[parameter].items()]) if len(p[parameter]) > 0 else 0
                     elif parameter == 'multi_kills':
                         value = 0 if rule not in p[parameter] else p[parameter][rule]
                     elif rule == 'ward_kill':

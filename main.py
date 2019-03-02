@@ -142,7 +142,8 @@ categories = [
     Category(8, 'loss_streak', unit='matches', text='loss streak', rule='loss_streak', reverse=False, avg_format='%s'),
     Category(4, 'lane_efficiency_pct', unit='%', text='lane efficiency at 10min'),
     Category(2, 'buyback_count', unit='buybacks', text='buybacks'),
-    Category(2, 'kill_streaks', unit='streaks', text='beyond godlike streaks', rule='beyond_godlike', has_max=False),
+    Category(3, 'kill_streaks', unit='streaks', text='beyond godlike streaks', rule='beyond_godlike', has_max=False),
+    Category(10, 'kill_streaks', unit='kills', text='kill streak', rule='max_streak', has_avg=False),
     Category(2, 'actions_per_min', unit='apm', text='actions per minute'),
     Category(2, 'duration', unit='min', text='duration in minutes', apply_transform=T.sec_to_min, max_format='%.2f')
 ]
