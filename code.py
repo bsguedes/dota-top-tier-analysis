@@ -475,6 +475,8 @@ class Parser:
                         value = (p['kills'] + p['assists']) / (p['deaths'] + 1)
                     elif rule == 'beyond_godlike':
                         value = 0 if "10" not in p[parameter] else p[parameter]["10"]
+                    elif parameter == 'multi_kills':
+                        value = 0 if rule not in p[parameter] else p[parameter][rule]
                     elif rule == 'ward_kill':
                         value = p['observer_kills'] + p['sentry_kills']
                     elif rule == 'max_hit':

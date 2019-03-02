@@ -14,8 +14,8 @@ import calendar
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
-YEARS = [2019]
-MONTH = 2
+YEARS = [2018]
+MONTH = None
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
 REDOWNLOAD_SMALL_FILES = False
@@ -25,10 +25,10 @@ REDOWNLOAD_SMALL_FILES = False
 
 parameters = {
     PNK: {
-        'min_matches': 4,
-        'min_couple_matches': 3,
+        'min_matches': 30,
+        'min_couple_matches': 10,
         'min_party_size': 4,
-        'min_matches_with_hero': 2
+        'min_matches_with_hero': 3
     },
     BLAZING_DOTA: {
         'min_matches': 4,
@@ -122,6 +122,10 @@ categories = [
     Category(5, 'rune_pickups', unit='runes', text='runes picked up'),
     Category(8, 'obs_placed', unit='wards', text='observer wards placed'),
     Category(8, 'sen_placed', unit='sentries', text='sentry wards placed'),
+    Category(2, 'multi_kills', unit='double kills', text='double kills', rule='2', has_max=False),
+    Category(3, 'multi_kills', unit='triple kills', text='triple kills', rule='3', has_max=False),
+    Category(4, 'multi_kills', unit='ultra kills', text='ultra kills', rule='4', has_max=False),
+    Category(5, 'multi_kills', unit='rampages', text='rampages', rule='5', has_max=False),
     Category(5, 'purchase', unit='bkbs', text='BKBs purchased', rule='black_king_bar', has_max=False),
     Category(2, 'purchase', unit='dusts', text='dusts purchased', rule='dust'),
     Category(2, 'purchase', unit='smokes', text='smokes purchased', rule='smoke_of_deceit'),
