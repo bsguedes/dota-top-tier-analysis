@@ -14,8 +14,8 @@ import calendar
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
-YEARS = [2018]
-MONTH = None
+YEARS = [2019]
+MONTH = 3
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
 REDOWNLOAD_SMALL_FILES = False
@@ -25,10 +25,10 @@ REDOWNLOAD_SMALL_FILES = False
 
 parameters = {
     PNK: {
-        'min_matches': 30,
-        'min_couple_matches': 10,
+        'min_matches': 4,
+        'min_couple_matches': 3,
         'min_party_size': 4,
-        'min_matches_with_hero': 3
+        'min_matches_with_hero': 2
     },
     BLAZING_DOTA: {
         'min_matches': 4,

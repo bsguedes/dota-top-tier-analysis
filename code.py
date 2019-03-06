@@ -157,7 +157,8 @@ class Parser:
                     obj['throw'] = max(gold_adv + [0]) if 'throw' not in obj else obj['throw']
                     match_summary[match_id]['comeback_throw'] = obj['comeback'] if p['win'] > 0 else obj['throw']   
             if 'lane_role' in obj['players'][0]:
-                match_summary[match_id]['roles'] = Roles.evaluate_roles(match_summary[match_id], obj['players'])
+                match_summary[match_id]['roles'] = Roles.evaluate_roles(match_summary[match_id],
+                                                                        [x for x in obj['players'] if 'lane_role' in x])
             match_summary[match_id]['items'] = items.evaluate_items([x for x in obj['players'] if
                                                                     x['account_id'] in account_ids])
             match_summary[match_id]['barracks'] = obj[
@@ -177,7 +178,7 @@ class Parser:
             else:
                 self.win_rate_by_weekday[c_weekday]['losses'] += 1
                 self.win_rate_by_month[c_month]['losses'] += 1
-            for p in obj['players']:
+            for p in [x for x in obj['players'] if x['hero_id'] is not None]:
                 if p['isRadiant'] != match_summary[match_id]['is_radiant']:
                     match_summary[match_id]['enemy_heroes'].append(p['hero_id'])
                 else:
@@ -607,7 +608,8 @@ class Parser:
                   % (name, match_count, matches_with_team, 100 * percentage_with_team, self.team_name))
 
         self.match_summary_by_team = sorted(self.match_summary_by_player, key=lambda v: v['team_matches'], reverse=True)
-        return {k: v for k, v in matches.items() if len(v) >= self.min_party_size}
+        return {k: v for k, v in matches.items() if
+                self.min_party_size == 1 and len(v) == 1 or len(v) >= self.min_party_size}
 
     def player_versatility(self):
         inv_p = {v: k for k, v in self.players.items()}
@@ -632,11 +634,12 @@ class Parser:
                       key=lambda e: e.score)
 
     def versatility(self, values):
+        ver_factor = 20
         count = len([x for x in values if x > 0])
         h_sum = sum([x for x in values if x > 0])
-        if count == 0 or h_sum < self.min_matches:
+        if count == 0 or h_sum < self.min_matches / ver_factor:
             return 0
-        matches_factor = 1 - math.exp(-(count - 1) / 20)
+        matches_factor = 1 - math.exp(-(count - 1) / ver_factor)
         mean = statistics.mean(values)
         norm = statistics.stdev(values) / mean
         variance_factor = math.exp(-norm / 2)

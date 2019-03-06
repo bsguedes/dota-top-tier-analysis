@@ -3,6 +3,7 @@ import os
 import os.path
 import json
 import urllib.request
+import time
 
 
 def download_heroes():
@@ -32,17 +33,19 @@ def download_player_data(players, replacements, override=True):
     for name, pid in players.items():
         file_name = 'players/%s_matches.json' % name
         if override or not os.path.isfile(file_name):
-            print('Downloading %s data' % name)
+            start = time.time()
             url = 'https://api.opendota.com/api/players/%s/matches?project=start_time' % pid
             r = requests.get(url, allow_redirects=True)
+            print('Downloaded %s data: %.3f seconds' % (name, time.time() - start))
             open(file_name, 'wb').write(r.content)
     if replacements is not None:
         for name, pid in replacements.items():
             file_name = 'players/%s_matches_r.json' % name
             if override or not os.path.isfile(file_name):
-                print('Downloading %s replacement data' % name)
+                start = time.time()
                 url = 'https://api.opendota.com/api/players/%s/matches?project=start_time' % pid
                 r = requests.get(url, allow_redirects=True)
+                print('Downloaded %s replacement data: %.3f seconds' % (name, time.time() - start))
                 open(file_name, 'wb').write(r.content)
 
 
@@ -54,9 +57,10 @@ def download_matches(unique_matches, override=False, download_again=False):
     for match_id in unique_matches:
         file_name = 'matches/%s.json' % match_id
         if override or not os.path.isfile(file_name):
-            print('Downloading match %i data' % match_id)
+            start = time.time()
             url = 'https://api.opendota.com/api/matches/%i' % match_id
             r = requests.get(url, allow_redirects=True)
+            print('Downloaded match %i data: %.3f seconds' % (match_id, time.time() - start))
             open(file_name, 'wb').write(r.content)
         if os.path.getsize(file_name) < 35000 and download_again:
             os.remove(file_name)
