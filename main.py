@@ -14,21 +14,21 @@ import calendar
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
-YEARS = [2019]
-MONTH = 3
+YEARS = [2018]
+MONTH = None
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
 REDOWNLOAD_SMALL_FILES = False
 
 # PnK monthly parameters: 4, 3, 4, 2
-# Year parameters: 30, 10, 4, 3
+# PnK year parameters: 30, 10, 4, 3
 
 parameters = {
     PNK: {
-        'min_matches': 4,
-        'min_couple_matches': 3,
-        'min_party_size': 4,
-        'min_matches_with_hero': 2
+        'min_matches': 30,
+        'min_couple_matches': 10,
+        'min_party_size': 1,
+        'min_matches_with_hero': 3
     },
     BLAZING_DOTA: {
         'min_matches': 4,
@@ -47,6 +47,9 @@ replacement_list = {
     PNK: {
         'Fallenzão': 331461200,
         'kkz': 116647196
+    },
+    BLAZING_DOTA: {
+        'flesch': 372670607
     }
 }
 
@@ -138,6 +141,7 @@ categories = [
     Category(2, 'purchase', unit='tomes', text='tomes of knowledge purchased', rule='tome_of_knowledge'),
     Category(5, 'stuns', unit='seconds', text='stun duration dealt', max_format='%.2f'),
     Category(5, 'pings', unit='pings'),
+    Category(5, 'abandons', unit='abandons', has_max=False, reverse=False, avg_format='%.3f'),
     Category(8, 'win_streak', unit='matches', text='win streak', rule='win_streak', avg_format='%s'),
     Category(8, 'loss_streak', unit='matches', text='loss streak', rule='loss_streak', reverse=False, avg_format='%s'),
     Category(4, 'lane_efficiency_pct', unit='%', text='lane efficiency at 10min'),

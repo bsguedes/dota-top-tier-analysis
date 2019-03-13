@@ -41,7 +41,7 @@ class Roles:
             if len(safe_players) > 0:
                 result_roles[2] = Roles.max_gpm(safe_players, team_players)
                 safe_players.remove(result_roles[2])
-        else:
+        elif len(off_players) > 0 or len(safe_players) > 0:
             result_roles[0] = Roles.max_gpm(safe_players, team_players)
             if result_roles[0] in safe_players:
                 safe_players.remove(result_roles[0])
