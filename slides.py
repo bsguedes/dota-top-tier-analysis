@@ -166,6 +166,22 @@ class Slides:
         Slides.create_table(slide, desc['pairings'], headers, keys, formats, Inches(4.5), Inches(1.5), Inches(4.5), 1,
                             11, 15, widths=widths)
 
+        heroes = desc['top_heroes']
+        if len(heroes) > 0:
+            Slides.text_box(slide, 'Best %s player with (based on hero rating):' % self.team_name, 0.3, 3.4,
+                            font_size=13)
+            rows = 7
+            columns = 4
+            for y in range(columns):
+                for x in range(rows):
+                    index = y * rows + x
+                    if index < len(heroes):
+                        hero = heroes[index]
+                        pic_path = 'data/heroes/%s.jpg' % hero
+                        slide.shapes.add_picture(pic_path, Inches(0.3) + y * Inches(3.8 / columns),
+                                                 Inches(3.8) + x * Inches(0.5),
+                                                 height=Inches(0.45))
+
     def add_player_data_slide(self, desc):
         slide = self.add_slide(5, 255, 229, 204)
         title_shape = slide.shapes.title
@@ -412,7 +428,7 @@ class Slides:
         headers = ['Lane Composition', 'Wins', 'Matches', 'Win Rate']
         keys = ['comp', 'wins', 'matches', 'wr']
         formats = ['%s', '%s', '%s', '%.2f %%']
-        Slides.create_table(slide, compositions, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15)
+        Slides.create_table_with_text_boxes(slide, compositions, headers, keys, formats, 0.5, 1.5, 9, 12, 14)
 
     def add_win_rate_heroes(self, versus, text):
         versus = [v for v in versus if v['matches'] > 0]

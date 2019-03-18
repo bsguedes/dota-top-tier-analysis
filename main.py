@@ -16,7 +16,7 @@ BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
 YEARS = [2018]
 MONTH = None
-DOWNLOAD_PLAYERS = False
+DOWNLOAD_PLAYERS = True
 PRINT_TIERS = False
 REDOWNLOAD_SMALL_FILES = False
 
@@ -25,10 +25,10 @@ REDOWNLOAD_SMALL_FILES = False
 
 parameters = {
     PNK: {
-        'min_matches': 30,
-        'min_couple_matches': 10,
-        'min_party_size': 1,
-        'min_matches_with_hero': 3
+        'min_matches': 4,
+        'min_couple_matches': 3,
+        'min_party_size': 4,
+        'min_matches_with_hero': 2
     },
     BLAZING_DOTA: {
         'min_matches': 4,
@@ -171,7 +171,7 @@ if __name__ == '__main__':
     players = player_list[TEAM_NAME]
     replacements = replacement_list[TEAM_NAME] if TEAM_NAME in replacement_list else None
     s = Slides(TEAM_NAME, YEARS, get_title(), get_subtitle(), players, month=MONTH)
-    p = Parser(TEAM_NAME, YEARS, players, MIN_MATCHES, MIN_PARTY_SIZE)
+    p = Parser(TEAM_NAME, YEARS, players, MIN_MATCHES, MIN_PARTY_SIZE, MIN_MATCHES_WITH_HERO)
 
     downloader.download_heroes()
     downloader.download_player_data(players, replacements, override=DOWNLOAD_PLAYERS)

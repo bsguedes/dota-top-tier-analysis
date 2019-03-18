@@ -13,7 +13,7 @@ from constants import *
 
 
 class Parser:
-    def __init__(self, team_name, years, players, min_matches, min_party_size):
+    def __init__(self, team_name, years, players, min_matches, min_party_size, min_matches_with_hero):
         self.team_name = team_name
         self.years = years
         self.players = players
@@ -44,6 +44,7 @@ class Parser:
         self.player_heroes_in_match = {}
         self.player_descriptor = []
         self.factions = {}
+        self.min_matches_with_hero = min_matches_with_hero
 
     @staticmethod
     def load_matches(unique_matches):
@@ -435,9 +436,10 @@ class Parser:
                 'id': pid,
                 'roles': self.player_roles[pid],
                 'heroes': self.player_wins_by_hero[pid],
+                'top_heroes': self.calculate_top_heroes(pid),
                 'pairings': self.player_pairs[pid],
                 'matches': sum([w['matches'] for h, w in self.player_wins_by_hero[pid].items()]),
-                'streaks': Parser.calculate_streaks(pid, match_summary),
+                'streaks': self.calculate_streaks(pid),
                 'radiant_wr': 0 if len(
                     [1 for _, d in match_summary.items() if
                      pid in d['players'] and d['is_radiant']]) == 0 else 100 * len(
@@ -645,8 +647,18 @@ class Parser:
         variance_factor = math.exp(-norm / 2)
         return math.sqrt(matches_factor * variance_factor)
 
-    @staticmethod
-    def calculate_streaks(pid, matches):
+    def calculate_top_heroes(self, pid):
+        hero_ids = []
+        for hero in self.hero_statistics:
+            if len(hero['played_by']) > 0:
+                max_rating = max(hero['played_by'], key=lambda e: e['rating'])['rating']
+                e = [h for h in hero['played_by'] if h['id'] == pid]
+                if len(e) == 1 and e[0]['rating'] == max_rating and e[0]['matches'] >= self.min_matches_with_hero:
+                    hero_ids.append(hero['id'])
+        return hero_ids
+
+    def calculate_streaks(self, pid):
+        matches = self.match_summary
         streaks = list()
         streak = 0
         for mid, data in matches.items():
