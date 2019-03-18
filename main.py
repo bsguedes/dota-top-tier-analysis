@@ -14,9 +14,9 @@ import calendar
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
-YEARS = [2018]
+YEARS = [2019]
 MONTH = None
-DOWNLOAD_PLAYERS = True
+DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
 REDOWNLOAD_SMALL_FILES = False
 
@@ -130,9 +130,9 @@ categories = [
     Category(4, 'multi_kills', unit='ultra kills', text='ultra kills', rule='4', has_max=False, avg_format='%.3f'),
     Category(5, 'multi_kills', unit='rampages', text='rampages', rule='5', has_max=False, avg_format='%.3f'),
     Category(5, 'purchase', unit='bkbs', text='BKBs purchased', rule='black_king_bar', has_max=False),
-    Category(2, 'purchase', unit='dusts', text='dusts purchased', rule='dust'),
-    Category(2, 'purchase', unit='smokes', text='smokes purchased', rule='smoke_of_deceit'),
-    Category(2, 'purchase', unit='gems', text='gems of true sight purchased', rule='gem'),
+    Category(2, 'purchase', unit='dusts', text='dusts purchased', rule='dust', avg_format='%.3f'),
+    Category(2, 'purchase', unit='smokes', text='smokes purchased', rule='smoke_of_deceit', avg_format='%.3f'),
+    Category(2, 'purchase', unit='gems', text='gems of true sight purchased', rule='gem', avg_format='%.3f'),
     Category(5, 'purchase', unit='gold', text='gold in support items', rule='support_gold'),
     Category(5, 'creeps_stacked', unit='creeps', text='creeps stacked'),
     Category(4, 'observer_kills', unit='wards', text='wards removed', rule='ward_kill'),

@@ -56,7 +56,10 @@ class Roles:
         pos = 0
         while -1 in result_roles:
             if result_roles[pos] == -1:
-                result_roles[pos] = Roles.max_gpm(rest_of_players, team_players)
+                if pos >= 3:
+                    result_roles[pos] = Roles.max_wards(rest_of_players, team_players)
+                else:
+                    result_roles[pos] = Roles.max_gpm(rest_of_players, team_players)
                 rest_of_players.remove(result_roles[pos])
             pos += 1
 
@@ -66,5 +69,12 @@ class Roles:
     @staticmethod
     def max_gpm(players, team_players):
         gpm_list = {k['account_id']: k['gold_per_min'] for k in team_players if k['account_id'] in players}
+        m = max(gpm_list.items(), key=operator.itemgetter(1))
+        return m[0]
+
+    @staticmethod
+    def max_wards(players, team_players):
+        gpm_list = {k['account_id']: (-k['obs_placed'] - k['sen_placed'], -k['gold_per_min']) for k in team_players if
+                    k['account_id'] in players}
         m = max(gpm_list.items(), key=operator.itemgetter(1))
         return m[0]
