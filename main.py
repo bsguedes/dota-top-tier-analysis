@@ -134,6 +134,7 @@ categories = [
     Category(2, 'purchase', unit='smokes', text='smokes purchased', rule='smoke_of_deceit', avg_format='%.3f'),
     Category(2, 'purchase', unit='gems', text='gems of true sight purchased', rule='gem', avg_format='%.3f'),
     Category(5, 'purchase', unit='gold', text='gold in support items', rule='support_gold'),
+    Category(8, 'firstblood_claimed', unit='first bloods', text='first blood kills', has_max=False, avg_format='%.3f'),
     Category(5, 'creeps_stacked', unit='creeps', text='creeps stacked'),
     Category(4, 'observer_kills', unit='wards', text='wards removed', rule='ward_kill'),
     Category(2, 'courier_kills', unit='couriers', text='couriers killed', avg_format='%.3f'),

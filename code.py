@@ -427,7 +427,6 @@ class Parser:
                                                                  self.players[k[1]]]),
                                             'wins': couples_win[self.players[k[0]]][self.players[k[1]]],
                                             'matches': couples_matches[self.players[k[0]]][self.players[k[1]]]})
-
         self.player_couples = sorted(self.player_couples, key=lambda e: e['rating'], reverse=True)
 
         self.player_descriptor = [
@@ -651,7 +650,7 @@ class Parser:
         hero_ids = []
         for hero in self.hero_statistics:
             if len(hero['played_by']) > 0:
-                max_rating = max(hero['played_by'], key=lambda e: e['rating'])['rating']
+                max_rating = max(hero['played_by'], key=lambda x: x['rating'])['rating']
                 e = [h for h in hero['played_by'] if h['id'] == pid]
                 if len(e) == 1 and e[0]['rating'] == max_rating and e[0]['matches'] >= self.min_matches_with_hero:
                     hero_ids.append(hero['id'])
