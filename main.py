@@ -19,6 +19,7 @@ MONTH = 3
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
 REDOWNLOAD_SMALL_FILES = False
+BEST_TEAM = ['Chaos', 'Zé', 'Alidio', 'Older', 'Baco']
 
 # PnK monthly parameters: 4, 3, 4, 2
 # PnK year parameters: 30, 10, 4, 3
@@ -182,6 +183,7 @@ if __name__ == '__main__':
     downloader.download_matches(unique_matches, download_again=REDOWNLOAD_SMALL_FILES)
     matches_json = Parser.load_matches(unique_matches)
     tier_positions = p.identify_heroes(replacements, matches_json, min_couple_matches=MIN_COUPLE_MATCHES)
+
     tiers = []
     for c in categories:
         if c.rule == 'position':
@@ -210,6 +212,12 @@ if __name__ == '__main__':
                 tier_max = Tier(c.weight, res_max, 'Maximum %s in a single match' % cat_name, reverse=c.reverse,
                                 is_max=True)
                 tiers.append((tier_max, c))
+
+    if BEST_TEAM is not None:
+        combinations = p.best_team(BEST_TEAM)
+        if len(combinations) > 0:
+            s.add_divider_slide("%s Draft Helper (BETA)" % TEAM_NAME, 'Suggestions for Drafting based on recent success')
+            s.add_draft_suggestion(p.heroes, p.inv_p, combinations)
 
     s.add_divider_slide("%s General Statistics" % TEAM_NAME, 'Win Rate, Comebacks, Throws, Heroes, Compositions, Pairs')
     s.add_intro_slide(len(unique_matches), MIN_PARTY_SIZE, MIN_MATCHES, MIN_COUPLE_MATCHES)

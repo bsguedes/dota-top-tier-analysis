@@ -18,6 +18,7 @@ class Parser:
         self.years = years
         self.players = players
         self.heroes = {}
+        self.inv_p = {v: k for k, v in self.players.items()}
         self.win_rate = 0
         self.min_matches = min_matches
         self.min_party_size = min_party_size
@@ -359,7 +360,7 @@ class Parser:
                    for a, b in pp.items()}
             print('%s positions: %s' % (inv_p[pid], ppp))
             self.player_roles[pid] = [
-                {'role': a, 'matches': b,
+                {'role': a, 'matches': b, 'rating': rating(player_win_pos[pid][a], matches=b),
                  'wr': 0 if player_positions[pid][a] == 0 else 100 * player_win_pos[pid][a] / player_positions[pid][a]}
                 for a, b in player_positions[pid].items()]
         self.hero_statistics = sorted([{
@@ -611,6 +612,62 @@ class Parser:
         self.match_summary_by_team = sorted(self.match_summary_by_player, key=lambda v: v['team_matches'], reverse=True)
         return {k: v for k, v in matches.items() if
                 self.min_party_size == 1 and len(v) == 1 or len(v) >= self.min_party_size}
+
+    def best_team(self, players):
+        print('')
+        print('Best team analysis:')
+        print('Players: ', sequence(players))
+        players = [self.players[i] for i in players]
+        inv_r = {v: k for k, v in roles().items()}
+        player_hero_role_scores = {}
+        for hid, _ in self.heroes.items():
+            y = [x for x in self.hero_statistics if x['id'] == hid]
+            if len(y) > 0:
+                played_by = y[0]['played_by']
+                for pid in players:
+                    z = [x for x in played_by if x['id'] == pid]
+                    if len(z) > 0:
+                        player_hero = z[0]['roles']
+                        for el in self.player_roles[pid]:
+                            if player_hero[el['role']]['matches'] >= self.min_matches_with_hero:
+                                player_hero_role_scores[(inv_r[el['role']], pid, hid)] = el['rating'] * \
+                                                                                       player_hero[el['role']]['rating']
+                            else:
+                                player_hero_role_scores[(el['role'], pid, hid)] = 0
+        player_hero_role_scores = {k: v for k, v in player_hero_role_scores.items() if v > 0}
+        history = {}
+        for p in players:
+            for i, r in roles().items():
+                history[(p, i)] = []
+                for hid, _ in self.heroes.items():
+                    c = (i, p, hid)
+                    if c in player_hero_role_scores:
+                        history[(p, i)].append((hid, player_hero_role_scores[c]))
+        combinations = []
+        total_combinations = 0
+        for composition in list(itertools.permutations(players, 5)):
+            team = [[{
+                'player': composition[role_index - 1],
+                'role': role_index,
+                'hero': hero
+            } for hero in history[(composition[role_index - 1], role_index)]] for role_index, role in roles().items()]
+            if any([len(member) == 0 for member in team]):
+                continue
+            for combination in itertools.product(*team):
+                s = sum([player['hero'][1] for player in combination])
+                total_combinations += 1
+                if s > 200:
+                    d = []
+                    for player in combination:
+                        r = player['role']
+                        p = player['player']
+                        h = player['hero'][0]
+                        d.append((r, h, p))
+                    combinations.append((s, d))
+        print('Number of filtered combinations: %s' % len(combinations))
+        print('Number of combinations: %s' % total_combinations)
+        combinations.sort(reverse=True)
+        return combinations
 
     def player_versatility(self):
         inv_p = {v: k for k, v in self.players.items()}

@@ -361,19 +361,18 @@ class Slides:
         p = tf.add_paragraph()
         p.text = 'Match count: %s' % match_count
         tf.add_paragraph()
-        p = tf.add_paragraph()
-        p.font.size = Pt(24)
-        p.text = 'Radiant: %.2f %%   %s matches (%s-%s)' % (
-            faction['r_wr'], faction['r_win'] + faction['r_loss'], faction['r_win'], faction['r_loss'])
-        p = tf.add_paragraph()
-        p.font.size = Pt(24)
-        p.text = 'Dire:       %.2f %%   %s matches (%s-%s)' % (
-            faction['d_wr'], faction['d_win'] + faction['d_loss'], faction['d_win'], faction['d_loss'])
-        tf.add_paragraph()
         for i in range(1, 6):
             p = tf.add_paragraph()
             p.font.size = Pt(20)
             p.text = '%s matches with party size = %i' % (party_size[i-1], i)
+        Slides.text_box(slide, 'Radiant', 0.8, 6, font_size=24, bold=True)
+        Slides.text_box(slide, 'Dire', 0.8, 6.6, font_size=24, bold=True)
+        Slides.text_box(slide, '%.2f %%' % faction['r_wr'], 2.5, 6, font_size=24)
+        Slides.text_box(slide, '%.2f %%' % faction['d_wr'], 2.5, 6.6, font_size=24)
+        Slides.text_box(slide, '%s matches' % (faction['r_win'] + faction['r_loss']), 4, 6, font_size=24)
+        Slides.text_box(slide, '%s matches' % (faction['d_win'] + faction['d_loss']), 4, 6.6, font_size=24)
+        Slides.text_box(slide, '%s-%s' % (faction['r_win'], faction['r_loss']), 6, 6, font_size=24)
+        Slides.text_box(slide, '%s-%s' % (faction['d_win'], faction['d_loss']), 6, 6.6, font_size=24)
 
     def add_comebacks_throws(self, comebacks, throws):
         slide = self.add_slide(5, 152, 251, 152)
@@ -621,6 +620,38 @@ class Slides:
             pic_path = 'data/pics/%s.jpg' % self.players[scores[i].name]
             if os.path.isfile(pic_path):
                 slide.shapes.add_picture(pic_path, left + Inches(3*i), top + Inches(2.5), height=Inches(2.5))
+
+    def add_draft_suggestion(self, heroes, players, compositions):
+        slide = self.add_slide(5, 152, 251, 152)
+        slide.shapes.title.text = "Draft Suggestion"
+        i = 0
+        Slides.text_box(slide, "%.2f" % compositions[0][0], 8, 2.8, bold=True,
+                        width=1.5, font_size=24, alignment=PP_ALIGN.CENTER)
+        for j in range(1, min(len(compositions), 8)):
+            Slides.text_box(slide, "%.2f" % compositions[j][0], 8, 4.5 + (j - 1) * 0.4, bold=True,
+                            width=1.5, font_size=15, alignment=PP_ALIGN.CENTER)
+        for ri, r in roles().items():
+            Slides.text_box(slide, r, 0.5 + 1.5 * i, 1.5, width=1.5, font_size=14, bold=True, alignment=PP_ALIGN.CENTER)
+            pic_path = 'data/heroes/%i.jpg' % compositions[0][1][ri-1][1]
+            slide.shapes.add_picture(pic_path, Inches(0.7 + 1.5 * i), Inches(1.85), height=Inches(0.55))
+            Slides.text_box(slide, heroes[compositions[0][1][ri-1][1]], 0.5 + 1.5 * i, 2.5,
+                            width=1.5, font_size=16, alignment=PP_ALIGN.CENTER)
+
+            pic_path = 'data/pics/%i.jpg' % compositions[0][1][ri-1][2]
+            if os.path.isfile(pic_path):
+                slide.shapes.add_picture(pic_path, Inches(0.85 + 1.5 * i), Inches(3), height=Inches(0.7))
+            Slides.text_box(slide, players[compositions[0][1][ri-1][2]], 0.5 + 1.5 * i, 3.8,
+                            width=1.5, font_size=16, alignment=PP_ALIGN.CENTER)
+
+            for j in range(1, min(len(compositions), 8)):
+                pic_path = 'data/heroes/%i.jpg' % compositions[j][1][ri - 1][1]
+                slide.shapes.add_picture(pic_path, Inches(0.5 + 1.5 * i), Inches(4.5 + (j - 1) * 0.4),
+                                         height=Inches(0.3))
+                pic_path = 'data/pics/%i.jpg' % compositions[j][1][ri - 1][2]
+                if os.path.isfile(pic_path):
+                    slide.shapes.add_picture(pic_path, Inches(1.12 + 1.5 * i), Inches(4.5 + (j - 1) * 0.4),
+                                             height=Inches(0.3))
+            i += 1
 
     def add_best_team(self, best_team):
         slide = self.add_slide(5, 152, 251, 152)
