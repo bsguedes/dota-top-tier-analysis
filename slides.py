@@ -193,11 +193,14 @@ class Slides:
             slide.shapes.add_picture(pic_path, Inches(8), Inches(0.2), height=Inches(1.1))
 
         Slides.text_box(slide, 'Rating:', 0.5, 1.6, 1.5)
-        Slides.text_box(slide, 'Win Rate:', 0.5, 2, 1.5)
-        Slides.text_box(slide, 'Versatility:', 0.5, 2.4, 1.5)
+        Slides.text_box(slide, 'Wins:', 0.5, 2, 1.5)
+        Slides.text_box(slide, 'Losses:', 0.5, 2.4, 1.5)
         Slides.text_box(slide, 'Distinct heroes:', 0.5, 2.8, 1.5)
         Slides.text_box(slide, 'Matches played:', 0.5, 3.2, 1.5)
 
+        Slides.text_box(slide, str(desc['wins']), 1.6, 1.95, 1.75, alignment=PP_ALIGN.RIGHT, font_size=22)
+        Slides.text_box(slide, str(desc['matches'] - desc['wins']), 1.6, 2.35, 1.75, alignment=PP_ALIGN.RIGHT,
+                        font_size=22)
         Slides.text_box(slide, str(len([x for x in desc['heroes'].values() if x['matches'] > 0])), 1.6, 2.75, 1.75,
                         alignment=PP_ALIGN.RIGHT, font_size=22)
         Slides.text_box(slide, str(desc['matches']), 1.6, 3.15, 1.75, alignment=PP_ALIGN.RIGHT, font_size=22)
@@ -214,6 +217,9 @@ class Slides:
         Slides.text_box(slide, '%.2f %%' % desc['radiant_wr'], 4.8, 2.75, 1.75, alignment=PP_ALIGN.RIGHT, font_size=22)
         Slides.text_box(slide, '%.2f %%' % desc['dire_wr'], 4.8, 3.15, 1.75, alignment=PP_ALIGN.RIGHT, font_size=22)
 
+        Slides.text_box(slide, 'Win Rate:', 6.7, 1.6, 1.5)
+        Slides.text_box(slide, 'Versatility:', 6.7, 2, 1.5)
+
         tx_box = slide.shapes.add_textbox(Inches(1.6), Inches(1.5), Inches(1.75), Inches(0.5))
         tf = tx_box.text_frame
         p = tf.paragraphs[0]
@@ -222,14 +228,14 @@ class Slides:
         p.font.size = Pt(28)
         p.alignment = PP_ALIGN.RIGHT
 
-        tx_box = slide.shapes.add_textbox(Inches(1.6), Inches(1.95), Inches(1.75), Inches(0.5))
+        tx_box = slide.shapes.add_textbox(Inches(7.8), Inches(1.55), Inches(1.75), Inches(0.5))
         tf = tx_box.text_frame
         p = tf.paragraphs[0]
         p.text = '%.2f %%' % (100 * desc['wins'] / desc['matches'])
         p.font.size = Pt(22)
         p.alignment = PP_ALIGN.RIGHT
 
-        tx_box = slide.shapes.add_textbox(Inches(1.6), Inches(2.35), Inches(1.75), Inches(0.5))
+        tx_box = slide.shapes.add_textbox(Inches(7.8), Inches(1.95), Inches(1.75), Inches(0.5))
         tf = tx_box.text_frame
         p = tf.paragraphs[0]
         p.text = '%.3f' % desc['versatility']
@@ -348,6 +354,26 @@ class Slides:
         formats = ['%s', '%s', '%s', '%.2f %%']
         widths = [4.5, 1.5, 1.5, 1.5]
         Slides.create_table(slide, comp, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
+                            widths=widths)
+
+    def add_match_details(self, to_parse, match_types):
+        slide = self.add_slide(1, 152, 251, 152)
+        shapes = slide.shapes
+        title_shape = shapes.title
+        body_shape = shapes.placeholders[1]
+        title_shape.text = '%s Summary' % self.team_name
+        tf = body_shape.text_frame
+        tf.text = '%s matches have incomplete data' % to_parse
+        p = tf.add_paragraph()
+        p.font.size = Pt(20)
+        p.text = 'Login every week to OpenDota in order to have complete data to our matches'
+        p = tf.add_paragraph()
+        p.text = 'Match Summary per Game Type:'
+        headers = ['Game Type', 'Wins', 'Matches', 'Win Rate']
+        keys = ['lobby_type', 'wins', 'matches', 'wr']
+        formats = ['%s', '%s', '%s', '%.2f %%']
+        widths = [4.5, 1.5, 1.5, 1.5]
+        Slides.create_table(slide, match_types, headers, keys, formats, Inches(0.5), Inches(4.5), Inches(9), 1, 13, 15,
                             widths=widths)
 
     def add_win_rate_slide(self, win_rate, match_count, party_size, faction):

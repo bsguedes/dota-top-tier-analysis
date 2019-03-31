@@ -36,6 +36,25 @@ def lobby_type():
     ]
 
 
+def match_types():
+    return {
+        'normal': 'Normal Game',
+        'practice': 'Practice',
+        'tournament': 'Tournament',
+        'tutorial': 'Tutorial',
+        'bots': 'Bots',
+        'ranked_team': 'Party Ranked',
+        'ranked_solo': 'Solo Ranked',
+        'ranked': 'Ranked',
+        'mid': '1 vs. 1 Mid',
+        'battle_cup': 'Battle Cup'
+    }
+
+
+def win_rate(wins, matches):
+    return 0 if matches == 0 else 100 * wins / matches
+
+
 def rating(win, loss=None, matches=None):
     if matches is not None:
         loss = matches - win

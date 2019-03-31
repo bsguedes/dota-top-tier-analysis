@@ -18,8 +18,9 @@ YEARS = [2019]
 MONTH = 3
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
-REDOWNLOAD_SMALL_FILES = False
-BEST_TEAM = ['Chaos', 'Zé', 'Alidio', 'Older', 'Baco']
+REDOWNLOAD_SMALL_FILES = True
+BEST_TEAM = None
+# BEST_TEAM = ['Nuvah', 'Zé', 'Scrider', 'Older', 'Lotus']
 
 # PnK monthly parameters: 4, 3, 4, 2
 # PnK year parameters: 30, 10, 4, 3
@@ -180,7 +181,7 @@ if __name__ == '__main__':
     downloader.download_heroes()
     downloader.download_player_data(players, replacements, override=DOWNLOAD_PLAYERS)
     unique_matches = p.get_matches(replacements, month=MONTH, ranked_only=False)
-    downloader.download_matches(unique_matches, download_again=REDOWNLOAD_SMALL_FILES)
+    to_parse = downloader.download_matches(unique_matches, download_again=REDOWNLOAD_SMALL_FILES)
     matches_json = Parser.load_matches(unique_matches)
     tier_positions = p.identify_heroes(replacements, matches_json, min_couple_matches=MIN_COUPLE_MATCHES)
 
@@ -222,6 +223,7 @@ if __name__ == '__main__':
     s.add_divider_slide("%s General Statistics" % TEAM_NAME, 'Win Rate, Comebacks, Throws, Heroes, Compositions, Pairs')
     s.add_intro_slide(len(unique_matches), MIN_PARTY_SIZE, MIN_MATCHES, MIN_COUPLE_MATCHES)
     s.add_win_rate_slide(p.win_rate, len(unique_matches), p.matches_by_party_size, p.factions)
+    s.add_match_details(to_parse, p.match_types)
     s.add_five_player_compositions(p.five_player_compositions, p.full_party_matches)
     s.add_match_summary_by_player(p.match_summary_by_player, p.match_summary_by_team)
     s.add_comebacks_throws(p.top_comebacks, p.top_throws)

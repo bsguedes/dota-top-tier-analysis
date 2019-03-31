@@ -68,8 +68,11 @@ def download_matches(unique_matches, override=False, download_again=False):
             url = 'https://api.opendota.com/api/matches/%i' % match_id
             r = requests.get(url, allow_redirects=True)
             open(file_name, 'wb').write(r.content)
+    matches_to_parse = 0
     for match_id in unique_matches:
         file_name = 'matches/%s.json' % match_id
         if os.path.getsize(file_name) < 35000:
+            matches_to_parse += 1
             print("Should re-parse match %i on OpenDota" % match_id)
+    return matches_to_parse
 

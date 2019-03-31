@@ -45,6 +45,7 @@ class Parser:
         self.player_heroes_in_match = {}
         self.player_descriptor = []
         self.factions = {}
+        self.match_types = []
         self.min_matches_with_hero = min_matches_with_hero
 
     @staticmethod
@@ -189,6 +190,17 @@ class Parser:
             self.win_rate_by_weekday[wd]['wr'] = 100 * o['wins'] / o['matches'] if o['matches'] > 0 else 0
         for wd, o in self.win_rate_by_month.items():
             self.win_rate_by_month[wd]['wr'] = 100 * o['wins'] / o['matches'] if o['matches'] > 0 else 0
+        for match_type in lobby_type():
+            m = [y for x, y in match_summary.items() if y['lobby_type'] == match_type]
+            games = len(m)
+            wins = len([x for x in m if x['win']])
+            if games > 0:
+                self.match_types.append({
+                    'lobby_type': match_types()[match_type],
+                    'wins': wins,
+                    'matches': games,
+                    'wr': win_rate(wins, games),
+                })
         self.match_summary = match_summary
 
         r_wins = sum([1 for mid, data in self.match_summary.items() if data['is_radiant'] and data['win']])
