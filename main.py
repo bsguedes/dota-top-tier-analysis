@@ -81,7 +81,9 @@ player_list = {
         'Roshan': 151913285,
         'deliri019': 88091172,
         'Pogo': 121639063,
-        'darkkside': 112645060
+        'darkkside': 112645060,
+        'Xupito': 130741370,
+        'Vesgo': 84964267
     },
     BLAZING_DOTA: {
         'Pogo': 121639063,

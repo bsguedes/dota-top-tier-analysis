@@ -113,7 +113,7 @@ class Parser:
                 if i not in counts:
                     counts[i] = {'wins': 0, 'matches': 0, 'wr': 0.0}
                 else:
-                    counts[i]['wr'] = 100 * counts[i]['wins'] / counts[i]['matches']
+                    counts[i]['wr'] = win_rate(counts[i]['wins'], counts[i]['matches'])
             ss = sorted(counts.items(), key=lambda e: e[0])
             ret.append({
                 'item_name': name,
@@ -187,9 +187,9 @@ class Parser:
                 else:
                     match_summary[match_id]['our_team_heroes'].append(self.heroes[p['hero_id']])
         for wd, o in self.win_rate_by_weekday.items():
-            self.win_rate_by_weekday[wd]['wr'] = 100 * o['wins'] / o['matches'] if o['matches'] > 0 else 0
+            self.win_rate_by_weekday[wd]['wr'] = win_rate(o['wins'], o['matches'])
         for wd, o in self.win_rate_by_month.items():
-            self.win_rate_by_month[wd]['wr'] = 100 * o['wins'] / o['matches'] if o['matches'] > 0 else 0
+            self.win_rate_by_month[wd]['wr'] = win_rate(o['wins'], o['matches'])
         for match_type in lobby_type():
             m = [y for x, y in match_summary.items() if y['lobby_type'] == match_type]
             games = len(m)
@@ -208,16 +208,16 @@ class Parser:
         d_wins = sum([1 for mid, data in self.match_summary.items() if not data['is_radiant'] and data['win']])
         d_matches = sum([1 for mid, data in self.match_summary.items() if not data['is_radiant']])
         self.factions = {
-            'r_wr': 100 * r_wins / r_matches,
+            'r_wr': win_rate(r_wins, r_matches),
             'r_win': r_wins,
             'r_loss': r_matches - r_wins,
-            'd_wr': 100 * d_wins / d_matches,
+            'd_wr': win_rate(d_wins, d_matches),
             'd_win': d_wins,
             'd_loss': d_matches - d_wins,
         }
 
         print('')
-        self.win_rate = 100 * len([x for x, y in match_summary.items() if y['win']]) / len(matches)
+        self.win_rate = win_rate(len([x for x, y in match_summary.items() if y['win']]), len(matches))
         print('%s Win Rate: %.2f %%' % (self.team_name, self.win_rate))
 
         list_comebacks = {m: v['comeback_throw'] for m, v in match_summary.items() if v['win'] > 0}
@@ -368,19 +368,19 @@ class Parser:
         for pid, v in player_positions.items():
             pp = player_positions[pid]
             ppp = {a: '%i (%.2f %%)' % (
-                   b, 0 if player_positions[pid][a] == 0 else 100 * player_win_pos[pid][a] / player_positions[pid][a])
+                   b, win_rate(player_win_pos[pid][a], player_positions[pid][a]))
                    for a, b in pp.items()}
             print('%s positions: %s' % (inv_p[pid], ppp))
             self.player_roles[pid] = [
                 {'role': a, 'matches': b, 'rating': rating(player_win_pos[pid][a], matches=b),
-                 'wr': 0 if player_positions[pid][a] == 0 else 100 * player_win_pos[pid][a] / player_positions[pid][a]}
+                 'wr': win_rate(player_win_pos[pid][a], player_positions[pid][a])}
                 for a, b in player_positions[pid].items()]
         self.hero_statistics = sorted([{
             'name': hero_name,
             'id': inv_h[hero_name],
             'matches': wr_with[inv_h[hero_name]]['matches'],
             'roles': [{'role': r, 'matches': v['matches'], 'wins': v['wins'],
-                       'wr': 0 if v['matches'] == 0 else 100 * v['wins'] / v['matches']} for r, v in
+                       'wr': win_rate(v['wins'], v['matches'])} for r, v in
                       hero_positions[inv_h[hero_name]].items()],
             'played_by': sorted([{'name': p_name, 'id': pid, 'matches': phd[pid][inv_h[hero_name]]['matches'],
                                   'wins': phd[pid][inv_h[hero_name]]['wins'],
@@ -392,8 +392,8 @@ class Parser:
                                                         'matches'])} for _, r in roles().items()},
                                   'rating': rating(phd[pid][inv_h[hero_name]]['wins'],
                                                    matches=phd[pid][inv_h[hero_name]]['matches']),
-                                  'wr': (100 * phd[pid][inv_h[hero_name]]['wins'] / phd[pid][inv_h[hero_name]][
-                                      'matches'] if phd[pid][inv_h[hero_name]]['matches'] > 0 else 0)}
+                                  'wr': win_rate(phd[pid][inv_h[hero_name]]['wins'],
+                                                 phd[pid][inv_h[hero_name]]['matches'])}
                                  for p_name, pid in self.players.items() if phd[pid][inv_h[hero_name]]['matches'] > 0],
                                 key=lambda z: (z['rating'], z['wins']), reverse=True)
         } for hero_name, value in ss], key=lambda l: l['name'])
@@ -452,17 +452,13 @@ class Parser:
                 'pairings': self.player_pairs[pid],
                 'matches': sum([w['matches'] for h, w in self.player_wins_by_hero[pid].items()]),
                 'streaks': self.calculate_streaks(pid),
-                'radiant_wr': 0 if len(
+                'radiant_wr': win_rate(
+                    len([1 for _, d in match_summary.items() if pid in d['players'] and d['win'] and d['is_radiant']]),
+                    len([1 for _, d in match_summary.items() if pid in d['players'] and d['is_radiant']])),
+                'dire_wr': win_rate(len(
                     [1 for _, d in match_summary.items() if
-                     pid in d['players'] and d['is_radiant']]) == 0 else 100 * len(
-                    [1 for _, d in match_summary.items() if
-                     pid in d['players'] and d['win'] and d['is_radiant']]) / len(
-                    [1 for _, d in match_summary.items() if pid in d['players'] and d['is_radiant']]),
-                'dire_wr': 0 if len([1 for _, d in match_summary.items() if
-                                     pid in d['players'] and not d['is_radiant']]) == 0 else 100 * len(
-                    [1 for _, d in match_summary.items() if
-                     pid in d['players'] and d['win'] and not d['is_radiant']]) / len(
-                    [1 for _, d in match_summary.items() if pid in d['players'] and not d['is_radiant']]),
+                     pid in d['players'] and d['win'] and not d['is_radiant']]), len(
+                    [1 for _, d in match_summary.items() if pid in d['players'] and not d['is_radiant']])),
                 'wins': sum([w['wins'] for h, w in self.player_wins_by_hero[pid].items()]),
                 'rating': rating(sum([w['wins'] for h, w in self.player_wins_by_hero[pid].items()]),
                                  matches=sum([w['matches'] for h, w in self.player_wins_by_hero[pid].items()])),

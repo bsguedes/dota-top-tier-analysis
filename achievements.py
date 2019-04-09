@@ -219,8 +219,12 @@ class Achievement:
 
     @abc.abstractmethod
     def evaluate(self):
-        return {'matches': self.games, 'wins': self.wins, 'winners': self.winners,
-                'wr': 0 if self.games == 0 else 100 * self.wins / self.games}
+        return {
+            'matches': self.games,
+            'wins': self.wins,
+            'winners': self.winners,
+            'wr': win_rate(self.wins, self.games)
+        }
 
     def initialize(self, players, matches):
         self.player_list = players
