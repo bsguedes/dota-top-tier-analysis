@@ -716,9 +716,10 @@ class Parser:
         for hero in self.hero_statistics:
             if len(hero['played_by']) > 0:
                 max_rating = max(hero['played_by'], key=lambda x: x['rating'])['rating']
-                e = [h for h in hero['played_by'] if h['id'] == pid]
-                if len(e) == 1 and e[0]['rating'] == max_rating and e[0]['matches'] >= self.min_matches_with_hero:
-                    hero_ids.append(hero['id'])
+                if max_rating > 0:
+                    e = [h for h in hero['played_by'] if h['id'] == pid]
+                    if len(e) == 1 and e[0]['rating'] == max_rating and e[0]['matches'] >= self.min_matches_with_hero:
+                        hero_ids.append(hero['id'])
         return hero_ids
 
     def calculate_streaks(self, pid):
