@@ -4,7 +4,7 @@ from constants import roles
 
 class Roles:
     @staticmethod
-    def evaluate_roles(match_summary, team_players):
+    def evaluate_roles(match_id, match_summary, team_players):
         our_players = match_summary['players']
         result_roles = [-1] * 5
         team_players = team_players[0:5] if match_summary['is_radiant'] else team_players[5:10]

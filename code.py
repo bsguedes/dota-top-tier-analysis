@@ -160,7 +160,7 @@ class Parser:
                     obj['throw'] = max(gold_adv + [0]) if 'throw' not in obj else obj['throw']
                     match_summary[match_id]['comeback_throw'] = obj['comeback'] if p['win'] > 0 else obj['throw']   
             if 'lane_role' in obj['players'][0]:
-                match_summary[match_id]['roles'] = Roles.evaluate_roles(match_summary[match_id],
+                match_summary[match_id]['roles'] = Roles.evaluate_roles(match_id, match_summary[match_id],
                                                                         [x for x in obj['players'] if 'lane_role' in x])
             match_summary[match_id]['items'] = items.evaluate_items([x for x in obj['players'] if
                                                                     x['account_id'] in account_ids])
