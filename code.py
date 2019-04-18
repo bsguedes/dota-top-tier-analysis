@@ -150,8 +150,10 @@ class Parser:
                     match_summary[match_id]['lobby_type'] = lobby_type()[obj['lobby_type']]
                     match_summary[match_id]['our_heroes'].append(p['hero_id'])
                     match_summary[match_id]['players'].append(p['account_id'])
+                    apm = p['actions_per_min'] if 'actions_per_min' in p else 0
                     match_summary[match_id]['player_desc'][p['account_id']] = {'hero': self.heroes[p['hero_id']],
-                                                                               'total_gold': p['total_gold']}
+                                                                               'total_gold': p['total_gold'],
+                                                                               'apm': apm}
                     match_summary[match_id]['win'] = p['win'] > 0
                     match_summary[match_id]['is_radiant'] = p['isRadiant']
                     gold_adv = [] if obj['radiant_gold_adv'] is None else obj['radiant_gold_adv']                  
@@ -166,6 +168,8 @@ class Parser:
                                                                     x['account_id'] in account_ids])
             match_summary[match_id]['barracks'] = obj[
                 'barracks_status_radiant' if match_summary[match_id]['is_radiant'] else 'barracks_status_dire']
+            match_summary[match_id]['towers'] = obj[
+                'tower_status_radiant' if match_summary[match_id]['is_radiant'] else 'tower_status_dire']
             c_month = calendar.month_abbr[gmtime(int(obj['start_time'])).tm_mon]
             c_weekday = calendar.day_abbr[gmtime(int(obj['start_time'])).tm_wday]
             self.win_rate_by_weekday[c_weekday]['matches'] += 1

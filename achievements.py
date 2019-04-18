@@ -189,14 +189,18 @@ class PnKAchievements(AchievementBase):
         self.add_ach(ItemAchievement('Multiple Midas', 'hand_of_midas', 'Hand of Midas', 3))
         self.add_ach(ItemAchievement('Maximum Blink', 'blink', 'Blink Dagger', 5))
         self.add_ach(MultiKillAchievement('RAMPAGE!', '5'))
-        self.add_ach(ComeBackFromMegaCreepsAchievement('Overwhelming Odds'))
+        self.add_ach(WinWithBuildingStatus('Overwhelming Odds', 'barracks', 0, 'against Mega Creeps'))
+        self.add_ach(
+            WinWithBuildingStatus('No Tower Shall Fall', 'towers', 2047, 'losing no tower', count_on_building=False))
         self.add_ach(WinBattleCupPartyAchievement('Battle Cup Winners'))
-        self.add_ach(PlayerOnLowestParameterAchievement('Naked Baco', 'Baco', 'total_gold', 'net worth',
-                                                        img='naked_baco.png'))
+        self.add_ach(PlayerOnParameterAchievement('Naked Baco', 'Baco', 'total_gold', 'net worth',
+                                                  img='naked_baco.png'))
         self.add_ach(PlayerOnHeroAchievement('Brainless Baco', 'Baco', UNDEAD_HEROES, 'an undead hero',
                                              img='brainless_baco.png'))
         self.add_ach(PlayerOnHeroAchievement('Mustache Baco', 'Baco', MUSTACHE_HEROES, 'a hero with a mustache',
                                              img='mustache_baco.png'))
+        self.add_ach(PlayerOnParameterAchievement('Fap Baco', 'Baco', 'apm', 'actions per min', win=False, lowest=False,
+                                                  img='fap_baco.png'))
         self.add_ach(WinWithHeroAchievement('Girl Power', FEMALE_HEROES, 'are female heroes'))
         self.add_ach(WinWithHeroAchievement('Melee Only', MELEE_HEROES, 'are melee heroes'))
         self.add_ach(WinWithHeroAchievement('No Disables', NO_DISABLE_HEROES, 'have no reliable stuns'))
@@ -356,24 +360,29 @@ class WinBattleCupPartyAchievement(Achievement):
         return super(WinBattleCupPartyAchievement, self).evaluate()
 
 
-class PlayerOnLowestParameterAchievement(Achievement):
-    def __init__(self, name, player, parameter, parameter_name, img=None):
+class PlayerOnParameterAchievement(Achievement):
+    def __init__(self, name, player, parameter, parameter_name, img=None, win=True, lowest=True):
         Achievement.__init__(self, name, img=img)
         self.player = player
         self.parameter = parameter
-        self.description = 'Win a game with %s having lowest %s' % (player, parameter_name)
+        self.lowest = lowest
+        self.win = win
+        txt = 'lowest' if lowest else 'highest'
+        self.description = 'Win a game with %s having %s %s' % (player, txt, parameter_name)
 
     def evaluate(self):
         for match_id, data in self.match_list.items():
             if self.player_list[self.player] in data['players']:
                 self.games += 1
                 value = data['player_desc'][self.player_list[self.player]][self.parameter]
-                if data['win'] and value == min([v[self.parameter] for k, v in data['player_desc'].items()]):
+                comp = min([v[self.parameter] for k, v in data['player_desc'].items()]) if self.lowest else max(
+                    [v[self.parameter] for k, v in data['player_desc'].items()])
+                if (not self.win or data['win']) and value == comp and comp > 0:
                     self.wins += 1
                     for player_id in data['players']:
                         if player_id != self.player_list[self.player]:
                             self.winners[player_id].append(match_id)
-        return super(PlayerOnLowestParameterAchievement, self).evaluate()
+        return super(PlayerOnParameterAchievement, self).evaluate()
 
 
 class PlayerOnHeroAchievement(Achievement):
@@ -421,20 +430,26 @@ class WinCarriedByAchievement(Achievement):
         return super(WinCarriedByAchievement, self).evaluate()
 
 
-class ComeBackFromMegaCreepsAchievement(Achievement):
-    def __init__(self, name):
+class WinWithBuildingStatus(Achievement):
+    def __init__(self, name, building, value, text, count_on_building=True):
         Achievement.__init__(self, name)
-        self.description = 'Win a game against Mega Creeps'
+        self.building = building
+        self.value = value
+        self.count_on_building = count_on_building
+        self.description = 'Win a game %s' % text
 
     def evaluate(self):
         for match_id, data in self.match_list.items():
-            if data['barracks'] == 0:
+            if not self.count_on_building and data['win']:
                 self.games += 1
+            if data[self.building] == self.value:
+                if self.count_on_building:
+                    self.games += 1
                 if data['win']:
                     self.wins += 1
                     for player_id in data['players']:
                         self.winners[player_id].append(match_id)
-        return super(ComeBackFromMegaCreepsAchievement, self).evaluate()
+        return super(WinWithBuildingStatus, self).evaluate()
 
 
 class WinWithoutPlayerAchievement(Achievement):

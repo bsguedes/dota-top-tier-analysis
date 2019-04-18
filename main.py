@@ -14,13 +14,13 @@ import calendar
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
-YEARS = [2019]
-MONTH = 4
+YEARS = [2018]
+MONTH = None
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
-REDOWNLOAD_SMALL_FILES = True
+REDOWNLOAD_SMALL_FILES = False
 BEST_TEAM = None
-# BEST_TEAM = ['Nuvah', 'Zé', 'Pringles', 'Older', 'Lotus']
+# BEST_TEAM = ['Kiddy', 'Zé', 'Chaos', 'Older', 'Lotus']
 
 # PnK monthly parameters: 4, 3, 4, 2
 # PnK year parameters: 30, 10, 4, 3
