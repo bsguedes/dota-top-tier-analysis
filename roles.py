@@ -4,6 +4,15 @@ from constants import roles
 
 class Roles:
     @staticmethod
+    def got_first_blood(players, our_players):
+        for player in players:
+            if 'firstblood_claimed' not in player:
+                return None
+            if player['firstblood_claimed'] == 1 and player['account_id'] in our_players:
+                return True
+        return False
+
+    @staticmethod
     def evaluate_roles(match_id, match_summary, team_players):
         our_players = match_summary['players']
         result_roles = [-1] * 5

@@ -57,6 +57,21 @@ class Parser:
             matches.append({'id': match_id, 'content': content, 'date': content['start_time']})
         return sorted(matches, key=lambda e: e['date'])
 
+    def first_blood_win_rate(self):
+        first_bloods = len([1 for x, y in self.match_summary.items() if y['first_blood']])
+        matches = len([1 for x, y in self.match_summary.items() if y['first_blood'] is not None])
+        win_fb = len([1 for x, y in self.match_summary.items() if y['first_blood'] and y['win']])
+        win_nfb = len([1 for x, y in self.match_summary.items() if not y['first_blood'] and y['win']])
+        return {
+            'first_blood_rate': win_rate(first_bloods, matches),
+            'first_bloods': first_bloods,
+            'matches': matches,
+            'wr_if_first_blood': win_rate(win_fb, first_bloods),
+            'wr_if_not_first_blood': win_rate(win_nfb, matches-first_bloods),
+            'wins_if_first_blood': win_fb,
+            'wins_if_no_first_blood': win_nfb
+        }
+
     def evaluate_best_team_by_hero_player(self, min_matches):
         role_dict = {}
         result_dict = {}
@@ -170,6 +185,8 @@ class Parser:
                 'barracks_status_radiant' if match_summary[match_id]['is_radiant'] else 'barracks_status_dire']
             match_summary[match_id]['towers'] = obj[
                 'tower_status_radiant' if match_summary[match_id]['is_radiant'] else 'tower_status_dire']
+            match_summary[match_id]['first_blood'] = Roles.got_first_blood(obj['players'],
+                                                                           match_summary[match_id]['players'])
             c_month = calendar.month_abbr[gmtime(int(obj['start_time'])).tm_mon]
             c_weekday = calendar.day_abbr[gmtime(int(obj['start_time'])).tm_wday]
             self.win_rate_by_weekday[c_weekday]['matches'] += 1

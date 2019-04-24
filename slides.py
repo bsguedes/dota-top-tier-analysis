@@ -376,6 +376,38 @@ class Slides:
         Slides.create_table(slide, match_types, headers, keys, formats, Inches(0.5), Inches(4.5), Inches(9), 1, 13, 15,
                             widths=widths)
 
+    def add_win_rate_details_slide(self, fb_object):
+        slide = self.add_slide(1, 152, 251, 152)
+        shapes = slide.shapes
+        title_shape = shapes.title
+        title_shape.text = '%s Summary' % self.team_name
+        textbox = slide.shapes[1]
+        sp = textbox.element
+        sp.getparent().remove(sp)
+
+        Slides.text_box(slide, 'First Blood rate', 0.8, 2, font_size=24, bold=True)
+        Slides.text_box(slide, '%.2f %%' % fb_object['first_blood_rate'], 4.5, 2, font_size=24)
+        Slides.text_box(slide, '%s matches' % fb_object['matches'], 6, 2, font_size=24)
+        Slides.text_box(slide, '%s-%s' % (fb_object['first_bloods'], fb_object['matches'] - fb_object['first_bloods']),
+                        8, 2, font_size=24)
+
+        Slides.text_box(slide, 'Wins with first blood', 0.8, 2.5, font_size=24, bold=True)
+        Slides.text_box(slide, '%.2f %%' % fb_object['wr_if_first_blood'], 4.5, 2.5, font_size=24)
+        Slides.text_box(slide, '%s matches' % fb_object['first_bloods'], 6, 2.5, font_size=24)
+        Slides.text_box(slide, '%s-%s' % (
+                                            fb_object['wins_if_first_blood'],
+                                            fb_object['first_bloods'] - fb_object['wins_if_first_blood']),
+                        8, 2.5, font_size=24)
+
+        Slides.text_box(slide, 'Wins without first blood', 0.8, 3, font_size=24, bold=True)
+        Slides.text_box(slide, '%.2f %%' % fb_object['wr_if_not_first_blood'], 4.5, 3, font_size=24)
+        Slides.text_box(slide, '%s matches' % (fb_object['matches'] - fb_object['first_bloods']), 6, 3,
+                        font_size=24)
+        Slides.text_box(slide, '%s-%s' % (fb_object['wins_if_no_first_blood'],
+                                          fb_object['matches'] - fb_object['first_bloods'] - fb_object[
+                                              'wins_if_no_first_blood']),
+                        8, 3, font_size=24)
+
     def add_win_rate_slide(self, win_rate, match_count, party_size, faction):
         slide = self.add_slide(1, 152, 251, 152)
         shapes = slide.shapes
