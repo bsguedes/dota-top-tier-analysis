@@ -15,10 +15,10 @@ PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
 YEARS = [2019]
-MONTH = 4
+MONTH = 5
 DOWNLOAD_PLAYERS = True
 PRINT_TIERS = False
-REDOWNLOAD_SMALL_FILES = False
+REDOWNLOAD_SMALL_FILES = True
 BEST_TEAM = None
 # BEST_TEAM = ['Kiddy', 'Zé', 'Chaos', 'Older', 'Lotus']
 

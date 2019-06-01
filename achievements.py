@@ -37,6 +37,7 @@ NO_DISABLE_HEROES = [
     'Weaver',
     'Chen',
     'Dark Seer',
+    'Dark Willow',
     'Dazzle',
     'Death Prophet',
     'Disruptor',
