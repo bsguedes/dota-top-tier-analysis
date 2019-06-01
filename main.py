@@ -15,8 +15,8 @@ PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
 YEARS = [2019]
-MONTH = 5
-DOWNLOAD_PLAYERS = True
+MONTH = None
+DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
 REDOWNLOAD_SMALL_FILES = True
 BEST_TEAM = None
@@ -108,6 +108,8 @@ categories = [
     Category(10, 'deaths', unit='deaths', reverse=False),
     Category(10, 'assists', unit='assists'),
     Category(10, 'kda', text='KLA', rule='kla', max_format='%.2f'),
+    Category(10, 'duration', text='time between each kill/assist', rule='time_kill_assist', unit='s',
+             reverse=False, minimize=True, max_format='%.2f'),
     Category(10, 'versatility', rule='versatility', avg_format='%.3f'),
     Category(2, 'hard carry', unit='%', text='hard carry win rate', rule='position'),
     Category(2, 'mid', unit='%', text='mid win rate', rule='position'),
@@ -204,7 +206,7 @@ if __name__ == '__main__':
             tiers.append((tier, c))
         else:
             res_avg, res_max = p.stat_counter(matches_json, c.parameter, text=c.text, unit=c.unit, tf=c.transform,
-                                              max_fmt=c.max_format, avg_fmt=c.avg_format,
+                                              max_fmt=c.max_format, avg_fmt=c.avg_format, minimize=c.minimize,
                                               reverse=c.reverse, has_max=c.has_max, rule=c.rule, has_avg=c.has_avg)
             cat_name = c.text if c.text is not None else c.parameter
             if c.has_avg:

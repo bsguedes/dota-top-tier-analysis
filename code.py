@@ -488,7 +488,7 @@ class Parser:
         return tier_dict
 
     def stat_counter(self, matches, parameter, reverse=True, has_avg=True, unit=None, max_fmt=None, avg_fmt=None,
-                     text=None, has_max=True, tf=None, rule=None):
+                     text=None, has_max=True, tf=None, rule=None, minimize=False):
         matches = {o['id']: o['content'] for o in matches}
         text = parameter if text is None else text
 
@@ -499,7 +499,8 @@ class Parser:
         averages = {k: 0 for k, v in self.players.items()}
         totals = {k: 0 for k, v in self.players.items()}
 
-        maximum_value = {v: 0 for k, v in self.players.items()}
+        maximum_value = {v: 9999999999 for k, v in self.players.items()} \
+            if not reverse and minimize else {v: 0 for k, v in self.players.items()}
         maximum_match = {v: 0 for k, v in self.players.items()}
 
         for match_id, obj in matches.items():
@@ -524,6 +525,9 @@ class Parser:
                         value = sum([v for k, v in p[parameter].items()])
                     elif rule == 'bool':
                         value = 1 if p[parameter] else 0
+                    elif rule == 'time_kill_assist':
+                        s = p['kills'] + p['assists']
+                        value = 0 if s == 0 else p['duration'] / s
                     elif parameter == 'purchase':
                         if rule == 'support_gold':
                             pch = dict()
@@ -542,9 +546,14 @@ class Parser:
                     else:
                         value = p[parameter]
                     totals[inv_p[p['account_id']]] += value
-                    if value > maximum_value[p['account_id']]:
-                        maximum_value[p['account_id']] = value
-                        maximum_match[p['account_id']] = match_id
+                    if not reverse and minimize:
+                        if value < maximum_value[p['account_id']] and value != 0:
+                            maximum_value[p['account_id']] = value
+                            maximum_match[p['account_id']] = match_id
+                    else:
+                        if value > maximum_value[p['account_id']]:
+                            maximum_value[p['account_id']] = value
+                            maximum_match[p['account_id']] = match_id
                     matches_played[inv_p[p['account_id']]] += 1
 
         for name, pid in self.players.items():

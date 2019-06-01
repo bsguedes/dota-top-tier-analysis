@@ -613,7 +613,7 @@ class Slides:
             x, y, cx, cy = Inches(0.1), Inches(2.8), Inches(5), Inches(4.7)
             chart = slide.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, x, y, cx, cy, chart_data).chart
             category_axis = chart.category_axis
-            category_axis.tick_labels.font.size = Pt(12)
+            category_axis.tick_labels.font.size = Pt(9)
             value_axis = chart.value_axis
             tick_labels = value_axis.tick_labels
             tick_labels.font.size = Pt(12)
