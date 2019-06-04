@@ -23,6 +23,7 @@ def item_list():
         'crimson_guard': 'Crimson Guard',
         'vladmir': 'Vladmir\'s Offering',
         'ancient_janggo': 'Drum of Endurance',
+        'nullifier': 'Nullifier',
         'radiance': 'Radiance',
         'magic_stick': 'Magic Stick',
         'magic_wand': 'Magic Wand',

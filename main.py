@@ -15,7 +15,7 @@ PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
 YEARS = [2019]
-MONTH = None
+MONTH = 6
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
 REDOWNLOAD_SMALL_FILES = True
@@ -48,7 +48,8 @@ MIN_MATCHES_WITH_HERO = parameters[TEAM_NAME]['min_matches_with_hero']
 replacement_list = {
     PNK: {
         'Fallenzão': 331461200,
-        'kkz': 116647196
+        'kkz': 116647196,
+        'Kiddy': 409605487
     },
     BLAZING_DOTA: {
         'flesch': 372670607
@@ -122,7 +123,7 @@ categories = [
     Category(8, 'hero_damage', unit='dmg', text='hero damage'),
     Category(5, 'hero_healing', unit='heal', text='hero healing'),
     Category(5, 'tower_damage', unit='dmg', text='tower damage'),
-    Category(5, 'damage_taken', unit='dmg', text='damage taken', rule='accumulate'),
+    Category(5, 'damage_taken', unit='dmg', reverse=False, text='damage taken', rule='accumulate'),
     Category(5, 'teamfight_participation', unit='%', text='team fight participation',
              apply_transform=T.percentage, max_format='%.2f'),
     Category(6, 'life_state_dead', unit='min', text='minutes dead',
