@@ -1,5 +1,5 @@
 def evaluate_items(players):
-    items = {i: {p['account_id']: 0 for p in players} for i, j in item_list().items()}
+    items = {i: {p['account_id']: {'count': 0, 'times': []} for p in players} for i, j in item_list().items()}
     slots = ['item_0', 'item_1', 'item_2', 'item_3', 'item_4', 'item_5', 'backpack_0', 'backpack_1', 'backpack_2']
     all_items = item_ids()
     for player in players:
@@ -8,13 +8,17 @@ def evaluate_items(players):
                 return None
             item_id = player[slot]
             if item_id in all_items and all_items[item_id] in items:
-                items[all_items[item_id]][player['account_id']] += 1
+                items[all_items[item_id]][player['account_id']]['count'] += 1
+        for item_key, item_name in item_list().items():
+            items[item_key][player['account_id']]['times'] = [k['time'] for k in player['purchase_log'] if
+                                                              k['key'] == item_key]
     return items
 
 
 def item_list():
     return {
         'black_king_bar': 'Black King Bar',
+        'radiance': 'Radiance',
         'ultimate_scepter': 'Aghanim\'s Scepter',
         'blink': 'Blink Dagger',
         'force_staff': 'Force Staff',
@@ -24,7 +28,6 @@ def item_list():
         'vladmir': 'Vladmir\'s Offering',
         'ancient_janggo': 'Drum of Endurance',
         'nullifier': 'Nullifier',
-        'radiance': 'Radiance',
         'magic_stick': 'Magic Stick',
         'magic_wand': 'Magic Wand',
         'bottle': 'Bottle',

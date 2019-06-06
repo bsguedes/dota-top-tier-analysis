@@ -57,6 +57,18 @@ class Parser:
             matches.append({'id': match_id, 'content': content, 'date': content['start_time']})
         return sorted(matches, key=lambda e: e['date'])
 
+    def bounties(self):
+        lst = list()
+        for i in range(5):
+            r = dict()
+            r['counts'] = i
+            r['matches'] = len([1 for x, y in self.match_summary.items() if y['first_bounties'] == i])
+            r['wins'] = len([1 for x, y in self.match_summary.items() if y['first_bounties'] == i and y['win']])
+            r['losses'] = r['matches'] - r['wins']
+            r['wr'] = win_rate(r['wins'], matches=r['matches'])
+            lst.append(r)
+        return lst
+
     def first_blood_win_rate(self):
         first_bloods = len([1 for x, y in self.match_summary.items() if y['first_blood']])
         matches = len([1 for x, y in self.match_summary.items() if y['first_blood'] is not None])
@@ -116,7 +128,7 @@ class Parser:
         for item, name in items.item_list().items():
             counts = dict()
             for match_id, summary in self.match_summary.items():
-                s = sum([k for p, k in summary['items'][item].items()])
+                s = sum([k['count'] for p, k in summary['items'][item].items()])
                 if s not in counts:
                     counts[s] = {'wins': 0, 'matches': 0, 'wr': 0.0}
                 counts[s]['matches'] += 1
@@ -168,6 +180,7 @@ class Parser:
                     apm = p['actions_per_min'] if 'actions_per_min' in p else 0
                     match_summary[match_id]['player_desc'][p['account_id']] = {'hero': self.heroes[p['hero_id']],
                                                                                'total_gold': p['total_gold'],
+                                                                               'kills': p['kills'],
                                                                                'apm': apm}
                     match_summary[match_id]['win'] = p['win'] > 0
                     match_summary[match_id]['is_radiant'] = p['isRadiant']
@@ -187,6 +200,8 @@ class Parser:
                 'tower_status_radiant' if match_summary[match_id]['is_radiant'] else 'tower_status_dire']
             match_summary[match_id]['first_blood'] = Roles.got_first_blood(obj['players'],
                                                                            match_summary[match_id]['players'])
+            match_summary[match_id]['first_bounties'] = Roles.first_bounties(obj['players'],
+                                                                             match_summary[match_id]['players'])
             c_month = calendar.month_abbr[gmtime(int(obj['start_time'])).tm_mon]
             c_weekday = calendar.day_abbr[gmtime(int(obj['start_time'])).tm_wday]
             self.win_rate_by_weekday[c_weekday]['matches'] += 1
@@ -636,13 +651,15 @@ class Parser:
 
         for name, match_count in sorted_matches:
             matches_with_team = len([i for i, v in matches.items() if len(v) >= 2 and name in v])
+            matches_with_party = len([i for i, v in matches.items() if len(v) >= self.min_party_size and name in v])
             percentage_with_team = matches_with_team / match_count if match_count > 0 else 0
             self.match_summary_by_player.append(
                 {
                     'player': name,
                     'matches': match_count,
                     'team_matches': matches_with_team,
-                    'perc_with_team': 100 * percentage_with_team
+                    'perc_with_team': 100 * percentage_with_team,
+                    'matches_party': matches_with_party
                 })
             print('%s played %i matches -- %i matches (%.2f %%) played with %s'
                   % (name, match_count, matches_with_team, 100 * percentage_with_team, self.team_name))

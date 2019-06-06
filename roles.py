@@ -13,6 +13,16 @@ class Roles:
         return False
 
     @staticmethod
+    def first_bounties(players, our_players):
+        runes = 0
+        for player in players:
+            if 'runes_log' not in player:
+                return None
+            if player['account_id'] in our_players:
+                runes += sum([1 for r in player['runes_log'] if r['key'] == 5 and r['time'] < 300])
+        return runes
+
+    @staticmethod
     def evaluate_roles(match_id, match_summary, team_players):
         our_players = match_summary['players']
         result_roles = [-1] * 5

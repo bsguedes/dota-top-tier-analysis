@@ -179,16 +179,21 @@ class PnKAchievements(AchievementBase):
         self.add_ach(WinWithPlayerAchievement('I AM ARCHON', ['Scrider', 'Older', 'tchepo']))
         self.add_ach(WinWithPlayerAchievement('Feldmann Brothers', ['Lotus', 'Pringles']))
         self.add_ach(WinWithoutPlayerAchievement('Subs Captain', ['Zé']))
-        self.add_ach(WinCarriedByAchievement('Best Hooks for Enemy Team', 'Cristian', 'Pudge'))
+        self.add_ach(PlayerOnParameterAchievement('Vem Tranquilo', 'Scrider', 'kills', 'kill count',
+                                                  lowest=False, win=False))
         self.add_ach(WinCarriedByAchievement('Pushing Far From Your Friends', 'Nuvah', 'Lina'))
         self.add_ach(WinCarriedByAchievement('Heavier than a Black Hole', 'Alidio', 'Wraith King'))
-        self.add_ach(WinCarriedByAchievement('What is a Hero Pool?', 'Chuvisco', 'Necrophos'))
+        self.add_ach(WinCarriedByAchievement('My hero pool is not only my Level 25 heroes', 'Chuvisco', 'Ursa',
+                                             unless=True))
+        self.add_ach(WinCarriedByAchievement('Best Hooks for Enemy Team', 'Cristian', 'Pudge'))
         self.add_ach(StreakAchievement('All Green Profile', 8))
         self.add_ach(StreakAchievement('All Red Profile', -8))
         self.add_ach(ItemAchievement('Trump Card', 'rapier', 'Divine Rapier', 1))
         self.add_ach(ItemAchievement('Next Lebel Farming', 'radiance', 'Radiance', 2))
         self.add_ach(ItemAchievement('Multiple Midas', 'hand_of_midas', 'Hand of Midas', 3))
         self.add_ach(ItemAchievement('Maximum Blink', 'blink', 'Blink Dagger', 5))
+        self.add_ach(ItemSequenceAchievement('Primeiro Rad, Depois Aghanim', ['radiance', 'ultimate_scepter'],
+                                             'The new meta is: buy a Radiance, then Aghanim\'s Scepter'))
         self.add_ach(MultiKillAchievement('RAMPAGE!', '5'))
         self.add_ach(WinWithBuildingStatus('Overwhelming Odds', 'barracks', 0, 'against Mega Creeps'))
         self.add_ach(
@@ -276,6 +281,31 @@ class StreakAchievement(Achievement):
         return super(StreakAchievement, self).evaluate()
 
 
+class ItemSequenceAchievement(Achievement):
+    def __init__(self, name, items, description):
+        Achievement.__init__(self, name)
+        self.items = items
+        self.description = description
+
+    def evaluate(self):
+        for match_id, data in self.match_list.items():
+            if data['items'] is not None:
+                self.games += 1
+                some_win = False
+                for player in data['players']:
+                    min_times = []
+                    for it in self.items:
+                        if len(data['items'][it][player]['times']) > 0 and data['items'][it][player]['count'] > 0:
+                            min_times.append(data['items'][it][player]['times'])
+                    if len(min_times) == len(self.items) and all(
+                            min_times[i] <= min_times[i + 1] for i in range(len(min_times) - 1)):
+                        self.winners[player].append(match_id)
+                        some_win = True
+                if some_win:
+                    self.wins += 1
+        return super(ItemSequenceAchievement, self).evaluate()
+
+
 class ItemAchievement(Achievement):
     def __init__(self, name, item_code, item_name, amount):
         Achievement.__init__(self, name)
@@ -287,7 +317,7 @@ class ItemAchievement(Achievement):
     def evaluate(self):
         for match_id, data in self.match_list.items():
             if data['items'] is not None:
-                if len([1 for x in data['items'][self.item_code].values() if x > 0]) >= self.amount:
+                if len([1 for x in data['items'][self.item_code].values() if x['count'] > 0]) >= self.amount:
                     self.games += 1
                     if data['win']:
                         self.wins += 1
@@ -369,7 +399,8 @@ class PlayerOnParameterAchievement(Achievement):
         self.lowest = lowest
         self.win = win
         txt = 'lowest' if lowest else 'highest'
-        self.description = 'Win a game with %s having %s %s' % (player, txt, parameter_name)
+        prefix = 'Win' if win else 'Play'
+        self.description = '%s a game with %s having %s %s' % (prefix, player, txt, parameter_name)
 
     def evaluate(self):
         for match_id, data in self.match_list.items():
@@ -411,16 +442,20 @@ class PlayerOnHeroAchievement(Achievement):
 
 
 class WinCarriedByAchievement(Achievement):
-    def __init__(self, name, player, hero):
+    def __init__(self, name, player, hero, unless=False):
         Achievement.__init__(self, name)
         self.player = player
         self.hero = hero
-        self.description = 'Win a game being carried by %s on %s' % (player, hero)
+        self.unless = unless
+        self.description = 'Win a game being carried by %s on any hero except %s' % (
+            player, hero) if unless else 'Win a game being carried by %s on %s' % (player, hero)
 
     def evaluate(self):
         for match_id, data in self.match_list.items():
             if self.player_list[self.player] in data['players'] \
-                    and data['player_desc'][self.player_list[self.player]]['hero'] == self.hero:
+                    and ((
+                    data['player_desc'][self.player_list[self.player]]['hero'] == self.hero and not self.unless) or (
+                    data['player_desc'][self.player_list[self.player]]['hero'] != self.hero and self.unless)):
                 self.games += 1
                 nw = data['player_desc'][self.player_list[self.player]]['total_gold']
                 if data['win'] and nw == max([v['total_gold'] for k, v in data['player_desc'].items()]):

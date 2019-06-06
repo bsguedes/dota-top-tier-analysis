@@ -376,7 +376,7 @@ class Slides:
         Slides.create_table(slide, match_types, headers, keys, formats, Inches(0.5), Inches(4.5), Inches(9), 1, 13, 15,
                             widths=widths)
 
-    def add_win_rate_details_slide(self, fb_object):
+    def add_win_rate_details_slide(self, fb_object, bounties):
         slide = self.add_slide(1, 152, 251, 152)
         shapes = slide.shapes
         title_shape = shapes.title
@@ -407,6 +407,13 @@ class Slides:
                                           fb_object['matches'] - fb_object['first_bloods'] - fb_object[
                                               'wins_if_no_first_blood']),
                         8, 3, font_size=24)
+
+        Slides.text_box(slide, 'Bounty runes at minute zero', 0.8, 3.8, font_size=24, bold=True)
+        headers = ['Bounties', 'Wins', 'Losses', 'Matches', 'Win Rate']
+        keys = ['counts', 'wins', 'losses', 'matches', 'wr']
+        formats = ['%s', '%s', '%s', '%s', '%.2f %%']
+        Slides.create_table(slide, bounties, headers, keys, formats, Inches(2), Inches(4.5), Inches(6),
+                            1, 12, 15)
 
     def add_win_rate_slide(self, win_rate, match_count, party_size, faction):
         slide = self.add_slide(1, 152, 251, 152)
@@ -561,7 +568,7 @@ class Slides:
                             p.font.bold = True
                             p.alignment = PP_ALIGN.CENTER
 
-    def add_match_summary_by_player(self, summary, team):
+    def add_match_summary_by_player(self, summary, team, party_size):
         cat = Category(0, '', unit='matches')
 
         slide = self.add_slide(5, 152, 251, 152)
@@ -579,9 +586,10 @@ class Slides:
         slide = self.add_slide(5, 152, 251, 152)
         title_shape = slide.shapes.title
         title_shape.text = 'Match Summary by Player'
-        headers = ['Player', 'Total Matches', 'Matches with %s' % self.team_name, '%% with %s' % self.team_name]
-        keys = ['player', 'matches', 'team_matches', 'perc_with_team']
-        formats = ['%s', '%s', '%s', '%.2f %%']
+        headers = ['Player', 'Total Matches', 'Matches with %s' % self.team_name, '%% with %s' % self.team_name,
+                   'with party >= %s' % party_size]
+        keys = ['player', 'matches', 'team_matches', 'perc_with_team', 'matches_party']
+        formats = ['%s', '%s', '%s', '%.2f %%', '%s']
         Slides.create_table_with_text_boxes(slide,
                                             sorted([x for x in summary if x['team_matches'] > 0],
                                                    key=lambda e: e['team_matches'], reverse=True),
