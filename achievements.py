@@ -180,7 +180,7 @@ class PnKAchievements(AchievementBase):
         self.add_ach(WinWithPlayerAchievement('Feldmann Brothers', ['Lotus', 'Pringles']))
         self.add_ach(WinWithoutPlayerAchievement('Subs Captain', ['Zé']))
         self.add_ach(PlayerOnParameterAchievement('Vem Tranquilo', 'Scrider', 'kills', 'kill count',
-                                                  lowest=False, win=False))
+                                                  lowest=False, win=True))
         self.add_ach(WinCarriedByAchievement('Pushing Far From Your Friends', 'Nuvah', 'Lina'))
         self.add_ach(WinCarriedByAchievement('Heavier than a Black Hole', 'Alidio', 'Wraith King'))
         self.add_ach(WinCarriedByAchievement('My hero pool is not only my Level 25 heroes', 'Chuvisco', 'Ursa',

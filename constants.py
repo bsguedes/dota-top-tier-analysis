@@ -102,7 +102,7 @@ def rating(win, loss=None, matches=None):
 
 
 def sequence(strings, maximum=None):
-    if maximum is None or len(strings) <= 5:
+    if maximum is None or len(strings) <= maximum:
         return '%s and %s' % (', '.join(strings[:-1]), strings[-1]) if len(strings) > 1 else strings[0]
     else:
-        return "%s, ..." % ', '.join(strings[:5])
+        return "%s, ..." % ', '.join(strings[:maximum])

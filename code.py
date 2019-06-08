@@ -606,7 +606,7 @@ class Parser:
             if matches_played[inv_p[pid]] >= self.min_matches and maximum_match[pid] > 0:
                 v = max_fmt % tf(maximum_value[pid])
                 hero = self.heroes[self.player_heroes_in_match[maximum_match[pid]][pid]]
-                txt = '%s: %s %s as %s (match id: %i)' % (inv_p[pid], v, unit, hero, maximum_match[pid])
+                txt = '%s: %s %s as %s (match id: #%i#)' % (inv_p[pid], v, unit, hero, maximum_match[pid])
                 results_max.append(TierItem(inv_p[pid], tf(maximum_value[pid]), txt))
 
         if not has_avg:

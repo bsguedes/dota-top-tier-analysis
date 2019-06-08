@@ -163,8 +163,8 @@ class Slides:
         keys = ['name', 'matches', 'wins', 'wr']
         formats = ['%s', '%s', '%s', '%.2f %%']
         widths = [1.5, 1, 1, 1]
-        Slides.create_table(slide, desc['pairings'], headers, keys, formats, Inches(4.5), Inches(1.5), Inches(4.5), 1,
-                            11, 15, widths=widths)
+        Slides.create_table_with_text_boxes(slide, desc['pairings'], headers, keys, formats, 4.5, 1.5, 4.5,
+                                            11, 15, widths=widths)
 
         heroes = desc['top_heroes']
         if len(heroes) > 0:
@@ -448,13 +448,13 @@ class Slides:
         formats = ['%s', '%s', '%s']
         widths = [2, 2, 5]
         Slides.create_table(slide, comebacks, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
-                            widths=widths)
+                            widths=widths, hyperlink=[0])
 
         slide = self.add_slide(5, 152, 251, 152)
         title_shape = slide.shapes.title
         title_shape.text = 'Top 10 %s Throws' % self.team_name
         Slides.create_table(slide, throws, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
-                            widths=widths)
+                            widths=widths, hyperlink=[0])
 
     def add_win_rate_by_date(self, input_data, label):
         slide = self.add_slide(5, 152, 251, 152)
@@ -641,8 +641,17 @@ class Slides:
         tf = txt_box.text_frame
         for i in range(2, len(texts)):
             p = tf.add_paragraph()
-            p.text = texts[i]
             p.font.size = Pt(10)
+            s = texts[i].split('#')
+            if len(s) == 1:
+                p.text = texts[i]
+                p.font.size = Pt(10)
+            else:
+                for j in range(len(s)):
+                    r = p.add_run()
+                    r.text = s[j]
+                    if j == 1:
+                        Slides.add_open_dota_link(r, s[j])
             if texts[i].startswith("Tier"):
                 p.font.bold = True
 
@@ -962,7 +971,7 @@ class Slides:
                 tf.paragraphs[0].font.bold = True
                 txt_box = slide.shapes.add_textbox(left + Inches(2.5), Inches(2.35 + 0.42 * i), width, height)
                 tf = txt_box.text_frame
-                tf.text = sequence(['%s' % i for i in matches], 5)
+                Slides.hyperlink_sequence(tf.paragraphs[0], ['%s' % i for i in matches], 5)
                 tf.paragraphs[0].font.size = Pt(12)
                 i += 1
         else:
@@ -1065,20 +1074,52 @@ class Slides:
 
     @staticmethod
     def create_table(slide, data, headers, keys, formats, left, top, width, height, font_size, header_size,
-                     widths=None):
+                     widths=None, hyperlink=None):
         table_shape = slide.shapes.add_table(len(data) + 1, len(headers), left, top, width, height)
         table = table_shape.table
         for i in range(len(headers)):
             table.cell(0, i).text = headers[i]
         for i in range(len(data)):
             for j in range(len(keys)):
-                table.cell(i + 1, j).text = formats[j] % data[i][keys[j]]
+                if hyperlink is not None and j in hyperlink:
+                    run = table.cell(i + 1, j).text_frame.paragraphs[0].add_run()
+                    run.text = formats[j] % data[i][keys[j]]
+                    Slides.add_open_dota_link(run, formats[j] % data[i][keys[j]])
+                else:
+                    table.cell(i + 1, j).text = formats[j] % data[i][keys[j]]
         Slides.set_table_font_size(table, font_size)
         for i in range(len(keys)):
             table.cell(0, i).text_frame.paragraphs[0].runs[0].font.size = Pt(header_size)
         if widths is not None:
             for i in range(len(widths)):
                 table.columns[i].width = Inches(widths[i])
+
+    @staticmethod
+    def add_open_dota_link(run, match_id, with_text=False):
+        if with_text:
+            run.text = match_id
+        run.hyperlink.address = 'https://www.opendota.com/matches/%s' % match_id
+
+    @staticmethod
+    def hyperlink_sequence(paragraph, strings, maximum=0):
+        if len(strings) == 1:
+            Slides.add_open_dota_link(paragraph.add_run(), strings[0], with_text=True)
+        elif maximum == 0 or maximum >= len(strings):
+            for s in strings[:-2]:
+                Slides.add_open_dota_link(paragraph.add_run(), s, with_text=True)
+                r = paragraph.add_run()
+                r.text = ', '
+            Slides.add_open_dota_link(paragraph.add_run(), strings[-2], with_text=True)
+            r = paragraph.add_run()
+            r.text = ' and '
+            Slides.add_open_dota_link(paragraph.add_run(), strings[-1], with_text=True)
+        else:
+            for s in strings[:maximum]:
+                Slides.add_open_dota_link(paragraph.add_run(), s, with_text=True)
+                r = paragraph.add_run()
+                r.text = ', '
+            r = paragraph.add_run()
+            r.text = '...'
 
     @staticmethod
     def create_table_with_text_boxes(slide, data, headers, keys, formats, left, top, width, font_size,
