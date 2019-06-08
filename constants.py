@@ -12,7 +12,7 @@ def item_cost():
 
 
 def fix_time(t):
-    return int(int(t) - 60 * 60 * 2.7)
+    return int(int(t) - 60 * 60 * 2.5)
 
 
 def roles():
