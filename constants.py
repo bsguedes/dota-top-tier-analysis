@@ -11,6 +11,10 @@ def item_cost():
     }
 
 
+def fix_time(t):
+    return int(int(t) - 60 * 60 * 2.5)
+
+
 def roles():
     return {
         1: "hard carry", 
@@ -33,6 +37,36 @@ def lobby_type():
         'ranked',
         'mid',
         'battle_cup'
+    ]
+
+
+def game_mode():
+    return [
+        'Unknown',
+        'All Pick',
+        'Captains Mode',
+        'Random Draft',
+        'Single Draft',
+        'All Random',
+        'Intro',
+        'Diretide',
+        'Reverse Captains Mode',
+        'Greeviling',
+        'Tutorial',
+        'Mid Only',
+        'Least Played',
+        'Limited Heroes',
+        'Compendium Matchmaking',
+        'Custom',
+        'Captains Draft',
+        'Balanced Draft',
+        'Ability Draft',
+        'Event',
+        'All Random Deathmatch',
+        '1v1 Mid',
+        'All Draft',
+        'Turbo',
+        'Mutation'
     ]
 
 

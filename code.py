@@ -33,6 +33,7 @@ class Parser:
         self.with_heroes = []
         self.most_played_heroes = []
         self.compositions = []
+        self.win_rate_by_hour = {}
         self.win_rate_by_weekday = {}
         self.win_rate_by_month = {}
         self.player_roles = {}
@@ -54,7 +55,7 @@ class Parser:
         for match_id, _ in unique_matches.items():
             content = open('matches/%i.json' % match_id, 'r', encoding='utf-8').read()
             content = json.loads(content)
-            matches.append({'id': match_id, 'content': content, 'date': content['start_time']})
+            matches.append({'id': match_id, 'content': content, 'date': fix_time(content['start_time'])})
         return sorted(matches, key=lambda e: e['date'])
 
     def bounties(self):
@@ -167,6 +168,7 @@ class Parser:
                              'our_team_heroes': [],
                              'players': [],
                              'player_desc': {}} for k, v in matches.items()}
+        self.win_rate_by_hour = {str(i): {'wins': 0, 'losses': 0, 'matches': 0, 'wr': 0} for i in range(24)}
         self.win_rate_by_weekday = {i: {'wins': 0, 'losses': 0, 'matches': 0, 'wr': 0} for i in calendar.day_abbr}
         self.win_rate_by_month = {i: {'wins': 0, 'losses': 0, 'matches': 0, 'wr': 0} for i in calendar.month_abbr[1:]}
         for match_id, obj in matches.items():
@@ -175,6 +177,7 @@ class Parser:
                     p['account_id'] = self.players[replacements[p['account_id']]]
                 if p['account_id'] in account_ids:
                     match_summary[match_id]['lobby_type'] = lobby_type()[obj['lobby_type']]
+                    match_summary[match_id]['game_mode'] = game_mode()[obj['game_mode']]
                     match_summary[match_id]['our_heroes'].append(p['hero_id'])
                     match_summary[match_id]['players'].append(p['account_id'])
                     apm = p['actions_per_min'] if 'actions_per_min' in p else 0
@@ -190,7 +193,7 @@ class Parser:
                     obj['throw'] = max(gold_adv + [0]) if 'throw' not in obj else obj['throw']
                     match_summary[match_id]['comeback_throw'] = obj['comeback'] if p['win'] > 0 else obj['throw']   
             if 'lane_role' in obj['players'][0]:
-                match_summary[match_id]['roles'] = Roles.evaluate_roles(match_id, match_summary[match_id],
+                match_summary[match_id]['roles'] = Roles.evaluate_roles(match_summary[match_id],
                                                                         [x for x in obj['players'] if 'lane_role' in x])
             match_summary[match_id]['items'] = items.evaluate_items([x for x in obj['players'] if
                                                                     x['account_id'] in account_ids])
@@ -202,19 +205,23 @@ class Parser:
                                                                            match_summary[match_id]['players'])
             match_summary[match_id]['first_bounties'] = Roles.first_bounties(obj['players'],
                                                                              match_summary[match_id]['players'])
-            c_month = calendar.month_abbr[gmtime(int(obj['start_time'])).tm_mon]
-            c_weekday = calendar.day_abbr[gmtime(int(obj['start_time'])).tm_wday]
-            self.win_rate_by_weekday[c_weekday]['matches'] += 1
-            self.win_rate_by_month[c_month]['matches'] += 1
             match_summary[match_id]['multi_kills'] = {}
             for p in match_summary[match_id]['players']:
                 po = [o for o in obj['players'] if o['account_id'] == p][0]
                 match_summary[match_id]['multi_kills'][p] = po['multi_kills'] if 'multi_kills' in po and po[
                     'multi_kills'] is not None else {}
+            c_month = calendar.month_abbr[gmtime(int(fix_time(obj['start_time']))).tm_mon]
+            c_weekday = calendar.day_abbr[gmtime(int(fix_time(obj['start_time']))).tm_wday]
+            c_hour = str(gmtime(int(fix_time(obj['start_time']))).tm_hour)
+            self.win_rate_by_hour[c_hour]['matches'] += 1
+            self.win_rate_by_weekday[c_weekday]['matches'] += 1
+            self.win_rate_by_month[c_month]['matches'] += 1
             if match_summary[match_id]['win']:
+                self.win_rate_by_hour[c_hour]['wins'] += 1
                 self.win_rate_by_weekday[c_weekday]['wins'] += 1
                 self.win_rate_by_month[c_month]['wins'] += 1
             else:
+                self.win_rate_by_hour[c_hour]['losses'] += 1
                 self.win_rate_by_weekday[c_weekday]['losses'] += 1
                 self.win_rate_by_month[c_month]['losses'] += 1
             for p in [x for x in obj['players'] if x['hero_id'] is not None]:
@@ -226,13 +233,15 @@ class Parser:
             self.win_rate_by_weekday[wd]['wr'] = win_rate(o['wins'], o['matches'])
         for wd, o in self.win_rate_by_month.items():
             self.win_rate_by_month[wd]['wr'] = win_rate(o['wins'], o['matches'])
-        for match_type in lobby_type():
-            m = [y for x, y in match_summary.items() if y['lobby_type'] == match_type]
+        for wd, o in self.win_rate_by_hour.items():
+            self.win_rate_by_hour[wd]['wr'] = win_rate(o['wins'], o['matches'])
+        for lobby, game in list(itertools.product(lobby_type(), game_mode())):
+            m = [y for x, y in match_summary.items() if y['lobby_type'] == lobby and y['game_mode'] == game]
             games = len(m)
             wins = len([x for x in m if x['win']])
             if games > 0:
                 self.match_types.append({
-                    'lobby_type': match_types()[match_type],
+                    'lobby_type': '%s %s' % (match_types()[lobby], game),
                     'wins': wins,
                     'matches': games,
                     'wr': win_rate(wins, games),
@@ -613,9 +622,9 @@ class Parser:
             obj = json.loads(content)            
             total_matches[name] = 0
             for o in obj:
-                m = gmtime(int(o['start_time'])).tm_mon
-                y = gmtime(int(o['start_time'])).tm_year                
-                if ((last_days is not None and (calendar.timegm(gmtime()) - int(o['start_time'])) < last_days * 86400)
+                m = gmtime(int(fix_time(o['start_time']))).tm_mon
+                y = gmtime(int(fix_time(o['start_time']))).tm_year
+                if ((last_days is not None and (calendar.timegm(gmtime()) - fix_time(int(o['start_time']))) < last_days * 86400)
                         or (last_days is None and month is not None and y in self.years and m == month)
                         or (last_days is None and month is None and y in self.years)
                         and (not ranked_only or o['lobby_type'] in [5, 6, 7])):
@@ -630,10 +639,10 @@ class Parser:
                 if name not in total_matches:
                     total_matches[name] = 0
                 for o in obj:
-                    m = gmtime(int(o['start_time'])).tm_mon
-                    y = gmtime(int(o['start_time'])).tm_year
+                    m = gmtime(fix_time(int(o['start_time']))).tm_mon
+                    y = gmtime(fix_time(int(o['start_time']))).tm_year
                     if ((last_days is not None
-                            and (calendar.timegm(gmtime()) - int(o['start_time'])) < last_days * 86400)
+                            and (calendar.timegm(gmtime()) - fix_time(int(o['start_time']))) < last_days * 86400)
                             or (last_days is None and month is not None and y in self.years and m == month)
                             or (last_days is None and month is None and y in self.years)
                             and (not ranked_only or o['lobby_type'] in [5, 6, 7])):

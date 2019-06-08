@@ -10,8 +10,9 @@ def evaluate_items(players):
             if item_id in all_items and all_items[item_id] in items:
                 items[all_items[item_id]][player['account_id']]['count'] += 1
         for item_key, item_name in item_list().items():
-            items[item_key][player['account_id']]['times'] = [k['time'] for k in player['purchase_log'] if
-                                                              k['key'] == item_key]
+            if player['purchase_log'] is not None:
+                items[item_key][player['account_id']]['times'] = [k['time'] for k in player['purchase_log'] if
+                                                                  k['key'] == item_key]
     return items
 
 

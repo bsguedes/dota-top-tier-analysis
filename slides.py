@@ -373,7 +373,7 @@ class Slides:
         keys = ['lobby_type', 'wins', 'matches', 'wr']
         formats = ['%s', '%s', '%s', '%.2f %%']
         widths = [4.5, 1.5, 1.5, 1.5]
-        Slides.create_table(slide, match_types, headers, keys, formats, Inches(0.5), Inches(4.5), Inches(9), 1, 13, 15,
+        Slides.create_table(slide, match_types, headers, keys, formats, Inches(0.5), Inches(4), Inches(9), 1, 13, 15,
                             widths=widths)
 
     def add_win_rate_details_slide(self, fb_object, bounties):
@@ -456,29 +456,40 @@ class Slides:
         Slides.create_table(slide, throws, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
                             widths=widths)
 
-    def add_win_rate_by_date(self, data, label):
+    def add_win_rate_by_date(self, input_data, label):
         slide = self.add_slide(5, 152, 251, 152)
         title_shape = slide.shapes.title
         title_shape.text = '%s Win Rate by %s' % (self.team_name, label)
 
+        data = {a: b for a, b in input_data.items() if int(a) < 12} if label == 'Hour' else input_data
         headers = [a for a in data.keys()]
         keys = [str(i) for i in range(len(data))]
-        formats = ['%.2f %%'] * len(data)
+        formats = ['%.1f %%'] * len(data)
         table_data = [{str(i): o['wr'] for i, o in zip(range(len(data)), data.values())}]
-        Slides.create_table(slide, table_data, headers, keys, formats, Inches(0.5), Inches(1.8), Inches(9), 1, 12, 15)
+        Slides.create_table(slide, table_data, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 12, 15)
 
+        if label == 'Hour':
+            data = {a: b for a, b in input_data.items() if int(a) >= 12}
+            headers = [a for a in data.keys()]
+            keys = [str(i) for i in range(len(data))]
+            formats = ['%.1f %%'] * len(data)
+            table_data = [{str(i): o['wr'] for i, o in zip(range(len(data)), data.values())}]
+            Slides.create_table(slide, table_data, headers, keys, formats, Inches(0.5), Inches(2.5), Inches(9), 1, 12,
+                                15)
+
+        data = input_data
         chart_data = ChartData()
         chart_data.categories = data.keys()
         chart_data.add_series('Wins', [o['wins'] for o in data.values()])
         chart_data.add_series('Losses', [o['losses'] for o in data.values()])
-        graphic_frame = slide.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, Inches(0.5), Inches(3), Inches(9),
+        graphic_frame = slide.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, Inches(0.5), Inches(3.5), Inches(9),
                                                Inches(4),
                                                chart_data)
         chart = graphic_frame.chart
         plot = chart.plots[0]
         plot.has_data_labels = True
         data_labels = plot.data_labels
-        data_labels.font.size = Pt(10)
+        data_labels.font.size = Pt(9)
         data_labels.font.color.rgb = RGBColor(0x0A, 0x42, 0x80)
         data_labels.position = XL_LABEL_POSITION.INSIDE_END
         chart.has_legend = True

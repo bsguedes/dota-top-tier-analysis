@@ -18,7 +18,7 @@ YEARS = [2019]
 MONTH = None
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
-REDOWNLOAD_SMALL_FILES = True
+REDOWNLOAD_SMALL_FILES = False
 BEST_TEAM = None
 # BEST_TEAM = ['Kiddy', 'Zé', 'Chaos', 'Older', 'Lotus']
 
@@ -238,6 +238,7 @@ if __name__ == '__main__':
     s.add_most_played([v for v in p.most_played_heroes if v['matches'] == 0], False)
     s.add_win_rate_heroes(p.against_heroes, 'Against')
     s.add_compositions(p.compositions)
+    s.add_win_rate_by_date(p.win_rate_by_hour, 'Hour')
     s.add_win_rate_by_date(p.win_rate_by_weekday, 'Weekday')
     if MONTH is None:
         s.add_win_rate_by_date(p.win_rate_by_month, 'Month')
