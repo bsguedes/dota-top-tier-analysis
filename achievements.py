@@ -183,7 +183,7 @@ class PnKAchievements(AchievementBase):
                                                   lowest=False, win=True))
         self.add_ach(WinCarriedByAchievement('Pushing Far From Your Friends', 'Nuvah', 'Lina'))
         self.add_ach(WinCarriedByAchievement('Heavier than a Black Hole', 'Alidio', 'Wraith King'))
-        self.add_ach(WinCarriedByAchievement('My hero pool is not only my Level 25 heroes', 'Chuvisco', 'Ursa',
+        self.add_ach(WinCarriedByAchievement('My Big Hero Pool', 'Chuvisco', 'Ursa',
                                              unless=True))
         self.add_ach(WinCarriedByAchievement('Best Hooks for Enemy Team', 'Cristian', 'Pudge'))
         self.add_ach(StreakAchievement('All Green Profile', 8))
@@ -192,8 +192,8 @@ class PnKAchievements(AchievementBase):
         self.add_ach(ItemAchievement('Next Lebel Farming', 'radiance', 'Radiance', 2))
         self.add_ach(ItemAchievement('Multiple Midas', 'hand_of_midas', 'Hand of Midas', 3))
         self.add_ach(ItemAchievement('Maximum Blink', 'blink', 'Blink Dagger', 5))
-        self.add_ach(ItemSequenceAchievement('Primeiro Rad, Depois Aghanim', ['radiance', 'ultimate_scepter'],
-                                             'The new meta is: buy a Radiance, then Aghanim\'s Scepter'))
+        self.add_ach(ItemSequenceAchievement('The New Meta Build', ['radiance', 'ultimate_scepter'],
+                                             'Primeiro Rad, depois Aghanim'))
         self.add_ach(MultiKillAchievement('RAMPAGE!', '5'))
         self.add_ach(WinWithBuildingStatus('Overwhelming Odds', 'barracks', 0, 'against Mega Creeps'))
         self.add_ach(

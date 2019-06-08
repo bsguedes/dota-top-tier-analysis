@@ -6,6 +6,7 @@ import calendar
 import operator
 import itertools
 import items
+import time
 from time import gmtime
 from tier import TierItem
 from roles import Roles
@@ -681,6 +682,7 @@ class Parser:
         print('')
         print('Best team analysis:')
         print('Players: ', sequence(players))
+        start = time.time()
         players = [self.players[i] for i in players]
         inv_r = {v: k for k, v in roles().items()}
         player_hero_role_scores = {}
@@ -697,8 +699,12 @@ class Parser:
                                 player_hero_role_scores[(inv_r[el['role']], pid, hid)] = el['rating'] * \
                                                                                        player_hero[el['role']]['rating']
                             else:
-                                player_hero_role_scores[(el['role'], pid, hid)] = 0
-        player_hero_role_scores = {k: v for k, v in player_hero_role_scores.items() if v > 0}
+                                player_hero_role_scores[(inv_r[el['role']], pid, hid)] = 0
+        print("Rating time %.2f seconds." % (time.time() - start))
+        start = time.time()
+        print("List of scores: ", len(player_hero_role_scores))
+        player_hero_role_scores = {k: v for k, v in player_hero_role_scores.items() if v > 30}
+        print("List of scores after filter: ", len(player_hero_role_scores))
         history = {}
         for p in players:
             for i, r in roles().items():
@@ -707,6 +713,8 @@ class Parser:
                     c = (i, p, hid)
                     if c in player_hero_role_scores:
                         history[(p, i)].append((hid, player_hero_role_scores[c]))
+        print("History time %.2f seconds." % (time.time() - start))
+        start = time.time()
         combinations = []
         total_combinations = 0
         for composition in list(itertools.permutations(players, 5)):
@@ -718,20 +726,37 @@ class Parser:
             if any([len(member) == 0 for member in team]):
                 continue
             for combination in itertools.product(*team):
-                s = sum([player['hero'][1] for player in combination])
                 total_combinations += 1
-                if s > 200:
-                    d = []
-                    for player in combination:
-                        r = player['role']
-                        p = player['player']
-                        h = player['hero'][0]
-                        d.append((r, h, p))
-                    combinations.append((s, d))
+                heroes = list(set([x['hero'][0] for x in combination]))
+                if len(heroes) == 5:
+                    s = sum([player['hero'][1] for player in combination]) / 5
+                    if s > 40:
+                        d = []
+                        for player in combination:
+                            r = player['role']
+                            h = player['hero'][0]
+                            p = player['player']
+                            d.append((r, h, p))
+                        combinations.append((s, d))
+        print("Permutation time %.2f seconds." % (time.time() - start))
         print('Number of filtered combinations: %s' % len(combinations))
         print('Number of combinations: %s' % total_combinations)
         combinations.sort(reverse=True)
-        return combinations
+        heroes_resulted = [[x[1] for x in combinations[0][1]]]
+        resulted = [combinations[0]]
+        for i in range(len(combinations)):
+            heroes = [x[1] for x in combinations[i][1]]
+            append = True
+            for j in range(len(resulted)):
+                if len(set(heroes_resulted[j]) & set(heroes)) > 3:
+                    append = False
+                    break
+            if append:
+                resulted.append(combinations[i])
+                heroes_resulted.append(heroes)
+                if len(resulted) > 10:
+                    break
+        return resulted
 
     def player_versatility(self):
         inv_p = {v: k for k, v in self.players.items()}

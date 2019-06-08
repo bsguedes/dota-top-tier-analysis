@@ -14,13 +14,13 @@ import calendar
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
-YEARS = [2018]
+YEARS = [2018, 2019]
 MONTH = None
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
 REDOWNLOAD_SMALL_FILES = False
 BEST_TEAM = None
-# BEST_TEAM = ['Kiddy', 'Zé', 'Chaos', 'Older', 'Lotus']
+# BEST_TEAM = ['Kiddy', 'Scrider', 'kkz', 'Older', 'Alidio']
 
 # PnK monthly parameters: 4, 3, 4, 2
 # PnK year parameters: 30, 10, 4, 3
@@ -178,6 +178,7 @@ def get_subtitle():
 
 if __name__ == '__main__':
     start = time.time()
+    YEARS = [2018, 2019] if BEST_TEAM is not None else YEARS
     players = player_list[TEAM_NAME]
     replacements = replacement_list[TEAM_NAME] if TEAM_NAME in replacement_list else None
     s = Slides(TEAM_NAME, YEARS, get_title(), get_subtitle(), players, month=MONTH)
@@ -224,65 +225,66 @@ if __name__ == '__main__':
         if len(combinations) > 0:
             s.add_divider_slide("%s Draft Helper (BETA)" % TEAM_NAME, 'Suggestions for Drafting based on recent success')
             s.add_draft_suggestion(p.heroes, p.inv_p, combinations)
+    else:
+        s.add_divider_slide("%s General Statistics" % TEAM_NAME,
+                            'Win Rate, Comebacks, Throws, Heroes, Compositions, Pairs')
+        s.add_intro_slide(len(unique_matches), MIN_PARTY_SIZE, MIN_MATCHES, MIN_COUPLE_MATCHES)
+        s.add_win_rate_slide(p.win_rate, len(unique_matches), p.matches_by_party_size, p.factions)
+        s.add_win_rate_details_slide(p.first_blood_win_rate(), p.bounties())
+        s.add_match_details(to_parse, p.match_types)
+        s.add_five_player_compositions(p.five_player_compositions, p.full_party_matches)
+        s.add_match_summary_by_player(p.match_summary_by_player, p.match_summary_by_team, p.min_party_size)
+        s.add_comebacks_throws(p.top_comebacks, p.top_throws)
+        s.add_win_rate_heroes(p.with_heroes, 'Playing')
+        s.add_most_played([v for v in p.most_played_heroes if v['matches'] > 0], True)
+        s.add_most_played([v for v in p.most_played_heroes if v['matches'] == 0], False)
+        s.add_win_rate_heroes(p.against_heroes, 'Against')
+        s.add_compositions(p.compositions)
+        s.add_win_rate_by_date(p.win_rate_by_hour, 'Hour')
+        s.add_win_rate_by_date(p.win_rate_by_weekday, 'Weekday')
+        if MONTH is None:
+            s.add_win_rate_by_date(p.win_rate_by_month, 'Month')
+        s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES))
+        s.add_best_team_by_player(p.evaluate_best_team_by_hero_player(MIN_COUPLE_MATCHES/2))
+        s.add_couples(p.player_couples[0:10], 'Best')
+        s.add_couples(p.player_couples[-10:][::-1], 'Worst')
 
-    s.add_divider_slide("%s General Statistics" % TEAM_NAME, 'Win Rate, Comebacks, Throws, Heroes, Compositions, Pairs')
-    s.add_intro_slide(len(unique_matches), MIN_PARTY_SIZE, MIN_MATCHES, MIN_COUPLE_MATCHES)
-    s.add_win_rate_slide(p.win_rate, len(unique_matches), p.matches_by_party_size, p.factions)
-    s.add_win_rate_details_slide(p.first_blood_win_rate(), p.bounties())
-    s.add_match_details(to_parse, p.match_types)
-    s.add_five_player_compositions(p.five_player_compositions, p.full_party_matches)
-    s.add_match_summary_by_player(p.match_summary_by_player, p.match_summary_by_team, p.min_party_size)
-    s.add_comebacks_throws(p.top_comebacks, p.top_throws)
-    s.add_win_rate_heroes(p.with_heroes, 'Playing')
-    s.add_most_played([v for v in p.most_played_heroes if v['matches'] > 0], True)
-    s.add_most_played([v for v in p.most_played_heroes if v['matches'] == 0], False)
-    s.add_win_rate_heroes(p.against_heroes, 'Against')
-    s.add_compositions(p.compositions)
-    s.add_win_rate_by_date(p.win_rate_by_hour, 'Hour')
-    s.add_win_rate_by_date(p.win_rate_by_weekday, 'Weekday')
-    if MONTH is None:
-        s.add_win_rate_by_date(p.win_rate_by_month, 'Month')
-    s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES))
-    s.add_best_team_by_player(p.evaluate_best_team_by_hero_player(MIN_COUPLE_MATCHES/2))
-    s.add_couples(p.player_couples[0:10], 'Best')
-    s.add_couples(p.player_couples[-10:][::-1], 'Worst')
+        s.add_divider_slide("%s Players" % TEAM_NAME, 'Roles, Pairings and Most Played Heroes')
+        for item in sorted(p.player_descriptor, key=lambda e: e['rating'], reverse=True):
+            if item['matches'] > 0:
+                s.add_player_data_slide(item)
+                s.add_player_tables_slide(item)
 
-    s.add_divider_slide("%s Players" % TEAM_NAME, 'Roles, Pairings and Most Played Heroes')
-    for item in sorted(p.player_descriptor, key=lambda e: e['rating'], reverse=True):
-        if item['matches'] > 0:
-            s.add_player_data_slide(item)
-            s.add_player_tables_slide(item)
+        s.add_divider_slide("%s Technical Categories" % TEAM_NAME, 'Averages and Maximum for many statistics')
+        for tier, category in tiers:
+            if PRINT_TIERS:
+                tier.print()
+            s.add_tier_slides(tier, category)
+        medals = Tier.show_results(players, [t for t, c in tiers])
+        points = Tier.show_results_weights(players, [t for t, c in tiers])
+        s.add_results_slides(medals, points)
 
-    s.add_divider_slide("%s Technical Categories" % TEAM_NAME, 'Averages and Maximum for many statistics')
-    for tier, category in tiers:
-        if PRINT_TIERS:
-            tier.print()
-        s.add_tier_slides(tier, category)
-    medals = Tier.show_results(players, [t for t, c in tiers])
-    points = Tier.show_results_weights(players, [t for t, c in tiers])
-    s.add_results_slides(medals, points)
+        if MONTH is None:
+            s.add_divider_slide("Individual Hero Statistics", 'Positions, Win Rate and Best Players at each Hero')
+            s.add_heroes(p.hero_statistics, MIN_MATCHES_WITH_HERO)
 
-    if MONTH is None:
-        s.add_divider_slide("Individual Hero Statistics", 'Positions, Win Rate and Best Players at each Hero')
-        s.add_heroes(p.hero_statistics, MIN_MATCHES_WITH_HERO)
+        s.add_divider_slide("%s Items" % TEAM_NAME, 'Win rate based on items at the end of the game')
+        s.add_item_slides(p.generate_item_statistics())
 
-    s.add_divider_slide("%s Items" % TEAM_NAME, 'Win rate based on items at the end of the game')
-    s.add_item_slides(p.generate_item_statistics())
+        if TEAM_NAME == PNK:
+            achievements = PnKAchievements(players, p.match_summary)
 
-    if TEAM_NAME == PNK:
-        achievements = PnKAchievements(players, p.match_summary)
+        if achievements is not None:
+            s.add_divider_slide("%s Achievements" % TEAM_NAME, 'Awarded to the most exquisite accomplishments')
+            for achievement in achievements.get_achievements():
+                result = achievement.evaluate()
+                s.add_achievement_slide(achievement, result)
 
-    if achievements is not None:
-        s.add_divider_slide("%s Achievements" % TEAM_NAME, 'Awarded to the most exquisite accomplishments')
-        for achievement in achievements.get_achievements():
-            result = achievement.evaluate()
-            s.add_achievement_slide(achievement, result)
-
-    if popular_vote is not None:
-        s.add_divider_slide("%s Popular Vote" % TEAM_NAME, popular_vote.message)
-        for category in popular_vote.votes:
-            s.add_popular_vote_category_slides(category)
-        s.add_top_five_slides(popular_vote.get_top_five())
+        if popular_vote is not None:
+            s.add_divider_slide("%s Popular Vote" % TEAM_NAME, popular_vote.message)
+            for category in popular_vote.votes:
+                s.add_popular_vote_category_slides(category)
+            s.add_top_five_slides(popular_vote.get_top_five())
     s.save()
 
     print('')
