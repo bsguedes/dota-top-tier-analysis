@@ -101,9 +101,10 @@ class Parser:
             result_dict[r] = list()
             for i in range(min(5, len(s))):
                 m = s[i]
-                result_dict[r].append({'hero_id': m['hero'], 'hero_name': self.heroes[m['hero']],
-                                       'rating': m['data']['rating'],
-                                       'player_id': m['player'], 'player_name': inv_p[m['player']], 'role': r})
+                if m['data']['rating'] > 0:
+                    result_dict[r].append({'hero_id': m['hero'], 'hero_name': self.heroes[m['hero']],
+                                           'rating': m['data']['rating'],
+                                           'player_id': m['player'], 'player_name': inv_p[m['player']], 'role': r})
         return result_dict
 
     def evaluate_best_team_by_hero(self, min_matches):
