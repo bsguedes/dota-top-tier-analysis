@@ -164,7 +164,7 @@ class Slides:
         formats = ['%s', '%s', '%s', '%.2f %%']
         widths = [1.5, 1, 1, 1]
         Slides.create_table_with_text_boxes(slide, desc['pairings'], headers, keys, formats, 4.5, 1.5, 4.5,
-                                            11, 15, widths=widths)
+                                            11, 15, widths=widths, line_spacing=0.2)
 
         heroes = desc['top_heroes']
         if len(heroes) > 0:
@@ -604,7 +604,7 @@ class Slides:
         Slides.create_table_with_text_boxes(slide,
                                             sorted([x for x in summary if x['team_matches'] > 0],
                                                    key=lambda e: e['team_matches'], reverse=True),
-                                            headers, keys, formats, 0.5, 1.35, 9, 11, 14, line_spacing=0.225)
+                                            headers, keys, formats, 0.5, 1.35, 9, 11, 14, line_spacing=0.21)
 
     def add_tier_slides(self, tier, category):
         texts = tier.list_to_print()
@@ -935,7 +935,7 @@ class Slides:
             if os.path.isfile(pic_path):
                 slide.shapes.add_picture(pic_path, Inches(7.5), Inches(0.25), height=Inches(1.5))
         if achievement.special_description:
-            txt_box = slide.shapes.add_textbox(Inches(0.2), Inches(6.7), Inches(9.5), height)
+            txt_box = slide.shapes.add_textbox(Inches(0.2), Inches(6.55), Inches(9.5), height)
             tf = txt_box.text_frame
             tf.text = 'Hero list: %s' % sequence(achievement.heroes)
             tf.word_wrap = True

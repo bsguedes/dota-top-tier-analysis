@@ -14,8 +14,8 @@ import calendar
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
-YEARS = [2019]
-MONTH = 6
+YEARS = [2018, 2019]
+MONTH = None
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
 REDOWNLOAD_SMALL_FILES = False

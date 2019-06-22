@@ -3,14 +3,22 @@ from constants import *
 
 NO_DISABLE_HEROES = [
     'Abbadon',
+    'Brewmaster',
     'Bristleback',
+    'Clockwerk',
+    'Doom',
+    'Earth Spirit',
     'Huskar',
     'Io',
+    'Kunkka',
     'Lifestealer',
     'Lycan',
     'Night Stalker',
     'Omniknight',
+    'Phoenix',
     'Timbersaw',
+    'Treant Protector',
+    'Underlord',
     'Undying',
     'Anti-Mage',
     'Arc Warden',
@@ -19,13 +27,19 @@ NO_DISABLE_HEROES = [
     'Broodmother',
     'Clinkz',
     'Drow Ranger',
+    'Ember Spirit',
     'Juggernaut',
     'Lone Druid',
+    'Medusa',
+    'Meepo',
+    'Mirana',
+    'Naga Siren',
     'Phantom Assassin',
     'Phantom Lancer',
     'Razor',
     'Riki',
     'Shadow Fiend',
+    'Slark',
     'Sniper',
     'Spectre',
     'Templar Assassin',
@@ -35,13 +49,18 @@ NO_DISABLE_HEROES = [
     'Venomancer',
     'Viper',
     'Weaver',
+    'Ancient Apparition',
     'Chen',
+    'Crystal Maiden',
     'Dark Seer',
     'Dark Willow',
     'Dazzle',
     'Death Prophet',
     'Disruptor',
     'Enchantress',
+    'Grimstroke',
+    'Leshrac',
+    'Lina',
     'Nature\'s Prophet',
     'Oracle',
     'Pugna',
@@ -82,6 +101,7 @@ MELEE_HEROES = [
     'Lifestealer',
     'Lycan',
     'Magnus',
+    'Mars',
     'Meepo',
     'Naga Siren',
     'Night Stalker',
@@ -179,8 +199,10 @@ class PnKAchievements(AchievementBase):
         self.add_ach(WinWithPlayerAchievement('I AM ARCHON', ['Scrider', 'Older', 'tchepo']))
         self.add_ach(WinWithPlayerAchievement('Feldmann Brothers', ['Lotus', 'Pringles']))
         self.add_ach(WinWithoutPlayerAchievement('Subs Captain', ['Zé']))
+        self.add_ach(WinWithoutPlayerAchievement('No Divines Allowed', ['kkz', 'Kiddy']))
         self.add_ach(PlayerOnParameterAchievement('Vem Tranquilo', 'Scrider', 'kills', 'kill count',
                                                   lowest=False, win=True))
+        self.add_ach(StreakAchievement('Bela Tentativa', -3, same_hero=True))
         self.add_ach(WinCarriedByAchievement('Pushing Far From Your Friends', 'Nuvah', 'Lina'))
         self.add_ach(WinCarriedByAchievement('Heavier than a Black Hole', 'Alidio', 'Wraith King'))
         self.add_ach(WinCarriedByAchievement('My Big Hero Pool', 'Chuvisco', 'Ursa',
@@ -260,17 +282,26 @@ class MultiKillAchievement(Achievement):
 
 
 class StreakAchievement(Achievement):
-    def __init__(self, name, amount):
+    def __init__(self, name, amount, same_hero=False):
         Achievement.__init__(self, name)
         self.amount = amount
-        self.description = 'Get a %s Streak of %i Matches' % ('Win' if amount > 0 else 'Loss', abs(amount))
+        fmt = 'Get a %s Streak of %i Matches with the same hero' if same_hero else 'Get a %s Streak of %i Matches'
+        values = ('Win' if amount > 0 else 'Loss', abs(amount))
+        self.description = fmt % values
+        self.same_hero = same_hero
 
     def evaluate(self):
         player_count = {i: 0 for p, i in self.player_list.items()}
+        player_hero = {i: None for p, i in self.player_list.items()}
         for match_id, data in self.match_list.items():
             self.games += 1
             if (data['win'] and self.amount > 0) or (self.amount < 0 and not data['win']):
                 for player in data['players']:
+                    if self.same_hero:
+                        hero = data['player_desc'][player]['hero']
+                        if player_hero[player] != hero:
+                            player_count[player] = 0
+                        player_hero[player] = hero
                     player_count[player] += 1
                     if player_count[player] == abs(self.amount):
                         self.winners[player].append(match_id)
