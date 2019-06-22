@@ -20,7 +20,7 @@ DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
 REDOWNLOAD_SMALL_FILES = False
 BEST_TEAM = None
-# BEST_TEAM = ['Kiddy', 'Scrider', 'kkz', 'Older', 'Alidio']
+# BEST_TEAM = ['Zé', 'Nuvah', 'Chaos', 'Older', 'Alidio']
 
 # PnK monthly parameters: 4, 3, 4, 2
 # PnK year parameters: 30, 10, 4, 3
@@ -235,19 +235,19 @@ if __name__ == '__main__':
         s.add_five_player_compositions(p.five_player_compositions, p.full_party_matches)
         s.add_match_summary_by_player(p.match_summary_by_player, p.match_summary_by_team, p.min_party_size)
         s.add_comebacks_throws(p.top_comebacks, p.top_throws)
-        s.add_win_rate_heroes(p.with_heroes, 'Playing')
-        s.add_most_played([v for v in p.most_played_heroes if v['matches'] > 0], True)
-        s.add_most_played([v for v in p.most_played_heroes if v['matches'] == 0], False)
-        s.add_win_rate_heroes(p.against_heroes, 'Against')
+        s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES))
+        s.add_best_team_by_player(p.evaluate_best_team_by_hero_player(MIN_COUPLE_MATCHES/2))
+        s.add_couples(p.player_couples[0:10], 'Best')
+        s.add_couples(p.player_couples[-10:][::-1], 'Worst')
         s.add_compositions(p.compositions)
         s.add_win_rate_by_date(p.win_rate_by_hour, 'Hour')
         s.add_win_rate_by_date(p.win_rate_by_weekday, 'Weekday')
         if MONTH is None:
             s.add_win_rate_by_date(p.win_rate_by_month, 'Month')
-        s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES))
-        s.add_best_team_by_player(p.evaluate_best_team_by_hero_player(MIN_COUPLE_MATCHES/2))
-        s.add_couples(p.player_couples[0:10], 'Best')
-        s.add_couples(p.player_couples[-10:][::-1], 'Worst')
+        s.add_win_rate_heroes(p.with_heroes, 'Playing')
+        s.add_most_played([v for v in p.most_played_heroes if v['matches'] > 0], True)
+        s.add_most_played([v for v in p.most_played_heroes if v['matches'] == 0], False)
+        s.add_win_rate_heroes(p.against_heroes, 'Against')
 
         s.add_divider_slide("%s Players" % TEAM_NAME, 'Roles, Pairings and Most Played Heroes')
         for item in sorted(p.player_descriptor, key=lambda e: e['rating'], reverse=True):
