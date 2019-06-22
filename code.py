@@ -30,6 +30,8 @@ class Parser:
         self.match_summary_by_team = []
         self.top_comebacks = []
         self.top_throws = []
+        self.top_fast_wins = []
+        self.top_fast_losses = []
         self.against_heroes = []
         self.with_heroes = []
         self.most_played_heroes = []
@@ -193,10 +195,12 @@ class Parser:
                     gold_adv = gold_adv if p['isRadiant'] else -1 * gold_adv
                     obj['comeback'] = -1 * min(gold_adv + [0]) if 'comeback' not in obj else obj['comeback']
                     obj['throw'] = max(gold_adv + [0]) if 'throw' not in obj else obj['throw']
-                    match_summary[match_id]['comeback_throw'] = obj['comeback'] if p['win'] > 0 else obj['throw']   
+                    match_summary[match_id]['comeback_throw'] = obj['comeback'] if p['win'] > 0 else obj['throw']
             if 'lane_role' in obj['players'][0]:
                 match_summary[match_id]['roles'] = Roles.evaluate_roles(match_summary[match_id],
                                                                         [x for x in obj['players'] if 'lane_role' in x])
+            match_summary[match_id]['has_abandon'] = sum([o['abandons'] for o in obj['players']]) > 0
+            match_summary[match_id]['duration'] = obj['duration']
             match_summary[match_id]['items'] = items.evaluate_items([x for x in obj['players'] if
                                                                     x['account_id'] in account_ids])
             match_summary[match_id]['barracks'] = obj[
@@ -269,14 +273,24 @@ class Parser:
 
         list_comebacks = {m: v['comeback_throw'] for m, v in match_summary.items() if v['win'] > 0}
         list_throws = {m: v['comeback_throw'] for m, v in match_summary.items() if v['win'] == 0}
+        list_fast_wins = {m: v['duration'] for m, v in match_summary.items() if v['win'] > 0 and not v['has_abandon']}
+        list_fast_loss = {m: v['duration'] for m, v in match_summary.items() if v['win'] == 0 and not v['has_abandon']}
         self.top_comebacks = [
             {'match': m, 'gold': g,
              'players': ', '.join([x for x, y in self.players.items() if y in match_summary[m]['players']])}
-            for m, g in sorted(list_comebacks.items(), key=lambda e: e[1], reverse=True)[:10]]
+            for m, g in sorted(list_comebacks.items(), key=lambda e: e[1], reverse=True)[:15]]
         self.top_throws = [
             {'match': m, 'gold': g,
              'players': ', '.join([x for x, y in self.players.items() if y in match_summary[m]['players']])}
-            for m, g in sorted(list_throws.items(), key=lambda e: e[1], reverse=True)[:10]]
+            for m, g in sorted(list_throws.items(), key=lambda e: e[1], reverse=True)[:15]]
+        self.top_fast_wins = [
+            {'match': m, 'time': (g // 60, g % 60),
+             'players': ', '.join([x for x, y in self.players.items() if y in match_summary[m]['players']])}
+            for m, g in sorted(list_fast_wins.items(), key=lambda e: e[1])[:15]]
+        self.top_fast_losses = [
+            {'match': m, 'time': (g // 60, g % 60),
+             'players': ', '.join([x for x, y in self.players.items() if y in match_summary[m]['players']])}
+            for m, g in sorted(list_fast_loss.items(), key=lambda e: e[1])[:15]]
 
         wr_versus = {k: {'matches': 0, 'wins': 0} for k, v in self.heroes.items()}
         for mid, v in match_summary.items():

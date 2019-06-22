@@ -234,7 +234,7 @@ if __name__ == '__main__':
         s.add_match_details(to_parse, p.match_types)
         s.add_five_player_compositions(p.five_player_compositions, p.full_party_matches)
         s.add_match_summary_by_player(p.match_summary_by_player, p.match_summary_by_team, p.min_party_size)
-        s.add_comebacks_throws(p.top_comebacks, p.top_throws)
+        s.add_top_fifteen(p.top_comebacks, p.top_throws, p.top_fast_wins, p.top_fast_losses)
         s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES))
         s.add_best_team_by_player(p.evaluate_best_team_by_hero_player(MIN_COUPLE_MATCHES/2))
         s.add_couples(p.player_couples[0:10], 'Best')

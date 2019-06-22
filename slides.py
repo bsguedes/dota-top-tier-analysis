@@ -439,10 +439,11 @@ class Slides:
         Slides.text_box(slide, '%s-%s' % (faction['r_win'], faction['r_loss']), 6, 6, font_size=24)
         Slides.text_box(slide, '%s-%s' % (faction['d_win'], faction['d_loss']), 6, 6.6, font_size=24)
 
-    def add_comebacks_throws(self, comebacks, throws):
+    def add_top_fifteen(self, comebacks, throws, fast_wins, fast_losses):
         slide = self.add_slide(5, 152, 251, 152)
         title_shape = slide.shapes.title
-        title_shape.text = 'Top 10 %s Comebacks' % self.team_name
+        title_shape.text = 'Top 15 %s Comebacks' % self.team_name
+
         headers = ['Match ID', 'Gold', 'Players']
         keys = ['match', 'gold', 'players']
         formats = ['%s', '%s', '%s']
@@ -452,8 +453,23 @@ class Slides:
 
         slide = self.add_slide(5, 152, 251, 152)
         title_shape = slide.shapes.title
-        title_shape.text = 'Top 10 %s Throws' % self.team_name
+        title_shape.text = 'Top 15 %s Throws' % self.team_name
         Slides.create_table(slide, throws, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
+                            widths=widths, hyperlink=[0])
+
+        slide = self.add_slide(5, 152, 251, 152)
+        title_shape = slide.shapes.title
+        headers = ['Match ID', 'Time [min]', 'Players']
+        keys = ['match', 'time', 'players']
+        formats = ['%s', '%s:%s', '%s']
+        title_shape.text = 'Top 15 %s Fast Wins (no abandons)' % self.team_name
+        Slides.create_table(slide, fast_wins, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
+                            widths=widths, hyperlink=[0])
+
+        slide = self.add_slide(5, 152, 251, 152)
+        title_shape = slide.shapes.title
+        title_shape.text = 'Top 15 %s Fast Losses (no abandons)' % self.team_name
+        Slides.create_table(slide, fast_losses, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
                             widths=widths, hyperlink=[0])
 
     def add_win_rate_by_date(self, input_data, label):
