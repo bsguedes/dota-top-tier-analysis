@@ -196,13 +196,15 @@ class PnKAchievements(AchievementBase):
     def __init__(self, players, matches):
         AchievementBase.__init__(self, players, matches)
         self.add_ach(WinWithPlayerAchievement('Toxic Couple', ['Baco', 'Alidio']))
-        self.add_ach(WinWithPlayerAchievement('I AM ARCHON', ['Scrider', 'Older', 'tchepo']))
+        self.add_ach(WinWithPlayerAchievement('I AM ARCHON', ['Scrider', 'Older']))
         self.add_ach(WinWithPlayerAchievement('Feldmann Brothers', ['Lotus', 'Pringles']))
-        self.add_ach(WinWithoutPlayerAchievement('Subs Captain', ['Zé']))
         self.add_ach(WinWithoutPlayerAchievement('No Divines Allowed', ['kkz', 'Kiddy']))
+        self.add_ach(StreakAchievement('Bela Tentativa', -2, same_hero=True))
+        self.add_ach(ItemSequenceAchievement('Primeiro Rad, depois Aghanim', ['radiance', 'ultimate_scepter'],
+                                             'Build a Radiance and an Aghanim`s Scepter, in this order.'))
+        self.add_ach(WinWithoutPlayerAchievement('Subs Captain', ['Zé']))
         self.add_ach(PlayerOnParameterAchievement('Vem Tranquilo', 'Scrider', 'kills', 'kill count',
                                                   lowest=False, win=True))
-        self.add_ach(StreakAchievement('Bela Tentativa', -3, same_hero=True))
         self.add_ach(WinCarriedByAchievement('Pushing Far From Your Friends', 'Nuvah', 'Lina'))
         self.add_ach(WinCarriedByAchievement('Heavier than a Black Hole', 'Alidio', 'Wraith King'))
         self.add_ach(WinCarriedByAchievement('My Big Hero Pool', 'Chuvisco', 'Ursa',
@@ -210,12 +212,11 @@ class PnKAchievements(AchievementBase):
         self.add_ach(WinCarriedByAchievement('Best Hooks for Enemy Team', 'Cristian', 'Pudge'))
         self.add_ach(StreakAchievement('All Green Profile', 8))
         self.add_ach(StreakAchievement('All Red Profile', -8))
+        self.add_ach(AllRunesAchievement('Better Than Thanos'))
         self.add_ach(ItemAchievement('Trump Card', 'rapier', 'Divine Rapier', 1))
         self.add_ach(ItemAchievement('Next Lebel Farming', 'radiance', 'Radiance', 2))
         self.add_ach(ItemAchievement('Multiple Midas', 'hand_of_midas', 'Hand of Midas', 3))
         self.add_ach(ItemAchievement('Maximum Blink', 'blink', 'Blink Dagger', 5))
-        self.add_ach(ItemSequenceAchievement('The New Meta Build', ['radiance', 'ultimate_scepter'],
-                                             'Primeiro Rad, depois Aghanim'))
         self.add_ach(MultiKillAchievement('RAMPAGE!', '5'))
         self.add_ach(WinWithBuildingStatus('Overwhelming Odds', 'barracks', 0, 'against Mega Creeps'))
         self.add_ach(
@@ -285,7 +286,7 @@ class StreakAchievement(Achievement):
     def __init__(self, name, amount, same_hero=False):
         Achievement.__init__(self, name)
         self.amount = amount
-        fmt = 'Get a %s Streak of %i Matches with the same hero' if same_hero else 'Get a %s Streak of %i Matches'
+        fmt = 'Get a %s streak of %i matches with the same hero' if same_hero else 'Get a %s streak of %i matches'
         values = ('Win' if amount > 0 else 'Loss', abs(amount))
         self.description = fmt % values
         self.same_hero = same_hero
@@ -343,7 +344,7 @@ class ItemAchievement(Achievement):
         self.item_code = item_code
         self.item_name = item_name
         self.amount = amount
-        self.description = 'Win a game with %i %s on your team' % (amount, item_name)
+        self.description = 'Win a match with %i %s on your team' % (amount, item_name)
 
     def evaluate(self):
         for match_id, data in self.match_list.items():
@@ -357,11 +358,30 @@ class ItemAchievement(Achievement):
         return super(ItemAchievement, self).evaluate()
 
 
+class AllRunesAchievement(Achievement):
+    def __init__(self, name):
+        Achievement.__init__(self, name)
+        self.description = 'Get all 7 runes in a match'
+
+    def evaluate(self):
+        for match_id, data in self.match_list.items():
+            counted = False
+            self.games += 1
+            for player in data['players']:
+                value = data['player_desc'][player]['runes']
+                if value is not None and len(value) == 7:
+                    if not counted:
+                        self.wins += 1
+                        counted = True
+                    self.winners[player].append(match_id)
+        return super(AllRunesAchievement, self).evaluate()
+
+
 class WinWithPlayerAchievement(Achievement):
     def __init__(self, name, players):
         Achievement.__init__(self, name)
         self.players = players
-        self.description = 'Win a game with %s on your team' % sequence(players)
+        self.description = 'Win a match with %s on your team' % sequence(players)
 
     def evaluate(self):
         inv_p = {v: k for k, v in self.player_list.items()}
@@ -385,9 +405,9 @@ class WinWithHeroAchievement(Achievement):
         Achievement.__init__(self, name)
         self.heroes = heroes
         if msg is None:
-            self.description = 'Win a game with %s on your team' % sequence(heroes)
+            self.description = 'Win a match with %s on your team' % sequence(heroes)
         else:
-            self.description = 'Win a game where all heroes %s' % msg
+            self.description = 'Win a match where all heroes %s' % msg
             self.special_description = True
 
     def evaluate(self):
@@ -431,7 +451,7 @@ class PlayerOnParameterAchievement(Achievement):
         self.win = win
         txt = 'lowest' if lowest else 'highest'
         prefix = 'Win' if win else 'Play'
-        self.description = '%s a game with %s having %s %s' % (prefix, player, txt, parameter_name)
+        self.description = '%s a match with %s having %s %s' % (prefix, player, txt, parameter_name)
 
     def evaluate(self):
         for match_id, data in self.match_list.items():
@@ -454,9 +474,9 @@ class PlayerOnHeroAchievement(Achievement):
         self.player = player
         self.heroes = heroes
         if msg is None:
-            self.description = 'Win a game with %s playing one of %s' % (player, sequence(heroes))
+            self.description = 'Win a match with %s playing one of %s' % (player, sequence(heroes))
         else:
-            self.description = 'Win a game with %s playing %s' % (player, msg)
+            self.description = 'Win a match with %s playing %s' % (player, msg)
             self.special_description = True
 
     def evaluate(self):
@@ -478,8 +498,8 @@ class WinCarriedByAchievement(Achievement):
         self.player = player
         self.hero = hero
         self.unless = unless
-        self.description = 'Win a game being carried by %s on any hero except %s' % (
-            player, hero) if unless else 'Win a game being carried by %s on %s' % (player, hero)
+        self.description = 'Win a match being carried by %s on any hero except %s' % (
+            player, hero) if unless else 'Win a match being carried by %s on %s' % (player, hero)
 
     def evaluate(self):
         for match_id, data in self.match_list.items():
@@ -503,7 +523,7 @@ class WinWithBuildingStatus(Achievement):
         self.building = building
         self.value = value
         self.count_on_building = count_on_building
-        self.description = 'Win a game %s' % text
+        self.description = 'Win a match %s' % text
 
     def evaluate(self):
         for match_id, data in self.match_list.items():
@@ -523,7 +543,7 @@ class WinWithoutPlayerAchievement(Achievement):
     def __init__(self, name, players):
         Achievement.__init__(self, name)
         self.players = players
-        self.description = 'Win a game as 5 players without %s on team' % sequence(players)
+        self.description = 'Win a match as 5 players without %s on team' % sequence(players)
 
     def evaluate(self):
         for match_id, data in self.match_list.items():

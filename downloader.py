@@ -64,7 +64,8 @@ def download_matches(unique_matches, override=False, download_again=False):
             open(file_name, 'wb').write(r.content)
         if os.path.getsize(file_name) < 35000 and download_again:
             os.remove(file_name)
-            print('Downloading again match %i data' % match_id)
+            url = 'https://api.opendota.com/api/request/%i' % match_id
+            requests.post(url, allow_redirects=True)
             url = 'https://api.opendota.com/api/matches/%i' % match_id
             r = requests.get(url, allow_redirects=True)
             open(file_name, 'wb').write(r.content)

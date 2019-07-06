@@ -461,7 +461,7 @@ class Slides:
         title_shape = slide.shapes.title
         headers = ['Match ID', 'Time [min]', 'Players']
         keys = ['match', 'time', 'players']
-        formats = ['%s', '%s:%s', '%s']
+        formats = ['%s', '%02d:%02d', '%s']
         title_shape.text = 'Top 15 %s Fast Wins (no abandons)' % self.team_name
         Slides.create_table(slide, fast_wins, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
                             widths=widths, hyperlink=[0])

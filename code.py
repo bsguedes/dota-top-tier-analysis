@@ -185,9 +185,11 @@ class Parser:
                     match_summary[match_id]['our_heroes'].append(p['hero_id'])
                     match_summary[match_id]['players'].append(p['account_id'])
                     apm = p['actions_per_min'] if 'actions_per_min' in p else 0
+                    runes = p['runes'] if 'runes' in p else []
                     match_summary[match_id]['player_desc'][p['account_id']] = {'hero': self.heroes[p['hero_id']],
                                                                                'total_gold': p['total_gold'],
                                                                                'kills': p['kills'],
+                                                                               'runes': runes,
                                                                                'apm': apm}
                     match_summary[match_id]['win'] = p['win'] > 0
                     match_summary[match_id]['is_radiant'] = p['isRadiant']

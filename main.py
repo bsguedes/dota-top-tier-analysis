@@ -14,8 +14,8 @@ import calendar
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
-YEARS = [2018, 2019]
-MONTH = None
+YEARS = [2019]
+MONTH = 6
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
 REDOWNLOAD_SMALL_FILES = False
@@ -84,7 +84,8 @@ player_list = {
         'Pogo': 121639063,
         'darkkside': 112645060,
         'Xupito': 130741370,
-        'Vesgo': 84964267
+        'Vesgo': 84964267,
+        'Ghago': 106159466
     },
     BLAZING_DOTA: {
         'Pogo': 121639063,
