@@ -15,7 +15,7 @@ PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
 YEARS = [2019]
-MONTH = 6
+MONTH = 7
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
 REDOWNLOAD_SMALL_FILES = False
@@ -56,6 +56,38 @@ replacement_list = {
     }
 }
 
+discord_ids = {
+    'Zé': 139193879134994432,
+    'Chaos': 291727771967946754,
+    'Nuvah': 126788612040687616,
+    'Baco': 230178690519007232,
+    'Scrider': 166322198313697280,
+    'kkz': 276631463502282753,
+    'tchepo': 263451833916325891,
+    'Lotus': 175692038904348672,
+    'Alidio': 291728906556538882,
+    'Chuvisco': 280895347323305985,
+    'Gilberto': 115146154919854086,
+    'Older': 193946233616859137,
+    'tiago': 126515896993710082,
+    'shadow': 197096313647529984,
+    'Osaka': 225058575809118208,
+    'Cristian': 281936638593073153,
+    'Pringles': 348900934522372099,
+    'Alpiona': 126491764876902401,
+    'Fallenzão': 302310551114219522,
+    'Maionese': 319278774623404032,
+    'Kiddy': 139783087109177345,
+    'Roshan': 226882871724343296,
+    'deliri019': 216543587373023232,
+    'Pogo': 297716705805991936,
+    'darkkside': 185035904216203264,
+    'Xupito': 302253184775356416,
+    'Vesgo': 216632803113172993,
+    'Ghago': 227864196845404160,
+    'Gordito': 411710047547293707
+}
+
 player_list = {
     PNK: {
         'Zé': 25185394,
@@ -85,7 +117,8 @@ player_list = {
         'darkkside': 112645060,
         'Xupito': 130741370,
         'Vesgo': 84964267,
-        'Ghago': 106159466
+        'Ghago': 106159466,
+        'Gordito': 130714929
     },
     BLAZING_DOTA: {
         'Pogo': 121639063,
@@ -187,6 +220,7 @@ if __name__ == '__main__':
 
     downloader.download_heroes()
     downloader.download_player_data(players, replacements, override=DOWNLOAD_PLAYERS)
+    discord_data = downloader.download_discord()
     unique_matches = p.get_matches(replacements, month=MONTH, ranked_only=False)
     to_parse = downloader.download_matches(unique_matches, download_again=REDOWNLOAD_SMALL_FILES)
     matches_json = Parser.load_matches(unique_matches)

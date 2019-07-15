@@ -198,6 +198,8 @@ class PnKAchievements(AchievementBase):
         self.add_ach(WinWithPlayerAchievement('Toxic Couple', ['Baco', 'Alidio']))
         self.add_ach(WinWithPlayerAchievement('I AM ARCHON', ['Scrider', 'Older']))
         self.add_ach(WinWithPlayerAchievement('Feldmann Brothers', ['Lotus', 'Pringles']))
+        self.add_ach(WinWithPlayerAchievement('Scrider Brothers', ['Scrider', 'Gordito']))
+        self.add_ach(WinWithPlayerAchievement('Cold Blood', ['Baco', 'Alidio', 'Chuvisco']))
         self.add_ach(WinWithoutPlayerAchievement('No Divines Allowed', ['kkz', 'Kiddy']))
         self.add_ach(StreakAchievement('Bela Tentativa', -2, same_hero=True))
         self.add_ach(ItemSequenceAchievement('Primeiro Rad, depois Aghanim', ['radiance', 'ultimate_scepter'],
@@ -224,6 +226,8 @@ class PnKAchievements(AchievementBase):
         self.add_ach(WinBattleCupPartyAchievement('Battle Cup Winners'))
         self.add_ach(PlayerOnParameterAchievement('Naked Baco', 'Baco', 'total_gold', 'net worth',
                                                   img='naked_baco.png'))
+        self.add_ach(PlayerOnParameterAchievement('CEOsmar', 'Baco', 'total_gold', 'net worth', lowest=False,
+                                                  img='ceosmar.png'))
         self.add_ach(PlayerOnHeroAchievement('Brainless Baco', 'Baco', UNDEAD_HEROES, 'an undead hero',
                                              img='brainless_baco.png'))
         self.add_ach(PlayerOnHeroAchievement('Mustache Baco', 'Baco', MUSTACHE_HEROES, 'a hero with a mustache',
