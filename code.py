@@ -14,9 +14,10 @@ from constants import *
 
 
 class Parser:
-    def __init__(self, team_name, years, players, min_matches, min_party_size, min_matches_with_hero):
+    def __init__(self, team_name, years, month, players, min_matches, min_party_size, min_matches_with_hero):
         self.team_name = team_name
         self.years = years
+        self.month = month
         self.players = players
         self.heroes = {}
         self.inv_p = {v: k for k, v in self.players.items()}
@@ -790,6 +791,40 @@ class Parser:
                                 '%s best win streak: %s matches' % (p['name'], max(0, max(p['streaks'])))) for p in
                        self.player_descriptor if len(p['streaks']) > 0 and p['matches'] > self.min_matches],
                       key=lambda e: e.score, reverse=True)
+
+    def discord(self, ids, data, avg=False):
+        inv_id = {v: k for k, v in ids.items()}
+        player_ids = [k for k, _ in inv_id.items()]
+        entries = {}
+        for item in data['results']:
+            pid = int(item['player_id'])
+            if pid in player_ids:
+                if pid not in entries:
+                    entries[pid] = 0
+                year, month = map(lambda e: int(e), item['month_year'].split('-'))
+                if year in self.years and (self.month is None or self.month == month):
+                    entries[pid] += item['duration']
+        valid_ids = [pid for name, pid in self.players.items() if name in [i for i, _ in ids.items()]]
+        inv_p = {v: k for k, v in self.players.items()}
+        if avg:
+            durations = {v: 0 for k, v in self.players.items()}
+            for mid, data in self.match_summary.items():
+                for p in data['players']:
+                    if p in valid_ids:
+                        durations[p] += data['duration']
+            return sorted([TierItem(inv_p[pid], entries[ids[inv_p[pid]]] / 10 / d,
+                                    '%s spoke during %.2f %% of his time in matches' % (inv_p[pid],
+                                                                                        entries[ids[inv_p[
+                                                                                            pid]]] / 10 / d))
+                           for pid, d in durations.items() if d > 0],
+                          key=lambda e: e.score)
+        else:
+            return sorted([TierItem(inv_id[pid], d / 60000,
+                                    '%s spoke %d:%02d minutes on Discord' % (inv_id[pid],
+                                                                             (d / 1000) // 60,
+                                                                             (d / 1000) % 60)) for
+                           pid, d in entries.items()],
+                          key=lambda e: e.score, reverse=True)
 
     def loss_streak(self):
         return sorted([TierItem(p['name'], abs(min(0, min(p['streaks']))),

@@ -146,6 +146,9 @@ categories = [
     Category(10, 'duration', text='time between each kill/assist', rule='time_kill_assist', unit='s',
              reverse=False, minimize=True, max_format='%.2f'),
     Category(10, 'versatility', rule='versatility', avg_format='%.3f'),
+    Category(1, 'discord_avg', unit='%', text='time spoken on Discord per total game duration', rule='discord_avg',
+             reverse=False),
+    Category(1, 'discord', unit='min', text='time spoken on Discord', rule='discord'),
     Category(2, 'hard carry', unit='%', text='hard carry win rate', rule='position'),
     Category(2, 'mid', unit='%', text='mid win rate', rule='position'),
     Category(2, 'offlane', unit='%', text='offlane win rate', rule='position'),
@@ -216,7 +219,7 @@ if __name__ == '__main__':
     players = player_list[TEAM_NAME]
     replacements = replacement_list[TEAM_NAME] if TEAM_NAME in replacement_list else None
     s = Slides(TEAM_NAME, YEARS, get_title(), get_subtitle(), players, month=MONTH)
-    p = Parser(TEAM_NAME, YEARS, players, MIN_MATCHES, MIN_PARTY_SIZE, MIN_MATCHES_WITH_HERO)
+    p = Parser(TEAM_NAME, YEARS, MONTH, players, MIN_MATCHES, MIN_PARTY_SIZE, MIN_MATCHES_WITH_HERO)
 
     downloader.download_heroes()
     downloader.download_player_data(players, replacements, override=DOWNLOAD_PLAYERS)
@@ -234,6 +237,13 @@ if __name__ == '__main__':
             tiers.append((tier, c))
         elif c.rule == 'versatility':
             tier = Tier(c.weight, p.player_versatility(), 'Versatility in %s matches' % TEAM_NAME)
+            tiers.append((tier, c))
+        elif c.rule == 'discord' and TEAM_NAME == PNK:
+            tier = Tier(c.weight, p.discord(discord_ids, discord_data), 'Total time spoken on Discord')
+            tiers.append((tier, c))
+        elif c.rule == 'discord_avg' and TEAM_NAME == PNK:
+            tier = Tier(c.weight, p.discord(discord_ids, discord_data, avg=True),
+                        'Average percentage of time playing and speaking on Discord', reverse=False)
             tiers.append((tier, c))
         elif c.rule == 'win_streak':
             tier = Tier(c.weight, p.win_streak(), 'Best win streak in %s matches' % TEAM_NAME)
