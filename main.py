@@ -149,11 +149,11 @@ categories = [
     Category(1, 'discord_avg', unit='%', text='time spoken on Discord per total game duration', rule='discord_avg',
              reverse=False),
     Category(1, 'discord', unit='min', text='time spoken on Discord', rule='discord'),
-    Category(2, 'hard carry', unit='%', text='hard carry win rate', rule='position'),
-    Category(2, 'mid', unit='%', text='mid win rate', rule='position'),
-    Category(2, 'offlane', unit='%', text='offlane win rate', rule='position'),
-    Category(2, 'support', unit='%', text='support win rate', rule='position'),
-    Category(2, 'hard support', unit='%', text='hard support win rate', rule='position'),
+    Category(4, 'hard carry', unit='%', text='hard carry win rate', rule='position'),
+    Category(4, 'mid', unit='%', text='mid win rate', rule='position'),
+    Category(4, 'offlane', unit='%', text='offlane win rate', rule='position'),
+    Category(4, 'support', unit='%', text='support win rate', rule='position'),
+    Category(4, 'hard support', unit='%', text='hard support win rate', rule='position'),
     Category(4, 'xp_per_min', unit='xpm', text='xpm'),
     Category(4, 'total_gold', unit='gold', text='total gold'),
     Category(6, 'gold_per_min', unit='gpm', text='gpm'),
@@ -163,7 +163,7 @@ categories = [
     Category(5, 'damage_taken', unit='dmg', reverse=False, text='damage taken', rule='accumulate', minimize=True),
     Category(5, 'teamfight_participation', unit='%', text='team fight participation',
              apply_transform=T.percentage, max_format='%.2f'),
-    Category(6, 'life_state_dead', unit='min', text='minutes dead', minimize=True,
+    Category(8, 'life_state_dead', unit='min', text='minutes dead', minimize=True,
              apply_transform=T.sec_to_min, max_format='%.2f', reverse=False),
     Category(1, 'randomed', rule='bool', unit='%', text='randomed games', has_max=False, apply_transform=T.percentage),
     Category(5, 'last_hits', unit='last hits', text='last hits'),
@@ -176,18 +176,18 @@ categories = [
     Category(4, 'multi_kills', unit='ultra kills', text='ultra kills', rule='4', has_max=False, avg_format='%.3f'),
     Category(5, 'multi_kills', unit='rampages', text='rampages', rule='5', has_max=False, avg_format='%.3f'),
     Category(5, 'purchase', unit='bkbs', text='BKBs purchased', rule='black_king_bar', has_max=False),
-    Category(2, 'purchase', unit='dusts', text='dusts purchased', rule='dust', avg_format='%.3f'),
-    Category(2, 'purchase', unit='smokes', text='smokes purchased', rule='smoke_of_deceit', avg_format='%.3f'),
+    Category(3, 'purchase', unit='dusts', text='dusts purchased', rule='dust', avg_format='%.3f'),
+    Category(3, 'purchase', unit='smokes', text='smokes purchased', rule='smoke_of_deceit', avg_format='%.3f'),
     Category(2, 'purchase', unit='gems', text='gems of true sight purchased', rule='gem', avg_format='%.3f'),
-    Category(5, 'purchase', unit='gold', text='gold in support items', rule='support_gold'),
+    Category(8, 'purchase', unit='gold', text='gold in support items', rule='support_gold'),
     Category(8, 'firstblood_claimed', unit='first bloods', text='first blood kills', has_max=False, avg_format='%.3f'),
     Category(5, 'creeps_stacked', unit='creeps', text='creeps stacked'),
-    Category(4, 'observer_kills', unit='wards', text='wards removed', rule='ward_kill'),
+    Category(5, 'observer_kills', unit='wards', text='wards removed', rule='ward_kill'),
     Category(2, 'courier_kills', unit='couriers', text='couriers killed', avg_format='%.3f'),
     Category(2, 'purchase_tpscroll', unit='TPs', text='TPs purchased'),
     Category(2, 'purchase', unit='tomes', text='tomes of knowledge purchased', rule='tome_of_knowledge'),
     Category(5, 'stuns', unit='seconds', text='stun duration dealt', max_format='%.2f'),
-    Category(5, 'pings', unit='pings'),
+    Category(3, 'pings', unit='pings'),
     Category(5, 'abandons', unit='abandons', has_max=False, reverse=False, avg_format='%.3f'),
     Category(8, 'win_streak', unit='matches', text='win streak', rule='win_streak', avg_format='%s'),
     Category(8, 'loss_streak', unit='matches', text='loss streak', rule='loss_streak', reverse=False, avg_format='%s'),
@@ -279,7 +279,7 @@ if __name__ == '__main__':
         s.add_match_details(to_parse, p.match_types)
         s.add_five_player_compositions(p.five_player_compositions, p.full_party_matches)
         s.add_match_summary_by_player(p.match_summary_by_player, p.match_summary_by_team, p.min_party_size)
-        s.add_top_fifteen(p.top_comebacks, p.top_throws, p.top_fast_wins, p.top_fast_losses)
+        s.add_top_fifteen(p.top_comebacks, p.top_throws, p.top_fast_wins, p.top_fast_losses, p.longest_matches)
         s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES))
         s.add_best_team_by_player(p.evaluate_best_team_by_hero_player(MIN_COUPLE_MATCHES/2))
         s.add_couples(p.player_couples[0:10], 'Best')

@@ -439,7 +439,7 @@ class Slides:
         Slides.text_box(slide, '%s-%s' % (faction['r_win'], faction['r_loss']), 6, 6, font_size=24)
         Slides.text_box(slide, '%s-%s' % (faction['d_win'], faction['d_loss']), 6, 6.6, font_size=24)
 
-    def add_top_fifteen(self, comebacks, throws, fast_wins, fast_losses):
+    def add_top_fifteen(self, comebacks, throws, fast_wins, fast_losses, longest):
         slide = self.add_slide(5, 152, 251, 152)
         title_shape = slide.shapes.title
         title_shape.text = 'Top 15 %s Comebacks' % self.team_name
@@ -470,6 +470,16 @@ class Slides:
         title_shape = slide.shapes.title
         title_shape.text = 'Top 15 %s Fast Losses (no abandons)' % self.team_name
         Slides.create_table(slide, fast_losses, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
+                            widths=widths, hyperlink=[0])
+
+        slide = self.add_slide(5, 152, 251, 152)
+        title_shape = slide.shapes.title
+        title_shape.text = 'Top 15 %s Longest Matches' % self.team_name
+        headers = ['Match ID', 'Gold', 'Players', 'Win?']
+        keys = ['match', 'time', 'players', 'win']
+        formats = ['%s', '%02d:%02d', '%s', '%s']
+        widths = [1.7, 1.7, 3.9, 1.7]
+        Slides.create_table(slide, longest, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
                             widths=widths, hyperlink=[0])
 
     def add_win_rate_by_date(self, input_data, label):

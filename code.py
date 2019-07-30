@@ -33,6 +33,7 @@ class Parser:
         self.top_throws = []
         self.top_fast_wins = []
         self.top_fast_losses = []
+        self.longest_matches = []
         self.against_heroes = []
         self.with_heroes = []
         self.most_played_heroes = []
@@ -276,6 +277,7 @@ class Parser:
 
         list_comebacks = {m: v['comeback_throw'] for m, v in match_summary.items() if v['win'] > 0}
         list_throws = {m: v['comeback_throw'] for m, v in match_summary.items() if v['win'] == 0}
+        list_longest = {m: (v['duration'], v['win']) for m, v in match_summary.items()}
         list_fast_wins = {m: v['duration'] for m, v in match_summary.items() if v['win'] > 0 and not v['has_abandon']}
         list_fast_loss = {m: v['duration'] for m, v in match_summary.items() if v['win'] == 0 and not v['has_abandon']}
         self.top_comebacks = [
@@ -294,6 +296,10 @@ class Parser:
             {'match': m, 'time': (g // 60, g % 60),
              'players': ', '.join([x for x, y in self.players.items() if y in match_summary[m]['players']])}
             for m, g in sorted(list_fast_loss.items(), key=lambda e: e[1])[:15]]
+        self.longest_matches = [
+            {'match': m, 'time': (g[0] // 60, g[0] % 60), 'win': 'yes' if g[1] else 'no',
+             'players': ', '.join([x for x, y in self.players.items() if y in match_summary[m]['players']])}
+            for m, g in sorted(list_longest.items(), key=lambda e: e[1][0], reverse=True)[:15]]
 
         wr_versus = {k: {'matches': 0, 'wins': 0} for k, v in self.heroes.items()}
         for mid, v in match_summary.items():
@@ -504,7 +510,7 @@ class Parser:
                                                                  self.players[k[1]]]),
                                             'wins': couples_win[self.players[k[0]]][self.players[k[1]]],
                                             'matches': couples_matches[self.players[k[0]]][self.players[k[1]]]})
-        self.player_couples = sorted(self.player_couples, key=lambda e: e['rating'], reverse=True)
+        self.player_couples = sorted(self.player_couples, key=lambda e: (e['rating'], -e['matches']), reverse=True)
 
         self.player_descriptor = [
             {
@@ -816,7 +822,7 @@ class Parser:
                                     '%s spoke during %.2f %% of his time in matches' % (inv_p[pid],
                                                                                         entries[ids[inv_p[
                                                                                             pid]]] / 10 / d))
-                           for pid, d in durations.items() if d > 0],
+                           for pid, d in durations.items() if d > 0 and ids[inv_p[pid]] in entries],
                           key=lambda e: e.score)
         else:
             return sorted([TierItem(inv_id[pid], d / 60000,
