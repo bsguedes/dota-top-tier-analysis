@@ -356,7 +356,7 @@ class Slides:
         Slides.create_table(slide, comp, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
                             widths=widths)
 
-    def add_match_details(self, to_parse, match_types):
+    def add_match_details(self, to_parse, match_types, skills):
         slide = self.add_slide(1, 152, 251, 152)
         shapes = slide.shapes
         title_shape = shapes.title
@@ -375,6 +375,21 @@ class Slides:
         widths = [4.5, 1.5, 1.5, 1.5]
         Slides.create_table(slide, match_types, headers, keys, formats, Inches(0.5), Inches(4), Inches(9), 1, 13, 15,
                             widths=widths)
+
+        slide = self.add_slide(1, 152, 251, 152)
+        shapes = slide.shapes
+        title_shape = shapes.title
+        body_shape = shapes.placeholders[1]
+        title_shape.text = '%s Summary' % self.team_name
+        tf = body_shape.text_frame
+        tf.text = 'Match Summary per Game Skill'
+        headers = ['Game Skill', 'Wins', 'Matches', 'Win Rate']
+        keys = ['skill', 'wins', 'matches', 'wr']
+        formats = ['%s', '%s', '%s', '%.2f %%']
+        widths = [4.5, 1.5, 1.5, 1.5]
+        Slides.create_table(slide, skills, headers, keys, formats, Inches(0.5), Inches(2.5), Inches(9), 1, 13, 15,
+                            widths=widths)
+
 
     def add_win_rate_details_slide(self, fb_object, bounties):
         slide = self.add_slide(1, 152, 251, 152)
@@ -630,7 +645,7 @@ class Slides:
         Slides.create_table_with_text_boxes(slide,
                                             sorted([x for x in summary if x['team_matches'] > 0],
                                                    key=lambda e: e['team_matches'], reverse=True),
-                                            headers, keys, formats, 0.5, 1.35, 9, 11, 14, line_spacing=0.21)
+                                            headers, keys, formats, 0.5, 1.35, 9, 11, 14, line_spacing=0.19)
 
     def add_tier_slides(self, tier, category):
         texts = tier.list_to_print()
@@ -916,7 +931,7 @@ class Slides:
         scores = [{'player': k, 'gold': v[0], 'silver': v[1], 'bronze': v[2]} for k, v in medals]
         formats = ['%s', '%s', '%s', '%s']
         Slides.create_table_with_text_boxes(slide, [x for x in scores if x['gold'] + x['silver'] + x['bronze'] > 0],
-                                            headers, keys, formats, 2, 1.5, 6, 11, 14)
+                                            headers, keys, formats, 2, 1.5, 6, 11, 14, line_spacing=0.19)
 
         slide = self.add_slide(5, 255, 255, 224)
         title_shape = slide.shapes.title
@@ -932,7 +947,7 @@ class Slides:
         scores = [{'player': k, 'points': v} for k, v in points]
         formats = ['%s', '%s']
         Slides.create_table_with_text_boxes(slide, [x for x in scores if x['points'] > 0], headers, keys, formats, 3,
-                                            1.5, 3, 11, 14)
+                                            1.5, 3, 11, 14, line_spacing=0.19)
 
     def add_achievement_slide(self, achievement, result):
         inv_p = {v: k for k, v in self.players.items()}

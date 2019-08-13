@@ -52,6 +52,7 @@ class Parser:
         self.player_descriptor = []
         self.factions = {}
         self.match_types = []
+        self.match_skill = []
         self.min_matches_with_hero = min_matches_with_hero
 
     @staticmethod
@@ -183,6 +184,7 @@ class Parser:
                     p['account_id'] = self.players[replacements[p['account_id']]]
                 if p['account_id'] in account_ids:
                     match_summary[match_id]['lobby_type'] = lobby_type()[obj['lobby_type']]
+                    match_summary[match_id]['skill'] = obj['skill']
                     match_summary[match_id]['game_mode'] = game_mode()[obj['game_mode']]
                     match_summary[match_id]['our_heroes'].append(p['hero_id'])
                     match_summary[match_id]['players'].append(p['account_id'])
@@ -245,6 +247,17 @@ class Parser:
             self.win_rate_by_month[wd]['wr'] = win_rate(o['wins'], o['matches'])
         for wd, o in self.win_rate_by_hour.items():
             self.win_rate_by_hour[wd]['wr'] = win_rate(o['wins'], o['matches'])
+        for skill in range(1, 4):
+            m = [y for x, y in match_summary.items() if y['skill'] == skill]
+            games = len(m)
+            wins = len([x for x in m if x['win']])
+            if games > 0:
+                self.match_skill.append({
+                    'skill': [None, 'Normal Skill', 'High Skill', 'Very High Skill'][skill],
+                    'wins': wins,
+                    'matches': games,
+                    'wr': win_rate(wins, games),
+                })
         for lobby, game in list(itertools.product(lobby_type(), game_mode())):
             m = [y for x, y in match_summary.items() if y['lobby_type'] == lobby and y['game_mode'] == game]
             games = len(m)

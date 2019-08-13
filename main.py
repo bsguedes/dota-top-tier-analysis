@@ -14,8 +14,8 @@ import calendar
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
-YEARS = [2019]
-MONTH = 7
+YEARS = [2017, 2018, 2019]
+MONTH = None
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
 REDOWNLOAD_SMALL_FILES = False
@@ -276,7 +276,7 @@ if __name__ == '__main__':
         s.add_intro_slide(len(unique_matches), MIN_PARTY_SIZE, MIN_MATCHES, MIN_COUPLE_MATCHES)
         s.add_win_rate_slide(p.win_rate, len(unique_matches), p.matches_by_party_size, p.factions)
         s.add_win_rate_details_slide(p.first_blood_win_rate(), p.bounties())
-        s.add_match_details(to_parse, p.match_types)
+        s.add_match_details(to_parse, p.match_types, p.match_skill)
         s.add_five_player_compositions(p.five_player_compositions, p.full_party_matches)
         s.add_match_summary_by_player(p.match_summary_by_player, p.match_summary_by_team, p.min_party_size)
         s.add_top_fifteen(p.top_comebacks, p.top_throws, p.top_fast_wins, p.top_fast_losses, p.longest_matches)
