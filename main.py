@@ -14,11 +14,11 @@ import calendar
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
-YEARS = [2017, 2018, 2019]
+YEARS = [2019]
 MONTH = None
-DOWNLOAD_PLAYERS = False
+DOWNLOAD_PLAYERS = True
 PRINT_TIERS = False
-REDOWNLOAD_SMALL_FILES = False
+REDOWNLOAD_SMALL_FILES = True
 BEST_TEAM = None
 # BEST_TEAM = ['Zé', 'Nuvah', 'Chaos', 'Older', 'Alidio']
 
@@ -27,10 +27,10 @@ BEST_TEAM = None
 
 parameters = {
     PNK: {
-        'min_matches': 4,
-        'min_couple_matches': 3,
-        'min_party_size': 4,
-        'min_matches_with_hero': 2
+        'min_matches': 30,
+        'min_couple_matches': 10,
+        'min_party_size': 2,
+        'min_matches_with_hero': 3
     },
     BLAZING_DOTA: {
         'min_matches': 4,

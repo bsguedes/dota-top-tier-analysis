@@ -200,7 +200,7 @@ class PnKAchievements(AchievementBase):
         self.add_ach(WinWithPlayerAchievement('Feldmann Brothers', ['Lotus', 'Pringles']))
         self.add_ach(WinWithPlayerAchievement('Scrider Brothers', ['Scrider', 'Gordito']))
         self.add_ach(WinWithPlayerAchievement('Cold Blood', ['Baco', 'Alidio', 'Chuvisco']))
-        self.add_ach(WinWithoutPlayerAchievement('No Divines Allowed', ['kkz', 'Kiddy']))
+        self.add_ach(WinWithoutPlayerAchievement('No Immortals Allowed', ['kkz', 'Kiddy']))
         self.add_ach(StreakAchievement('Bela Tentativa', -2, same_hero=True))
         self.add_ach(ItemSequenceAchievement('Primeiro Rad, depois Aghanim', ['radiance', 'ultimate_scepter'],
                                              'Build a Radiance and an Aghanim`s Scepter, in this order.'))
@@ -214,7 +214,7 @@ class PnKAchievements(AchievementBase):
         self.add_ach(WinCarriedByAchievement('Best Hooks for Enemy Team', 'Cristian', 'Pudge'))
         self.add_ach(StreakAchievement('All Green Profile', 8))
         self.add_ach(StreakAchievement('All Red Profile', -8))
-        self.add_ach(AllRunesAchievement('Better Than Thanos'))
+        self.add_ach(AllRunesAchievement('I am Inevitable'))
         self.add_ach(ItemAchievement('Trump Card', 'rapier', 'Divine Rapier', 1))
         self.add_ach(ItemAchievement('Next Lebel Farming', 'radiance', 'Radiance', 2))
         self.add_ach(ItemAchievement('Multiple Midas', 'hand_of_midas', 'Hand of Midas', 3))
