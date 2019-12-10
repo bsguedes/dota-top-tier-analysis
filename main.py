@@ -15,22 +15,22 @@ PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
 YEARS = [2019]
-MONTH = 11
-DOWNLOAD_PLAYERS = True
+MONTH = None
+DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
-REDOWNLOAD_SMALL_FILES = True
+REDOWNLOAD_SMALL_FILES = False
 BEST_TEAM = None
 # BEST_TEAM = ['Zé', 'Nuvah', 'Chaos', 'Older', 'Alidio']
 
-# PnK monthly parameters: 4, 3, 4, 2
-# PnK year parameters: 30, 10, 4, 3
+# PnK monthly parameters: 4, 3, 3, 2
+# PnK year parameters: 30, 10, 3, 3
 
 parameters = {
     PNK: {
-        'min_matches': 4,
-        'min_couple_matches': 3,
+        'min_matches': 30,
+        'min_couple_matches': 10,
         'min_party_size': 3,
-        'min_matches_with_hero': 2
+        'min_matches_with_hero': 3
     },
     BLAZING_DOTA: {
         'min_matches': 4,
@@ -47,12 +47,12 @@ MIN_MATCHES_WITH_HERO = parameters[TEAM_NAME]['min_matches_with_hero']
 
 replacement_list = {
     PNK: {
-        'Fallenzão': 331461200,
-        'kkz': 116647196,
-        'Kiddy': 409605487
+        'Fallenzão': [331461200],
+        'kkz': [116647196],
+        'Kiddy': [409605487, 242249397]
     },
     BLAZING_DOTA: {
-        'flesch': 372670607
+        'flesch': [372670607]
     }
 }
 
@@ -268,7 +268,7 @@ if __name__ == '__main__':
     if BEST_TEAM is not None:
         combinations = p.best_team(BEST_TEAM)
         if len(combinations) > 0:
-            s.add_divider_slide("%s Draft Helper (BETA)" % TEAM_NAME, 'Suggestions for Drafting based on recent success')
+            s.add_divider_slide("%s Draft Helper (BETA)" % TEAM_NAME, 'Suggestions for Draft based on recent success')
             s.add_draft_suggestion(p.heroes, p.inv_p, combinations)
     else:
         s.add_divider_slide("%s General Statistics" % TEAM_NAME,

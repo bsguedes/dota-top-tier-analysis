@@ -39,14 +39,17 @@ def download_player_data(players, replacements, override=True):
             print('Downloaded %s data: %.3f seconds' % (name, time.time() - start))
             open(file_name, 'wb').write(r.content)
     if replacements is not None:
-        for name, pid in replacements.items():
-            file_name = 'players/%s_matches_r.json' % name
-            if override or not os.path.isfile(file_name):
-                start = time.time()
-                url = 'https://api.opendota.com/api/players/%s/matches?project=start_time' % pid
-                r = requests.get(url, allow_redirects=True)
-                print('Downloaded %s replacement data: %.3f seconds' % (name, time.time() - start))
-                open(file_name, 'wb').write(r.content)
+        for name, pid_array in replacements.items():
+            i = 0
+            for pid in pid_array:
+                i += 1
+                file_name = 'players/%s_matches_%i.json' % (name, i)
+                if override or not os.path.isfile(file_name):
+                    start = time.time()
+                    url = 'https://api.opendota.com/api/players/%s/matches?project=start_time' % pid
+                    r = requests.get(url, allow_redirects=True)
+                    print('Downloaded %s replacement data: %.3f seconds' % (name, time.time() - start))
+                    open(file_name, 'wb').write(r.content)
 
 
 def download_discord():
