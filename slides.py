@@ -141,6 +141,35 @@ class Slides:
                 Slides.create_table(slide, hero['played_by'], headers, keys, formats, Inches(4.5), Inches(1.5),
                                     Inches(5), 1, 11, 15, widths=widths)
 
+    def add_player_activity_data(self, desc):
+        slide = self.add_slide(5, 255, 229, 204)
+        title_shape = slide.shapes.title
+        title_shape.text = desc['name']
+        title_shape.text_frame.paragraphs[0].alignment = PP_ALIGN.LEFT
+
+        pic_path = 'data/pics/%s.jpg' % desc['id']
+        if os.path.isfile(pic_path):
+            slide.shapes.add_picture(pic_path, Inches(8), Inches(0.2), height=Inches(1.1))
+
+        data = desc['months']
+        chart_data = ChartData()
+        chart_data.categories = data.keys()
+        chart_data.add_series('Wins', [o['wins'] for o in data.values()])
+        chart_data.add_series('Losses', [o['losses'] for o in data.values()])
+        graphic_frame = slide.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, Inches(0.5), Inches(2), Inches(9),
+                                               Inches(5.5),
+                                               chart_data)
+        chart = graphic_frame.chart
+        plot = chart.plots[0]
+        plot.has_data_labels = True
+        data_labels = plot.data_labels
+        data_labels.font.size = Pt(9)
+        data_labels.font.color.rgb = RGBColor(0x0A, 0x42, 0x80)
+        data_labels.position = XL_LABEL_POSITION.INSIDE_END
+        chart.has_legend = True
+        chart.legend.position = XL_LEGEND_POSITION.RIGHT
+        chart.legend.include_in_layout = False
+
     def add_player_tables_slide(self, desc):
         slide = self.add_slide(5, 255, 229, 204)
         title_shape = slide.shapes.title
@@ -389,7 +418,6 @@ class Slides:
         widths = [4.5, 1.5, 1.5, 1.5]
         Slides.create_table(slide, skills, headers, keys, formats, Inches(0.5), Inches(2.5), Inches(9), 1, 13, 15,
                             widths=widths)
-
 
     def add_win_rate_details_slide(self, fb_object, bounties):
         slide = self.add_slide(1, 152, 251, 152)
@@ -1029,39 +1057,76 @@ class Slides:
         title_shape.text = popular_vote_category['category']
         tf = body_shape.text_frame
         tf.text = 'Opções: '
-        for item in popular_vote_category['options']:
-            p = tf.add_paragraph()
-            p.text = item
-            p.level = 1
-        if 'winner' in popular_vote_category and isinstance(popular_vote_category['winner'], list):
-            tx_box = slide.shapes.add_textbox(Inches(8), Inches(1.8), Inches(2), Inches(0.5))
-            tf = tx_box.text_frame
-            tf.text = "Vencedores"
-            for i in range(0, len(popular_vote_category['winner'])):
-                pic_path = 'data/pics/%s.jpg' % self.players[popular_vote_category['winner'][i]]
+        is_images = False
+        if isinstance(popular_vote_category['options'][0], list):
+            ct = 0
+            is_images = True
+            for item in popular_vote_category['options']:
+                pic_path = 'popularvote/%s' % item[0]
                 if os.path.isfile(pic_path):
-                    slide.shapes.add_picture(pic_path, Inches(8.3), Inches(2.3 + 1.55 * i), height=Inches(1))
-                tx_box = slide.shapes.add_textbox(Inches(8.3), Inches(2.3 + 1.55 * i + 1.08), Inches(2), Inches(0.4))
+                    slide.shapes.add_picture(pic_path, Inches(0.5 + (ct // 2) * 1.8), Inches(2.8 + 1.8 * (ct % 2)),
+                                             height=Inches(1.5))
+                ct += 1
+        else:
+            for item in popular_vote_category['options']:
+                p = tf.add_paragraph()
+                p.text = item
+                p.level = 1
+        if is_images:
+            if 'winner' in popular_vote_category and isinstance(popular_vote_category['winner'][0], list):
+                tx_box = slide.shapes.add_textbox(Inches(8), Inches(1.8), Inches(2), Inches(0.5))
                 tf = tx_box.text_frame
-                tf.text = popular_vote_category['winner'][i]
-        elif 'winner' in popular_vote_category:
-            tx_box = slide.shapes.add_textbox(Inches(8), Inches(1.8), Inches(2), Inches(0.5))
-            tf = tx_box.text_frame
-            tf.text = "Vencedor"
-            pic_path = 'data/pics/%s.jpg' % self.players[popular_vote_category['winner']]
-            if os.path.isfile(pic_path):
-                slide.shapes.add_picture(pic_path, Inches(8), Inches(2.5), height=Inches(1.4))
-            tx_box = slide.shapes.add_textbox(Inches(8), Inches(4), Inches(2), Inches(0.5))
-            tf = tx_box.text_frame
-            tf.text = popular_vote_category['winner']
+                tf.text = "Vencedores"
+                for i in range(0, len(popular_vote_category['winner'])):
+                    pic_path = 'popularvote/%s' % popular_vote_category['winner'][i][0]
+                    if os.path.isfile(pic_path):
+                        slide.shapes.add_picture(pic_path, Inches(8.3), Inches(2.3 + 1.55 * i), height=Inches(1))
+                    tx_box = slide.shapes.add_textbox(Inches(8.3), Inches(2.3 + 1.55 * i + 1.08), Inches(2), Inches(0.4))
+                    tf = tx_box.text_frame
+                    tf.text = popular_vote_category['winner'][i][1]
+            elif 'winner' in popular_vote_category:
+                tx_box = slide.shapes.add_textbox(Inches(8), Inches(1.8), Inches(2), Inches(0.5))
+                tf = tx_box.text_frame
+                tf.text = "Vencedor"
+                pic_path = 'popularvote/%s' % popular_vote_category['winner'][0]
+                if os.path.isfile(pic_path):
+                    slide.shapes.add_picture(pic_path, Inches(8), Inches(2.5), height=Inches(1.4))
+                tx_box = slide.shapes.add_textbox(Inches(8), Inches(4), Inches(2), Inches(0.5))
+                tf = tx_box.text_frame
+                tf.text = popular_vote_category['winner'][1]
+        else:
+            if 'winner' in popular_vote_category and isinstance(popular_vote_category['winner'], list):
+                tx_box = slide.shapes.add_textbox(Inches(8), Inches(1.8), Inches(2), Inches(0.5))
+                tf = tx_box.text_frame
+                tf.text = "Vencedores"
+                for i in range(0, len(popular_vote_category['winner'])):
+                    pic_path = 'data/pics/%s.jpg' % self.players[popular_vote_category['winner'][i]]
+                    if os.path.isfile(pic_path):
+                        slide.shapes.add_picture(pic_path, Inches(8.3), Inches(2.3 + 1.55 * i), height=Inches(1))
+                    tx_box = slide.shapes.add_textbox(Inches(8.3), Inches(2.3 + 1.55 * i + 1.08), Inches(2), Inches(0.4))
+                    tf = tx_box.text_frame
+                    tf.text = popular_vote_category['winner'][i]
+            elif 'winner' in popular_vote_category:
+                tx_box = slide.shapes.add_textbox(Inches(8), Inches(1.8), Inches(2), Inches(0.5))
+                tf = tx_box.text_frame
+                tf.text = "Vencedor"
+                pic_path = 'data/pics/%s.jpg' % self.players[popular_vote_category['winner']]
+                if os.path.isfile(pic_path):
+                    slide.shapes.add_picture(pic_path, Inches(8), Inches(2.5), height=Inches(1.4))
+                tx_box = slide.shapes.add_textbox(Inches(8), Inches(4), Inches(2), Inches(0.5))
+                tf = tx_box.text_frame
+                tf.text = popular_vote_category['winner']
 
         slide = self.add_slide(5, 221, 160, 221)
         slide.shapes.title.text = popular_vote_category['category']
         chart_data = ChartData()
-        chart_data.categories = popular_vote_category['options']
+        if is_images:
+            chart_data.categories = map(lambda e: e[1], popular_vote_category['options'])
+        else:
+            chart_data.categories = popular_vote_category['options']
         v = sum(popular_vote_category['votes'])
         chart_data.add_series("%i answers" % v, [x / v for x in popular_vote_category['votes']])
-        x, y, cx, cy = Inches(1), Inches(1.8), Inches(7), Inches(5)
+        x, y, cx, cy = Inches(1), Inches(1.8), Inches(8), Inches(5.5)
         chart = slide.shapes.add_chart(XL_CHART_TYPE.PIE, x, y, cx, cy, chart_data).chart
         chart.has_legend = True
         chart.legend.position = XL_LEGEND_POSITION.RIGHT
@@ -1070,7 +1135,7 @@ class Slides:
         data_labels = chart.plots[0].data_labels
         data_labels.number_format = '0%'
         data_labels.position = XL_LABEL_POSITION.OUTSIDE_END
-        tx_box = slide.shapes.add_textbox(Inches(8), Inches(6), Inches(2), Inches(0.5))
+        tx_box = slide.shapes.add_textbox(Inches(8), Inches(7), Inches(2), Inches(0.5))
         tf = tx_box.text_frame
         tf.text = "%i respostas" % v
 

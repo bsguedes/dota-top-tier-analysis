@@ -7,5 +7,6 @@ venv/
 *.pptx
 data/pics/
 data/heroes/
+popularvote/
 reports/
 secrets/

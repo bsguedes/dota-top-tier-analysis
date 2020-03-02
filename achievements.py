@@ -125,7 +125,8 @@ MELEE_HEROES = [
     'Underlord',
     'Undying',
     'Ursa',
-    'Wraith King'
+    'Wraith King',
+    'Void Spirit'
 ]
 
 UNDEAD_HEROES = [
@@ -149,7 +150,8 @@ MUSTACHE_HEROES = [
     'Brewmaster',
     'Tusk',
     'Beastmaster',
-    'Sniper'
+    'Sniper',
+    'Void Spirit'
 ]
 
 FEMALE_HEROES = [
@@ -171,7 +173,8 @@ FEMALE_HEROES = [
     'Queen of Pain',
     'Death Prophet',
     'Winter Wyvern',
-    'Dark Willow'
+    'Dark Willow',
+    'Snapfire'
 ]
 
 

@@ -183,7 +183,9 @@ class Parser:
         self.win_rate_by_weekday = {i: {'wins': 0, 'losses': 0, 'matches': 0, 'wr': 0} for i in calendar.day_abbr}
         self.win_rate_by_month = {i: {'wins': 0, 'losses': 0, 'matches': 0, 'wr': 0} for i in calendar.month_abbr[1:]}
         for match_id, obj in matches.items():
+            team_fight_index = -1
             for p in obj['players']:
+                team_fight_index += 1
                 if p['account_id'] in replacements:
                     p['account_id'] = self.players[replacements[p['account_id']]]
                 if p['account_id'] in account_ids:
@@ -194,12 +196,20 @@ class Parser:
                     match_summary[match_id]['players'].append(p['account_id'])
                     apm = p['actions_per_min'] if 'actions_per_min' in p else 0
                     runes = p['runes'] if 'runes' in p else []
+                    if 'teamfights' not in obj or obj['teamfights'] is None \
+                            or len(obj['teamfights']) == 0 or len(obj['players']) != 10:
+                        p['tf_max_damage'] = 0
+                        p['tf_max_healing'] = 0
+                    else:
+                        p['tf_max_damage'] = max([tf['players'][team_fight_index]['damage'] for tf in obj['teamfights']])
+                        p['tf_max_healing'] = max([tf['players'][team_fight_index]['healing'] for tf in obj['teamfights']])
                     match_summary[match_id]['player_desc'][p['account_id']] = {'hero': self.heroes[p['hero_id']],
                                                                                'total_gold': p['total_gold'],
                                                                                'kills': p['kills'],
                                                                                'runes': runes,
                                                                                'apm': apm}
                     match_summary[match_id]['win'] = p['win'] > 0
+                    match_summary[match_id]['start_time'] = obj['start_time']
                     match_summary[match_id]['is_radiant'] = p['isRadiant']
                     gold_adv = [] if obj['radiant_gold_adv'] is None else obj['radiant_gold_adv']                  
                     gold_adv = gold_adv if p['isRadiant'] else -1 * gold_adv
@@ -539,6 +549,7 @@ class Parser:
                 'pairings': self.player_pairs[pid],
                 'matches': sum([w['matches'] for h, w in self.player_wins_by_hero[pid].items()]),
                 'streaks': self.calculate_streaks(pid),
+                'months': self.calculate_months(pid),
                 'radiant_wr': win_rate(
                     len([1 for _, d in match_summary.items() if pid in d['players'] and d['win'] and d['is_radiant']]),
                     len([1 for _, d in match_summary.items() if pid in d['players'] and d['is_radiant']])),
@@ -581,7 +592,7 @@ class Parser:
                         value = 0 if "10" not in p[parameter] else p[parameter]["10"]
                     elif rule == 'max_streak':
                         value = max([int(k) for k, v in p[parameter].items()]) if len(p[parameter]) > 0 else 0
-                    elif parameter == 'multi_kills':
+                    elif parameter == 'multi_kills' or parameter == 'actions' or parameter == 'item_uses':
                         value = 0 if rule not in p[parameter] else p[parameter][rule]
                     elif rule == 'ward_kill':
                         value = p['observer_kills'] + p['sentry_kills']
@@ -880,6 +891,21 @@ class Parser:
                     if len(e) == 1 and e[0]['rating'] == max_rating and e[0]['matches'] >= self.min_matches_with_hero:
                         hero_ids.append(hero['id'])
         return hero_ids
+
+    def calculate_months(self, pid):
+        matches = self.match_summary
+        win_rate_by_month = {i: {'wins': 0, 'losses': 0, 'matches': 0, 'wr': 0} for i in calendar.month_abbr[1:]}
+        for mid, data in matches.items():
+            if pid in data['players']:
+                c_month = calendar.month_abbr[gmtime(int(fix_time(data['start_time']))).tm_mon]
+                win_rate_by_month[c_month]['matches'] += 1
+                if data['win']:
+                    win_rate_by_month[c_month]['wins'] += 1
+                else:
+                    win_rate_by_month[c_month]['losses'] += 1
+        for i in calendar.month_abbr[1:]:
+            win_rate_by_month[i]['wr'] = win_rate(win_rate_by_month[i]['wins'], win_rate_by_month[i]['matches'])
+        return win_rate_by_month
 
     def calculate_streaks(self, pid):
         matches = self.match_summary

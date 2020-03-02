@@ -5,7 +5,7 @@ from code import Parser
 from tier import Tier, T
 import downloader
 from slides import Slides
-from popular_vote import PopularVotePnK2018
+from popular_vote import PopularVotePnK2018, PopularVotePnK2019
 from achievements import PnKAchievements
 import time
 import calendar
@@ -14,7 +14,7 @@ import calendar
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
-YEARS = [2019]
+YEARS = [2017, 2018, 2019]
 MONTH = None
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
@@ -49,7 +49,7 @@ replacement_list = {
     PNK: {
         'Fallenzão': [331461200],
         'kkz': [116647196],
-        'Kiddy': [409605487, 242249397]
+        'Kiddy': [409605487, 242249397, 189723196]
     },
     BLAZING_DOTA: {
         'flesch': [372670607]
@@ -118,7 +118,9 @@ player_list = {
         'Xupito': 130741370,
         'Vesgo': 84964267,
         'Ghago': 106159466,
-        'Gordito': 130714929
+        'Gordito': 130714929,
+        'Scar': 29806143,
+        'JohnMirolho': 56828892
     },
     BLAZING_DOTA: {
         'Pogo': 121639063,
@@ -134,7 +136,8 @@ player_list = {
 popular_vote = None
 if TEAM_NAME == PNK and 2018 in YEARS:
     popular_vote = PopularVotePnK2018()
-
+elif TEAM_NAME == PNK and 2019 in YEARS:
+    popular_vote = PopularVotePnK2019()
 achievements = None
 
 categories = [
@@ -163,6 +166,10 @@ categories = [
     Category(5, 'damage_taken', unit='dmg', reverse=False, text='damage taken', rule='accumulate', minimize=True),
     Category(5, 'teamfight_participation', unit='%', text='team fight participation',
              apply_transform=T.percentage, max_format='%.2f'),
+    Category(8, 'tf_max_damage', unit='dmg', text='damage in a teamfight', has_avg=False),
+    Category(8, 'tf_max_healing', unit='heal', text='healing in a teamfight', has_avg=False),
+    Category(4, 'actions', unit='activations', text='glyphs used', rule='24'),
+    Category(4, 'actions', unit='uses', text='scans used', rule='31'),
     Category(8, 'life_state_dead', unit='min', text='minutes dead', minimize=True,
              apply_transform=T.sec_to_min, max_format='%.2f', reverse=False),
     Category(1, 'randomed', rule='bool', unit='%', text='randomed games', has_max=False, apply_transform=T.percentage),
@@ -188,6 +195,7 @@ categories = [
     Category(2, 'purchase', unit='tomes', text='tomes of knowledge purchased', rule='tome_of_knowledge'),
     Category(5, 'stuns', unit='seconds', text='stun duration dealt', max_format='%.2f'),
     Category(3, 'pings', unit='pings'),
+    Category(4, 'item_uses', unit='times', text='kavukochão', rule='trusty_shovel'),
     Category(5, 'abandons', unit='abandons', has_max=False, reverse=False, avg_format='%.3f'),
     Category(8, 'win_streak', unit='matches', text='win streak', rule='win_streak', avg_format='%s'),
     Category(8, 'loss_streak', unit='matches', text='loss streak', rule='loss_streak', reverse=False, avg_format='%s'),
@@ -299,6 +307,8 @@ if __name__ == '__main__':
             if item['matches'] > 0:
                 s.add_player_data_slide(item)
                 s.add_player_tables_slide(item)
+                if MONTH is None:
+                    s.add_player_activity_data(item)
 
         s.add_divider_slide("%s Technical Categories" % TEAM_NAME, 'Averages and Maximum for many statistics')
         for tier, category in tiers:
