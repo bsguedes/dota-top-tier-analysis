@@ -14,7 +14,7 @@ import calendar
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
-YEARS = [2017, 2018, 2019]
+YEARS = [2017, 2018, 2019, 2020]
 MONTH = None
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
@@ -292,6 +292,8 @@ if __name__ == '__main__':
         s.add_best_team_by_player(p.evaluate_best_team_by_hero_player(MIN_COUPLE_MATCHES/2))
         s.add_couples(p.player_couples[0:10], 'Best')
         s.add_couples(p.player_couples[-10:][::-1], 'Worst')
+        s.add_trios(p.trios[0:15], 'Best')
+        s.add_trios(p.trios[-15:][::-1], 'Worst')
         s.add_compositions(p.compositions)
         s.add_win_rate_by_date(p.win_rate_by_hour, 'Hour')
         s.add_win_rate_by_date(p.win_rate_by_weekday, 'Weekday')

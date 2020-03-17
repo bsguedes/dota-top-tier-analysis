@@ -846,6 +846,18 @@ class Slides:
                     tf.paragraphs[0].alignment = PP_ALIGN.LEFT
             i += 1
 
+    def add_trios(self, trios, text):
+        slide = self.add_slide(5, 255, 105, 180)
+        title_shape = slide.shapes.title
+        title_shape.text = '%s 15 %s Trios' % (text, self.team_name)
+
+        headers = ['Players', 'Rating', 'Wins', 'Matches', 'Win Rate']
+        keys = ['players', 'rating', 'wins', 'matches', 'wr']
+        formats = ['%s', '%.1f', '%s', '%s', '%.2f %%']
+        widths = [5, 1, 1, 1, 1]
+        Slides.create_table(slide, trios, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
+                            widths=widths)
+
     def add_couples(self, couples, text):
         inv_p = {v: k for k, v in self.players.items()}
         slide = self.add_slide(5, 255, 105, 180)

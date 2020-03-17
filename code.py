@@ -46,6 +46,7 @@ class Parser:
         self.player_wins_by_hero = {}
         self.player_pairs = {}
         self.player_couples = []
+        self.trios = []
         self.five_player_compositions = []
         self.hero_statistics = []
         self.player_heroes_in_match = {}
@@ -504,6 +505,23 @@ class Parser:
             for k, v in s:
                 tier_dict[pos_n].append(TierItem(k, v * 100, '%s: %s\'s win rate: %.2f %% (%i matches)'
                                                  % (pos_n, k, v * 100, player_positions[self.players[k]][pos_n])))
+
+        print('')
+        trios = {}
+        for match_id, v in match_summary.items():
+            our_players = v['players']
+            for comb in itertools.combinations(our_players, 3):
+                c = ', '.join([inv_p[i] for i in sorted(comb)])
+                if c not in trios:
+                    trios[c] = {'matches': 0, 'wins': 0, 'wr': 0, 'rating': 0, 'players': c}
+                trios[c]['matches'] += 1
+                if v['win']:
+                    trios[c]['wins'] += 1
+        for x, y in trios.items():
+            y['rating'] = rating(y['wins'], matches=y['matches'])
+            y['wr'] = win_rate(y['wins'], matches=y['matches'])
+        self.trios = sorted([y for _, y in trios.items() if y['matches'] >= min_couple_matches],
+                            key=lambda e: (e['rating'], -e['matches']), reverse=True)
 
         print('')
         couples_win = {b: {x: 0 for w, x in self.players.items()} for a, b in self.players.items()}
