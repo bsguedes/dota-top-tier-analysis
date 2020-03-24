@@ -27,10 +27,10 @@ BEST_TEAM = None
 
 parameters = {
     PNK: {
-        'min_matches': 30,
-        'min_couple_matches': 10,
+        'min_matches': 4,
+        'min_couple_matches': 3,
         'min_party_size': 3,
-        'min_matches_with_hero': 3
+        'min_matches_with_hero': 2
     },
     BLAZING_DOTA: {
         'min_matches': 4,
@@ -294,6 +294,7 @@ if __name__ == '__main__':
         s.add_couples(p.player_couples[-10:][::-1], 'Worst')
         s.add_trios(p.trios[0:15], 'Best')
         s.add_trios(p.trios[-15:][::-1], 'Worst')
+        s.add_rivals(p.rivals[0:15])
         s.add_compositions(p.compositions)
         s.add_win_rate_by_date(p.win_rate_by_hour, 'Hour')
         s.add_win_rate_by_date(p.win_rate_by_weekday, 'Weekday')

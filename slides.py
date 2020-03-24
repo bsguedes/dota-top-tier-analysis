@@ -846,6 +846,18 @@ class Slides:
                     tf.paragraphs[0].alignment = PP_ALIGN.LEFT
             i += 1
 
+    def add_rivals(self, rivals):
+        slide = self.add_slide(5, 104, 222, 255)
+        title_shape = slide.shapes.title
+        title_shape.text = '%s Rivals' % self.team_name
+
+        headers = ['Rival Name', 'ID', 'Wins', 'Matches', 'Win Rate']
+        keys = ['name', 'id', 'wins', 'matches', 'wr']
+        formats = ['%s', '%s', '%s', '%s', '%.2f %%']
+        widths = [4, 2, 1, 1, 1]
+        Slides.create_table(slide, rivals, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
+                            widths=widths, hyperlink=[1], hyperlink_type='players')
+
     def add_trios(self, trios, text):
         slide = self.add_slide(5, 255, 105, 180)
         title_shape = slide.shapes.title
@@ -1192,7 +1204,7 @@ class Slides:
 
     @staticmethod
     def create_table(slide, data, headers, keys, formats, left, top, width, height, font_size, header_size,
-                     widths=None, hyperlink=None):
+                     widths=None, hyperlink=None, hyperlink_type='matches'):
         table_shape = slide.shapes.add_table(len(data) + 1, len(headers), left, top, width, height)
         table = table_shape.table
         for i in range(len(headers)):
@@ -1202,7 +1214,7 @@ class Slides:
                 if hyperlink is not None and j in hyperlink:
                     run = table.cell(i + 1, j).text_frame.paragraphs[0].add_run()
                     run.text = formats[j] % data[i][keys[j]]
-                    Slides.add_open_dota_link(run, formats[j] % data[i][keys[j]])
+                    Slides.add_open_dota_link(run, formats[j] % data[i][keys[j]], hyperlink_type=hyperlink_type)
                 else:
                     table.cell(i + 1, j).text = formats[j] % data[i][keys[j]]
         Slides.set_table_font_size(table, font_size)
@@ -1213,10 +1225,10 @@ class Slides:
                 table.columns[i].width = Inches(widths[i])
 
     @staticmethod
-    def add_open_dota_link(run, match_id, with_text=False):
+    def add_open_dota_link(run, match_id, with_text=False, hyperlink_type='matches'):
         if with_text:
             run.text = match_id
-        run.hyperlink.address = 'https://www.opendota.com/matches/%s' % match_id
+        run.hyperlink.address = 'https://www.opendota.com/%s/%s' % (hyperlink_type, match_id)
 
     @staticmethod
     def hyperlink_sequence(paragraph, strings, maximum=0):

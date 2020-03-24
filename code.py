@@ -55,6 +55,7 @@ class Parser:
         self.match_types = []
         self.match_skill = []
         self.min_matches_with_hero = min_matches_with_hero
+        self.rivals = []
 
     @staticmethod
     def load_matches(unique_matches):
@@ -170,6 +171,7 @@ class Parser:
         inv_h = {h['localized_name']: h['id'] for h in hs_json}
         inv_p = {v: k for k, v in self.players.items()}
         account_ids = [v for k, v in self.players.items()]
+        rivals_names = {}
         replacements = {}
         if rep is not None:
             for k, v_l in rep.items():
@@ -177,6 +179,7 @@ class Parser:
                     replacements[v] = k
         match_summary = {k: {'our_heroes': [],
                              'enemy_heroes': [],
+                             'rivals': [],
                              'our_team_heroes': [],
                              'players': [],
                              'player_desc': {}} for k, v in matches.items()}
@@ -254,6 +257,11 @@ class Parser:
             for p in [x for x in obj['players'] if x['hero_id'] is not None]:
                 if p['isRadiant'] != match_summary[match_id]['is_radiant']:
                     match_summary[match_id]['enemy_heroes'].append(p['hero_id'])
+                    if p['account_id'] is not None:
+                        match_summary[match_id]['rivals'].append(p['account_id'])
+                        if p['account_id'] not in rivals_names:
+                            rivals_names[p['account_id']] = []
+                        rivals_names[p['account_id']].append(p['personaname'])
                 else:
                     match_summary[match_id]['our_team_heroes'].append(self.heroes[p['hero_id']])
         for wd, o in self.win_rate_by_weekday.items():
@@ -395,6 +403,21 @@ class Parser:
                 phd[pid][hid]['inv_rating'] = rating(phd[pid][hid]['matches_against'] - phd[pid][hid]['wins_against'],
                                                      matches=phd[pid][hid]['matches_against'])
         self.player_wins_by_hero = phd
+
+        rivals = {}
+        for mid, v in match_summary.items():
+            if len(v['rivals']) > 0:
+                for rival in v['rivals']:
+                    if rival not in rivals:
+                        rivals[rival] = {'id': rival, 'matches': 0, 'wins': 0, 'wr': 0,
+                                         'name': max(set(rivals_names[rival]), key=rivals_names[rival].count)}
+                    rivals[rival]['matches'] += 1
+                    if v['win']:
+                        rivals[rival]['wins'] += 1
+        for _, v in rivals.items():
+            v['wr'] = win_rate(v['wins'], v['matches'])
+        self.rivals = sorted([v for _, v in rivals.items() if v['matches'] > 1],
+                             key=lambda e: (-e['matches'], -e['wins']))
 
         print('')
         five_player = dict()
