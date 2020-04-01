@@ -14,8 +14,8 @@ import calendar
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
-YEARS = [2017, 2018, 2019, 2020]
-MONTH = None
+YEARS = [2020]
+MONTH = 3
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
 REDOWNLOAD_SMALL_FILES = False
@@ -306,6 +306,7 @@ if __name__ == '__main__':
         s.add_win_rate_heroes(p.against_heroes, 'Against')
 
         s.add_divider_slide("%s Players" % TEAM_NAME, 'Roles, Pairings and Most Played Heroes')
+        s.add_player_summary(p.player_descriptor, MIN_MATCHES)
         for item in sorted(p.player_descriptor, key=lambda e: e['rating'], reverse=True):
             if item['matches'] > 0:
                 s.add_player_data_slide(item)

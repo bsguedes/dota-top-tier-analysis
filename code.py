@@ -138,12 +138,13 @@ class Parser:
         for item, name in items.item_list().items():
             counts = dict()
             for match_id, summary in self.match_summary.items():
-                s = sum([k['count'] for p, k in summary['items'][item].items()])
-                if s not in counts:
-                    counts[s] = {'wins': 0, 'matches': 0, 'wr': 0.0}
-                counts[s]['matches'] += 1
-                if summary['win']:
-                    counts[s]['wins'] += 1
+                if summary['items'] is not None:
+                    s = sum([k['count'] for p, k in summary['items'][item].items()])
+                    if s not in counts:
+                        counts[s] = {'wins': 0, 'matches': 0, 'wr': 0.0}
+                    counts[s]['matches'] += 1
+                    if summary['win']:
+                        counts[s]['wins'] += 1
             min_count = min(counts.keys())
             max_count = max(counts.keys())
             for i in range(min_count, max_count+1):
@@ -182,6 +183,8 @@ class Parser:
                              'rivals': [],
                              'our_team_heroes': [],
                              'players': [],
+                             'our_ranks': [],
+                             'enemy_ranks': [],
                              'player_desc': {}} for k, v in matches.items()}
         self.win_rate_by_hour = {str(i): {'wins': 0, 'losses': 0, 'matches': 0, 'wr': 0} for i in range(24)}
         self.win_rate_by_weekday = {i: {'wins': 0, 'losses': 0, 'matches': 0, 'wr': 0} for i in calendar.day_abbr}
@@ -198,6 +201,8 @@ class Parser:
                     match_summary[match_id]['game_mode'] = game_mode()[obj['game_mode']]
                     match_summary[match_id]['our_heroes'].append(p['hero_id'])
                     match_summary[match_id]['players'].append(p['account_id'])
+                    if 'rank_tier' in p and p['rank_tier'] is not None:
+                        match_summary[match_id]['our_ranks'].append(p['rank_tier'])
                     apm = p['actions_per_min'] if 'actions_per_min' in p else 0
                     runes = p['runes'] if 'runes' in p else []
                     if 'teamfights' not in obj or obj['teamfights'] is None \
@@ -259,6 +264,8 @@ class Parser:
                     match_summary[match_id]['enemy_heroes'].append(p['hero_id'])
                     if p['account_id'] is not None:
                         match_summary[match_id]['rivals'].append(p['account_id'])
+                        if 'rank_tier' in p and p['rank_tier'] is not None:
+                            match_summary[match_id]['enemy_ranks'].append(p['rank_tier'])
                         if p['account_id'] not in rivals_names:
                             rivals_names[p['account_id']] = []
                         rivals_names[p['account_id']].append(p['personaname'])
@@ -580,6 +587,17 @@ class Parser:
                                             'matches': couples_matches[self.players[k[0]]][self.players[k[1]]]})
         self.player_couples = sorted(self.player_couples, key=lambda e: (e['rating'], -e['matches']), reverse=True)
 
+        starting_mmr = 2000
+        mmrs = {pid: starting_mmr for _, pid in self.players.items()}
+        sorted_summaries = [match_summary[x] for x in sorted([m for m, _ in match_summary.items()])]
+        for summary in sorted_summaries:
+            our_rank = average_rank(summary['our_ranks'])
+            enemy_rank = average_rank(summary['enemy_ranks'])
+            if our_rank is not None and enemy_rank is not None:
+                diff = mmr_diff(our_rank, enemy_rank) * 1 if summary['win'] else -1
+                for player in summary['players']:
+                    mmrs[player] += diff
+
         self.player_descriptor = [
             {
                 'name': player_name,
@@ -591,6 +609,7 @@ class Parser:
                 'matches': sum([w['matches'] for h, w in self.player_wins_by_hero[pid].items()]),
                 'streaks': self.calculate_streaks(pid),
                 'months': self.calculate_months(pid),
+                'mmr': int(mmrs[pid]),
                 'radiant_wr': win_rate(
                     len([1 for _, d in match_summary.items() if pid in d['players'] and d['win'] and d['is_radiant']]),
                     len([1 for _, d in match_summary.items() if pid in d['players'] and d['is_radiant']])),
@@ -867,7 +886,7 @@ class Parser:
     def win_streak(self):
         return sorted([TierItem(p['name'], max(0, max(p['streaks'])),
                                 '%s best win streak: %s matches' % (p['name'], max(0, max(p['streaks'])))) for p in
-                       self.player_descriptor if len(p['streaks']) > 0 and p['matches'] > self.min_matches],
+                       self.player_descriptor if len(p['streaks']) > 0 and p['matches'] >= self.min_matches],
                       key=lambda e: e.score, reverse=True)
 
     def discord(self, ids, data, avg=False):
@@ -907,7 +926,7 @@ class Parser:
     def loss_streak(self):
         return sorted([TierItem(p['name'], abs(min(0, min(p['streaks']))),
                                 '%s worst loss streak: %s matches' % (p['name'], abs(min(0, min(p['streaks']))))) for p
-                       in self.player_descriptor if len(p['streaks']) > 0 and p['matches'] > self.min_matches],
+                       in self.player_descriptor if len(p['streaks']) > 0 and p['matches'] >= self.min_matches],
                       key=lambda e: e.score)
 
     def versatility(self, values):

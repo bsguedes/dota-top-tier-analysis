@@ -14,6 +14,7 @@ from pptx.chart.data import CategoryChartData
 from pptx.dml.color import RGBColor
 from constants import roles
 from constants import sequence
+from constants import win_rate
 import calendar
 
 
@@ -210,6 +211,27 @@ class Slides:
                         slide.shapes.add_picture(pic_path, Inches(0.3) + y * Inches(3.8 / columns),
                                                  Inches(3.8) + x * Inches(0.5),
                                                  height=Inches(0.45))
+
+    def add_player_summary(self, player_descriptors, min_matches):
+        slide = self.add_slide(5, 222, 200, 178)
+        title_shape = slide.shapes.title
+        title_shape.text = 'Player Summary'
+
+        win_rate_lambda = lambda d: win_rate(d['wins'], d['matches'])
+        losses_lambda = lambda d: d['matches'] - d['wins']
+        hero_count_lambda = lambda d: len([1 for _, h in d['heroes'].items() if h['matches'] > 0])
+
+        headers = ['Name', 'Rating', 'Matches', 'Win Rate', 'Wins', 'Losses', 'Heroes', 'Versat.', 'MMR']
+        keys = ['name', 'rating', 'matches', win_rate_lambda, 'wins', losses_lambda, hero_count_lambda, 'versatility',
+                'mmr']
+        formats = ['%s', '%.1f', '%s', '%.2f %%', '%s', '%s', '%s', '%.3f', '%i']
+        widths = [1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+        players = sorted([p for p in player_descriptors if p['matches'] >= min_matches],
+                         key=lambda e: e['rating'],
+                         reverse=True)
+        Slides.create_table(slide, players, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 12, 14,
+                            widths=widths)
 
     def add_player_data_slide(self, desc):
         slide = self.add_slide(5, 255, 229, 204)
@@ -458,14 +480,14 @@ class Slides:
         Slides.create_table(slide, bounties, headers, keys, formats, Inches(2), Inches(4.5), Inches(6),
                             1, 12, 15)
 
-    def add_win_rate_slide(self, win_rate, match_count, party_size, faction):
+    def add_win_rate_slide(self, winrate, match_count, party_size, faction):
         slide = self.add_slide(1, 152, 251, 152)
         shapes = slide.shapes
         title_shape = shapes.title
         body_shape = shapes.placeholders[1]
         title_shape.text = '%s Summary' % self.team_name
         tf = body_shape.text_frame
-        tf.text = 'Win rate: %.2f %%' % win_rate
+        tf.text = 'Win rate: %.2f %%' % winrate
         p = tf.add_paragraph()
         p.text = 'Match count: %s' % match_count
         tf.add_paragraph()
@@ -982,7 +1004,7 @@ class Slides:
         keys = ['player', 'gold', 'silver', 'bronze']
         scores = [{'player': k, 'gold': v[0], 'silver': v[1], 'bronze': v[2]} for k, v in medals]
         formats = ['%s', '%s', '%s', '%s']
-        Slides.create_table_with_text_boxes(slide, [x for x in scores if x['gold'] + x['silver'] + x['bronze'] > 0],
+        Slides.create_table_with_text_boxes(slide, [x for x in scores if x['gold'] + x['silver'] + x['bronze'] > 10],
                                             headers, keys, formats, 2, 1.5, 6, 11, 14, line_spacing=0.19)
 
         slide = self.add_slide(5, 255, 255, 224)
@@ -998,7 +1020,7 @@ class Slides:
         keys = ['player', 'points']
         scores = [{'player': k, 'points': v} for k, v in points]
         formats = ['%s', '%s']
-        Slides.create_table_with_text_boxes(slide, [x for x in scores if x['points'] > 0], headers, keys, formats, 3,
+        Slides.create_table_with_text_boxes(slide, [x for x in scores if x['points'] > 100], headers, keys, formats, 3,
                                             1.5, 3, 11, 14, line_spacing=0.19)
 
     def add_achievement_slide(self, achievement, result):
@@ -1216,7 +1238,10 @@ class Slides:
                     run.text = formats[j] % data[i][keys[j]]
                     Slides.add_open_dota_link(run, formats[j] % data[i][keys[j]], hyperlink_type=hyperlink_type)
                 else:
-                    table.cell(i + 1, j).text = formats[j] % data[i][keys[j]]
+                    if isinstance(keys[j], str):
+                        table.cell(i + 1, j).text = formats[j] % data[i][keys[j]]
+                    else:
+                        table.cell(i + 1, j).text = formats[j] % keys[j](data[i])
         Slides.set_table_font_size(table, font_size)
         for i in range(len(keys)):
             table.cell(0, i).text_frame.paragraphs[0].runs[0].font.size = Pt(header_size)

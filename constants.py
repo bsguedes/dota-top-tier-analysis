@@ -106,3 +106,15 @@ def sequence(strings, maximum=None):
         return '%s and %s' % (', '.join(strings[:-1]), strings[-1]) if len(strings) > 1 else strings[0]
     else:
         return "%s, ..." % ', '.join(strings[:maximum])
+
+
+def average_rank(ranks):
+    r = [float(x // 10) for x in ranks if x is not None]
+    return None if len(r) == 0 else sum(r) / len(r)
+
+
+def mmr_diff(a, b):
+    base = 10
+    increase = 50
+    quotient = 400
+    return increase * (1 - 1 / (1 + base ** (b ** 3 - a ** 3) / quotient))
