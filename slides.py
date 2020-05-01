@@ -21,23 +21,28 @@ import calendar
 class Slides:
     def __init__(self, team_name, years, tit, sub, players, month=None):
         self.presentation = Presentation()
+        self.page_number = 0
         self.team_name = team_name
         self.players = players
         y = '_'.join([str(x) for x in years])
         self.dates = y if month is None else "%s_%s" % (y, calendar.month_abbr[month])
         self.add_divider_slide(tit, "%s" % sub)
 
-    def add_slide(self, layout, r, g, b):
+    def add_slide(self, layout, r, g, b, show_page_number=True):
         slide_layout = self.presentation.slide_layouts[layout]
         slide = self.presentation.slides.add_slide(slide_layout)
         if layout == 5:
             title_shape = slide.shapes.title
             title_shape.text_frame.paragraphs[0].font.size = Pt(40)
         Slides.change_slide_color(slide, r, g, b)
+        self.page_number += 1
+        if show_page_number:
+            Slides.text_box(slide, str(self.page_number), 0.1, 0.1,
+                            font_size=10)
         return slide
 
     def add_divider_slide(self, text, sub_text):
-        slide = self.add_slide(0, 230, 230, 230)
+        slide = self.add_slide(0, 230, 230, 230, show_page_number=False)
         title = slide.shapes.title
         subtitle = slide.placeholders[1]
         title.text = text
@@ -221,11 +226,10 @@ class Slides:
         losses_lambda = lambda d: d['matches'] - d['wins']
         hero_count_lambda = lambda d: len([1 for _, h in d['heroes'].items() if h['matches'] > 0])
 
-        headers = ['Name', 'Rating', 'Matches', 'Win Rate', 'Wins', 'Losses', 'Heroes', 'Versat.', 'MMR']
-        keys = ['name', 'rating', 'matches', win_rate_lambda, 'wins', losses_lambda, hero_count_lambda, 'versatility',
-                'mmr']
-        formats = ['%s', '%.1f', '%s', '%.2f %%', '%s', '%s', '%s', '%.3f', '%i']
-        widths = [1, 1, 1, 1, 1, 1, 1, 1, 1]
+        headers = ['Name', 'Rating', 'Matches', 'Win Rate', 'Wins', 'Losses', 'Heroes', 'Versat.']
+        keys = ['name', 'rating', 'matches', win_rate_lambda, 'wins', losses_lambda, hero_count_lambda, 'versatility']
+        formats = ['%s', '%.1f', '%s', '%.2f %%', '%s', '%s', '%s', '%.3f']
+        widths = [2, 1, 1, 1, 1, 1, 1, 1]
 
         players = sorted([p for p in player_descriptors if p['matches'] >= min_matches],
                          key=lambda e: e['rating'],

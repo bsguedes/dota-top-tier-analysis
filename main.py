@@ -15,7 +15,7 @@ PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
 YEARS = [2020]
-MONTH = 3
+MONTH = 4
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
 REDOWNLOAD_SMALL_FILES = False
@@ -48,7 +48,7 @@ MIN_MATCHES_WITH_HERO = parameters[TEAM_NAME]['min_matches_with_hero']
 replacement_list = {
     PNK: {
         'Fallenzão': [331461200],
-        'kkz': [116647196],
+        'kkz': [116647196, 92129470],
         'Kiddy': [409605487, 242249397, 189723196]
     },
     BLAZING_DOTA: {
@@ -149,9 +149,9 @@ categories = [
     Category(10, 'duration', text='time between each kill/assist', rule='time_kill_assist', unit='s',
              reverse=False, minimize=True, max_format='%.2f'),
     Category(10, 'versatility', rule='versatility', avg_format='%.3f'),
-    Category(1, 'discord_avg', unit='%', text='time spoken on Discord per total game duration', rule='discord_avg',
-             reverse=False),
-    Category(1, 'discord', unit='min', text='time spoken on Discord', rule='discord'),
+    # Category(1, 'discord_avg', unit='%', text='time spoken on Discord per total game duration', rule='discord_avg',
+    #         reverse=False),
+    # Category(1, 'discord', unit='min', text='time spoken on Discord', rule='discord'),
     Category(4, 'hard carry', unit='%', text='hard carry win rate', rule='position'),
     Category(4, 'mid', unit='%', text='mid win rate', rule='position'),
     Category(4, 'offlane', unit='%', text='offlane win rate', rule='position'),
@@ -231,7 +231,7 @@ if __name__ == '__main__':
 
     downloader.download_heroes()
     downloader.download_player_data(players, replacements, override=DOWNLOAD_PLAYERS)
-    discord_data = downloader.download_discord()
+    discord_data = None # downloader.download_discord()
     unique_matches = p.get_matches(replacements, month=MONTH, ranked_only=False)
     to_parse = downloader.download_matches(unique_matches, download_again=REDOWNLOAD_SMALL_FILES)
     matches_json = Parser.load_matches(unique_matches)
