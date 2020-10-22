@@ -93,7 +93,7 @@ class Roles:
 
     @staticmethod
     def max_wards(players, team_players):
-        gpm_list = {k['account_id']: (-k['obs_placed'] - k['sen_placed'], -k['gold_per_min']) for k in team_players if
-                    k['account_id'] in players}
-        m = max(gpm_list.items(), key=operator.itemgetter(1))
+        wards_list = {k['account_id']: (-k['obs_placed'] - k['sen_placed'], -k['gold_per_min']) for k in team_players if
+                      k['account_id'] in players}
+        m = max(wards_list.items(), key=operator.itemgetter(1))
         return m[0]

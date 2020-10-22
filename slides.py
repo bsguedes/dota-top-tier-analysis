@@ -9,6 +9,7 @@ from pptx.enum.text import PP_ALIGN
 from pptx.enum.chart import XL_CHART_TYPE
 from pptx.enum.chart import XL_LEGEND_POSITION
 from pptx.enum.chart import XL_LABEL_POSITION
+from pptx.enum.shapes import MSO_SHAPE
 from pptx.chart.data import ChartData
 from pptx.chart.data import CategoryChartData
 from pptx.dml.color import RGBColor
@@ -176,7 +177,7 @@ class Slides:
         chart.legend.position = XL_LEGEND_POSITION.RIGHT
         chart.legend.include_in_layout = False
 
-    def add_player_tables_slide(self, desc):
+    def add_player_tables_slide(self, desc, fantasy=None):
         slide = self.add_slide(5, 255, 229, 204)
         title_shape = slide.shapes.title
         title_shape.text = desc['name']
@@ -190,6 +191,16 @@ class Slides:
         keys = ['role', 'matches', 'wr']
         formats = ['%s', '%s', '%.2f %%']
         widths = [1.5, 1, 1]
+
+        if fantasy is not None:
+            headers = ['Role', 'Matches', 'Win Rate', 'PnKoins']
+            keys = ['role', 'matches', 'wr', 'coins']
+            formats = ['%s', '%s', '%.2f %%', '%s']
+            widths = [1.1, 1, 1, 1]
+            for role in desc['roles']:
+                coins = fantasy[role['role']]
+                role['coins'] = coins if coins > 0 else ' '
+
         Slides.create_table(slide, desc['roles'], headers, keys, formats, Inches(0.5), Inches(1.5), Inches(3.5), 1, 12,
                             15,
                             widths=widths)
@@ -198,7 +209,7 @@ class Slides:
         keys = ['name', 'matches', 'wins', 'wr']
         formats = ['%s', '%s', '%s', '%.2f %%']
         widths = [1.5, 1, 1, 1]
-        Slides.create_table_with_text_boxes(slide, desc['pairings'], headers, keys, formats, 4.5, 1.5, 4.5,
+        Slides.create_table_with_text_boxes(slide, desc['pairings'], headers, keys, formats, 5, 1.5, 4.5,
                                             11, 15, widths=widths, line_spacing=0.2)
 
         heroes = desc['top_heroes']
@@ -223,18 +234,20 @@ class Slides:
         title_shape.text = 'Player Summary'
 
         win_rate_lambda = lambda d: win_rate(d['wins'], d['matches'])
+        win_rate_without_lambda = lambda d: win_rate(d['team_wins'] - d['wins'], d['team_matches'] - d['matches'])
         losses_lambda = lambda d: d['matches'] - d['wins']
         hero_count_lambda = lambda d: len([1 for _, h in d['heroes'].items() if h['matches'] > 0])
 
-        headers = ['Name', 'Rating', 'Matches', 'Win Rate', 'Wins', 'Losses', 'Heroes', 'Versat.']
-        keys = ['name', 'rating', 'matches', win_rate_lambda, 'wins', losses_lambda, hero_count_lambda, 'versatility']
-        formats = ['%s', '%.1f', '%s', '%.2f %%', '%s', '%s', '%s', '%.3f']
-        widths = [2, 1, 1, 1, 1, 1, 1, 1]
+        headers = ['Name', 'Rating', 'Matches', 'Win Rate', 'Win Rate w/o', 'Wins', 'Losses', 'Heroes', 'Versat.']
+        keys = ['name', 'rating', 'matches', win_rate_lambda, win_rate_without_lambda,
+                'wins', losses_lambda, hero_count_lambda, 'versatility']
+        formats = ['%s', '%.1f', '%s', '%.2f %%', '%.2f %%', '%s', '%s', '%s', '%.3f']
+        widths = [1.5, 1, 1, 1, 1, 1, 1, 1, 1]
 
         players = sorted([p for p in player_descriptors if p['matches'] >= min_matches],
                          key=lambda e: e['rating'],
                          reverse=True)
-        Slides.create_table(slide, players, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 12, 14,
+        Slides.create_table(slide, players, headers, keys, formats, Inches(0.25), Inches(1.5), Inches(9.5), 1, 12, 14,
                             widths=widths)
 
     def add_player_data_slide(self, desc):
@@ -833,6 +846,38 @@ class Slides:
                     slide.shapes.add_picture(pic_path, Inches(1.12 + 1.5 * i), Inches(4.5 + (j - 1) * 0.4),
                                              height=Inches(0.3))
             i += 1
+
+    def add_fantasy_slide(self, fantasy_values, role):
+        slide = self.add_slide(5, 123, 111, 255)
+        slide.shapes.title.text = 'Fantasy Cards (%s)' % role.title()
+        y = 2
+        x = 8
+        left = 0.6
+        player_size = 1
+        pic_size = 0.8
+        spacing = 1.82
+        top = 1.5
+        row_width = 2.5
+        column_width = 1.1
+        values = sorted([{'player': p, 'coins': v[role]} for p, v in fantasy_values.items() if v[role] > 0],
+                        key=lambda e: e['coins'], reverse=True)
+        for i in range(x):
+            for j in range(y):
+                if j * x + i < len(values):
+                    c = values[j * x + i]
+                    slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(left + column_width * i),
+                                           Inches(top + row_width * j),
+                                           Inches(player_size),
+                                           Inches(row_width - 0.1))
+                    Slides.text_box(slide, c['player'], left + column_width * i, top + row_width * j + 0.2,
+                                    width=player_size, font_size=12, alignment=PP_ALIGN.CENTER, bold=True)
+                    Slides.text_box(slide, str(c['coins']), left + column_width * i,
+                                    top + row_width * j + spacing,
+                                    width=player_size, font_size=16, alignment=PP_ALIGN.CENTER, bold=True)
+                    pic_path = 'data/pics/%s.jpg' % self.players[c['player']]
+                    if os.path.isfile(pic_path):
+                        slide.shapes.add_picture(pic_path, Inches(left + 0.1 + column_width * i),
+                                                 Inches(top + row_width * j + 0.8), height=Inches(pic_size))
 
     def add_best_team(self, best_team):
         slide = self.add_slide(5, 152, 251, 152)

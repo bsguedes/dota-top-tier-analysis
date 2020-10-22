@@ -2,11 +2,15 @@ import math
 
 
 class TierItem:
-    def __init__(self, name, score, text, number=None):
+    def __init__(self, name, score, text, number=None, scores_per_role=None):
         self.name = name
         self.score = score
         self.text = text
+        self.score_per_role = scores_per_role
         self.number = float(score) if number is None else number
+
+    def __repr__(self):
+        return str(self.score_per_role)
 
 
 class Tier:
@@ -22,6 +26,11 @@ class Tier:
         self.is_max = is_max
         self.reverse = reverse
         self.tiers = self.get_tiers()
+
+    def players_sorted_by_role(self, role):
+        ordered = [t.name for t in sorted([v for v in self.scores_array if v.score_per_role[role] is not None],
+                                          key=lambda e: e.score_per_role[role], reverse=self.reverse)]
+        return ordered
 
     def get_tiers(self):
         tiers = dict()

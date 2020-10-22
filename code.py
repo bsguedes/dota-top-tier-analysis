@@ -11,6 +11,13 @@ from time import gmtime
 from tier import TierItem
 from roles import Roles
 from constants import *
+from datetime import timedelta, date
+import csv
+
+
+def daterange(start_date, end_date):
+    for n in range(0, int((end_date - start_date).days) + 1, 7):
+        yield start_date + timedelta(n)
 
 
 class Parser:
@@ -61,10 +68,22 @@ class Parser:
     def load_matches(unique_matches):
         matches = list()
         for match_id, _ in unique_matches.items():
-            content = open('matches/%i.json' % match_id, 'r', encoding='utf-8').read()
-            content = json.loads(content)
-            matches.append({'id': match_id, 'content': content, 'date': fix_time(content['start_time'])})
+            with open('matches/%i.json' % match_id, 'r', encoding='utf-8') as f:
+                content = Parser.clear_content(json.loads(f.read()))
+                if all(p['hero_id'] is not None and p['hero_id'] > 0 for p in content['players']):
+                    matches.append({'id': match_id, 'content': content, 'date': fix_time(content['start_time'])})
         return sorted(matches, key=lambda e: e['date'])
+
+    @staticmethod
+    def clear_content(content):
+        for player in content['players']:
+            player['damage'] = None
+            player['damage_targets'] = None
+            player['killed'] = None
+            player['kills_log'] = None
+            player['lane_pos'] = None
+            player['cosmetics'] = None
+        return content
 
     def bounties(self):
         lst = list()
@@ -189,7 +208,21 @@ class Parser:
         self.win_rate_by_hour = {str(i): {'wins': 0, 'losses': 0, 'matches': 0, 'wr': 0} for i in range(24)}
         self.win_rate_by_weekday = {i: {'wins': 0, 'losses': 0, 'matches': 0, 'wr': 0} for i in calendar.day_abbr}
         self.win_rate_by_month = {i: {'wins': 0, 'losses': 0, 'matches': 0, 'wr': 0} for i in calendar.month_abbr[1:]}
+
+        start_dt = date(2015, 1, 4)
+        end_dt = date(2020, 6, 21)
+        file = []
+        line = []
+        for dt in daterange(start_dt, end_dt):
+            line.append(str(dt))
+        file.append(line)
+        chart_csv = {}
+        for name, v in self.players.items():
+            chart_csv[v] = {dt: 0 for dt in line}
+
         for match_id, obj in matches.items():
+            if any(p['hero_id'] == 0 for p in obj['players']):
+                continue
             team_fight_index = -1
             for p in obj['players']:
                 team_fight_index += 1
@@ -215,6 +248,7 @@ class Parser:
                     match_summary[match_id]['player_desc'][p['account_id']] = {'hero': self.heroes[p['hero_id']],
                                                                                'total_gold': p['total_gold'],
                                                                                'kills': p['kills'],
+                                                                               'deaths': p['deaths'],
                                                                                'runes': runes,
                                                                                'apm': apm}
                     match_summary[match_id]['win'] = p['win'] > 0
@@ -245,9 +279,16 @@ class Parser:
                 po = [o for o in obj['players'] if o['account_id'] == p][0]
                 match_summary[match_id]['multi_kills'][p] = po['multi_kills'] if 'multi_kills' in po and po[
                     'multi_kills'] is not None else {}
-            c_month = calendar.month_abbr[gmtime(int(fix_time(obj['start_time']))).tm_mon]
-            c_weekday = calendar.day_abbr[gmtime(int(fix_time(obj['start_time']))).tm_wday]
-            c_hour = str(gmtime(int(fix_time(obj['start_time']))).tm_hour)
+            tm = gmtime(int(fix_time(obj['start_time'])))
+            c_month = calendar.month_abbr[tm.tm_mon]
+            c_weekday = calendar.day_abbr[tm.tm_wday]
+            c_hour = str(tm.tm_hour)
+            dt = date(tm.tm_year, tm.tm_mon, tm.tm_mday)
+            for threshold_date in line:
+                if threshold_date > str(dt):
+                    for player in match_summary[match_id]['players']:
+                        chart_csv[player][threshold_date] += 1
+                    break
             self.win_rate_by_hour[c_hour]['matches'] += 1
             self.win_rate_by_weekday[c_weekday]['matches'] += 1
             self.win_rate_by_month[c_month]['matches'] += 1
@@ -278,7 +319,7 @@ class Parser:
         for wd, o in self.win_rate_by_hour.items():
             self.win_rate_by_hour[wd]['wr'] = win_rate(o['wins'], o['matches'])
         for skill in range(1, 4):
-            m = [y for x, y in match_summary.items() if y['skill'] == skill]
+            m = [y for x, y in match_summary.items() if 'skill' in y and y['skill'] == skill]
             games = len(m)
             wins = len([x for x in m if x['win']])
             if games > 0:
@@ -289,7 +330,8 @@ class Parser:
                     'wr': win_rate(wins, games),
                 })
         for lobby, game in list(itertools.product(lobby_type(), game_mode())):
-            m = [y for x, y in match_summary.items() if y['lobby_type'] == lobby and y['game_mode'] == game]
+            m = [y for x, y in match_summary.items() if 'lobby_type' in y and y['lobby_type'] == lobby
+                 and y['game_mode'] == game]
             games = len(m)
             wins = len([x for x in m if x['win']])
             if games > 0:
@@ -300,6 +342,21 @@ class Parser:
                     'wr': win_rate(wins, games),
                 })
         self.match_summary = match_summary
+
+        csv_file = [['Name', 'Image'] + line]
+        for player, values in chart_csv.items():
+            player_line = [inv_p[player], player]
+            total = 0
+            for _, count in values.items():
+                total += count
+                player_line.append(total)
+            csv_file.append(player_line)
+        print(csv_file)
+
+        with open('chart.csv', mode='w') as file:
+            employee_writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            for row in csv_file:
+                employee_writer.writerow(row)
 
         r_wins = sum([1 for mid, data in self.match_summary.items() if data['is_radiant'] and data['win']])
         r_matches = sum([1 for mid, data in self.match_summary.items() if data['is_radiant']])
@@ -618,6 +675,8 @@ class Parser:
                      pid in d['players'] and d['win'] and not d['is_radiant']]), len(
                     [1 for _, d in match_summary.items() if pid in d['players'] and not d['is_radiant']])),
                 'wins': sum([w['wins'] for h, w in self.player_wins_by_hero[pid].items()]),
+                'team_wins': len([1 for l, v in match_summary.items() if v['win']]),
+                'team_matches': len([1 for l, v in match_summary.items()]),
                 'rating': rating(sum([w['wins'] for h, w in self.player_wins_by_hero[pid].items()]),
                                  matches=sum([w['matches'] for h, w in self.player_wins_by_hero[pid].items()])),
                 'versatility': self.versatility([w['matches'] for h, w in self.player_wins_by_hero[pid].items()])
@@ -635,6 +694,9 @@ class Parser:
 
         averages = {k: 0 for k, v in self.players.items()}
         totals = {k: 0 for k, v in self.players.items()}
+        totals_per_role = {k: {r: 0 for r in role_list()} for k, _ in self.players.items()}
+        matches_per_role = {k: {r: 0 for r in role_list()} for k, _ in self.players.items()}
+        average_per_role = {k: {r: None for r in role_list()} for k, _ in self.players.items()}
 
         maximum_value = {v: 9999999999 for k, v in self.players.items()} \
             if not reverse and minimize else {v: 0 for k, v in self.players.items()}
@@ -683,6 +745,13 @@ class Parser:
                     else:
                         value = p[parameter]
                     totals[inv_p[p['account_id']]] += value
+                    if 'roles' in self.match_summary[match_id]:
+                        accs = [v for v, _ in self.match_summary[match_id]['roles']['positions'].items()]
+                        if p['account_id'] in accs:
+                            role = next(v for k, v in self.match_summary[match_id]['roles']['positions'].items()
+                                        if k == p['account_id'])
+                            totals_per_role[inv_p[p['account_id']]][role] += value
+                            matches_per_role[inv_p[p['account_id']]][role] += 1
                     if not reverse and minimize:
                         if value < maximum_value[p['account_id']] and value != 0:
                             maximum_value[p['account_id']] = value
@@ -695,6 +764,10 @@ class Parser:
 
         for name, pid in self.players.items():
             averages[name] = totals[name]/matches_played[name] if matches_played[name] > 0 else 0
+            for role in role_list():
+                average_per_role[name][role] = totals_per_role[name][role] / \
+                                              matches_per_role[name][role] if \
+                                              matches_per_role[name][role] > self.min_matches_with_hero else None
 
         results_avg = []
         if has_avg:
@@ -706,7 +779,7 @@ class Parser:
                     vl = avg_fmt % tf(averages[name])
                     avg_block = ('(avg %s %s)' % (vl, unit)) if len(unit) > 0 else ('(avg %s)' % vl)
                     txt = '%s has %i %s in %i matches %s' % (name, totals[name], text, matches_played[name], avg_block)
-                    results_avg.append(TierItem(name, vl, txt, tf(averages[name])))
+                    results_avg.append(TierItem(name, vl, txt, tf(averages[name]), average_per_role[name]))
             if not has_max:
                 return results_avg, None
 
@@ -966,6 +1039,102 @@ class Parser:
         for i in calendar.month_abbr[1:]:
             win_rate_by_month[i]['wr'] = win_rate(win_rate_by_month[i]['wins'], win_rate_by_month[i]['matches'])
         return win_rate_by_month
+
+    def fantasy(self, tiers):
+        tier_fantasy = {
+            'Zé': {},
+            'Chaos': {},
+            'Nuvah': {},
+            'Baco': {},
+            'Scrider': {},
+            'kkz': {},
+            'tchepo': {},
+            'Lotus': {},
+            'Alidio': {},
+            'Chuvisco': {},
+            'Older': {},
+            'Cristian': {},
+            'Pringles': {},
+            'Kiddy': {},
+            'Xupito': {},
+            'JohnMirolho': {}
+        }
+        fantasy_roles = ['hard carry', 'mid', 'offlane', 'support', 'hard support']
+        fantasy_categories = ['hard carry', 'mid', 'offlane', 'support', 'hard support', 'xp_per_min', 'gold_per_min',
+                              'stuns', 'hero_healing', 'damage_taken', 'tower_damage', 'kills', 'assists', 'obs_placed']
+
+        for p, _ in tier_fantasy.items():
+            tier_fantasy[p] = {c: {} for c in fantasy_categories}
+
+        fantasy_weights = {
+            'hard carry': [5, 0, 0, 0, 0],
+            'mid': [0, 5, 0, 0, 0],
+            'offlane': [0, 0, 5, 0, 0],
+            'support': [0, 0, 0, 5, 0],
+            'hard support': [0, 0, 0, 0, 5],
+            'xp_per_min': [2, 3, 2, 1, 1],
+            'gold_per_min': [4, 3, 2, 1, 1],
+            'stuns': [1, 1, 3, 3, 2],
+            'hero_healing': [0, 0, 1, 2, 3],
+            'damage_taken': [1, 1, 3, 2, 1],
+            'tower_damage': [3, 2, 2, 1, 1],
+            'kills': [4, 4, 3, 2, 1],
+            'assists': [1, 2, 2, 3, 4],
+            'obs_placed': [1, 1, 1, 3, 4]
+        }
+
+        fantasy_count = {category: {role: 0 for role in fantasy_roles} for category in fantasy_categories}
+        fantasy_players = [player for player, _ in tier_fantasy.items()]
+
+        for t in tiers:
+            category = t[1].parameter
+            if category in fantasy_categories and not t[0].is_max:
+                if category in fantasy_roles:
+                    i = 0
+                    for tier_item in t[0].scores_array:
+                        if tier_item.name in fantasy_players:
+                            tier_fantasy[tier_item.name][category][category] = i
+                            i += 1
+                    fantasy_count[category][category] = i
+                else:
+                    for role in fantasy_roles:
+                        i = 0
+                        for tier_item in t[0].players_sorted_by_role(role):
+                            if tier_item in fantasy_players:
+                                tier_fantasy[tier_item][category][role] = i
+                                i += 1
+                        fantasy_count[category][role] = i
+
+        BASE = 100
+        POND = 3
+        ADJUST = 1
+
+        for i in range(5):
+            for c in fantasy_categories:
+                for p, d in tier_fantasy.items():
+                    if "value_%s" % i not in d:
+                        d["value_%s" % i] = 0
+                    if c in d:
+                        r = fantasy_roles[i]
+                        w = (1 + fantasy_weights[c][i] * POND / 100.0)
+                        b = fantasy_weights[c][i] * BASE
+                        if r in d[c]:
+                            points = b * w ** int(fantasy_count[c][r] / 2 - d[c][r])
+                            d["value_%s" % i] += points
+
+        fantasy_values = {}
+
+        for player, d in tier_fantasy.items():
+            fantasy_values[player] = {fantasy_roles[int(c[6])]: int(v / 10) * ADJUST * 10
+                                      for c, v in d.items() if 'value' in c}
+            for role, _ in fantasy_values[player].items():
+                desc = next(p for p in self.player_descriptor if p['name'] == player)
+                role_desc = next(r for r in desc['roles'] if r['role'] == role)
+                if role_desc['matches'] <= self.min_matches_with_hero:
+                    fantasy_values[player][role] = 0
+
+        print(fantasy_values)
+        return fantasy_values
 
     def calculate_streaks(self, pid):
         matches = self.match_summary

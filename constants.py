@@ -25,6 +25,10 @@ def roles():
     }
 
 
+def role_list():
+    return ['hard carry', 'mid', 'offlane', 'support', 'hard support']
+
+
 def lobby_type():
     return [
         'normal',
@@ -117,4 +121,5 @@ def mmr_diff(a, b):
     base = 10
     increase = 50
     quotient = 400
-    return increase * (1 - 1 / (1 + base ** (b ** 3 - a ** 3) / quotient))
+    return 0
+    # return increase * (1 - 1 / (1 + base ** (b ** 3 - a ** 3) / quotient))

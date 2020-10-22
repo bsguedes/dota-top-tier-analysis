@@ -205,6 +205,7 @@ class PnKAchievements(AchievementBase):
         self.add_ach(WinWithPlayerAchievement('Cold Blood', ['Baco', 'Alidio', 'Chuvisco']))
         self.add_ach(WinWithoutPlayerAchievement('No Immortals Allowed', ['kkz', 'Kiddy']))
         self.add_ach(StreakAchievement('Bela Tentativa', -2, same_hero=True))
+        self.add_ach(MaelkAchievement('Maelk Award', 20))
         self.add_ach(ItemSequenceAchievement('Primeiro Rad, depois Aghanim', ['radiance', 'ultimate_scepter'],
                                              'Build a Radiance and an Aghanim`s Scepter, in this order.'))
         self.add_ach(WinWithoutPlayerAchievement('Subs Captain', ['Zé']))
@@ -215,6 +216,7 @@ class PnKAchievements(AchievementBase):
         self.add_ach(WinCarriedByAchievement('My Big Hero Pool', 'Chuvisco', 'Ursa',
                                              unless=True))
         self.add_ach(WinCarriedByAchievement('Best Hooks for Enemy Team', 'Cristian', 'Pudge'))
+        self.add_ach(WinWithPlayerOnRoleAchievement('Olderiagace', 'Older', 'hard carry'))
         self.add_ach(StreakAchievement('All Green Profile', 8))
         self.add_ach(StreakAchievement('All Red Profile', -8))
         self.add_ach(AllRunesAchievement('I am Inevitable'))
@@ -287,6 +289,46 @@ class MultiKillAchievement(Achievement):
                     for i in range(data['multi_kills'][player][self.amount]):
                         self.winners[player].append(match_id)
         return super(MultiKillAchievement, self).evaluate()
+
+
+class MaelkAchievement(Achievement):
+    def __init__(self, name, amount):
+        Achievement.__init__(self, name)
+        self.amount = amount
+        self.description = 'Win a game with no kills and %s or more deaths' % amount
+
+    def evaluate(self):
+        for match_id, data in self.match_list.items():
+            if data['win']:
+                self.games += 1
+                for player_id in data['players']:
+                    kills = data['player_desc'][player_id]['kills']
+                    deaths = data['player_desc'][player_id]['deaths']
+                    if kills == 0 and deaths >= self.amount:
+                        self.wins += 1
+                        self.winners[player_id].append(match_id)
+        return super(MaelkAchievement, self).evaluate()
+
+
+class WinWithPlayerOnRoleAchievement(Achievement):
+    def __init__(self, name, player, role):
+        Achievement.__init__(self, name)
+        self.player = player
+        self.role = role
+        self.description = 'Win a match with %s playing as %s' % (player, role)
+
+    def evaluate(self):
+        pid = self.player_list[self.player]
+        for match_id, data in self.match_list.items():
+            if self.player_list[self.player] in data['players'] and 'roles' in data and \
+                    data['roles']['positions'][pid] == self.role:
+                self.games += 1
+                if data['win']:
+                    self.wins += 1
+                    for player_id in data['players']:
+                        if player_id != self.player_list[self.player]:
+                            self.winners[player_id].append(match_id)
+        return super(WinWithPlayerOnRoleAchievement, self).evaluate()
 
 
 class StreakAchievement(Achievement):
