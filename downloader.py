@@ -58,6 +58,12 @@ def download_discord():
     return json.loads(r.content)
 
 
+def download_fantasy():
+    url = 'http://pnkasino.herokuapp.com/fantasy/summary'
+    r = requests.get(url, allow_redirects=True)
+    return json.loads(r.content)['cards']
+
+
 def download_matches(unique_matches, override=False, download_again=False):
     print('')
     print('Found %s matches' % len(unique_matches))

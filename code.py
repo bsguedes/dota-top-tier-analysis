@@ -353,10 +353,10 @@ class Parser:
             csv_file.append(player_line)
         print(csv_file)
 
-        with open('chart.csv', mode='w') as file:
-            employee_writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            for row in csv_file:
-                employee_writer.writerow(row)
+        #with open('chart.csv', mode='w') as file:
+        #    employee_writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        #    for row in csv_file:
+        #        employee_writer.writerow(row)
 
         r_wins = sum([1 for mid, data in self.match_summary.items() if data['is_radiant'] and data['win']])
         r_matches = sum([1 for mid, data in self.match_summary.items() if data['is_radiant']])
@@ -1106,7 +1106,7 @@ class Parser:
                         fantasy_count[category][role] = i
 
         BASE = 100
-        POND = 3
+        POND = 5
         ADJUST = 1
 
         for i in range(5):
@@ -1133,7 +1133,7 @@ class Parser:
                 if role_desc['matches'] <= self.min_matches_with_hero:
                     fantasy_values[player][role] = 0
 
-        print(fantasy_values)
+        print(str(fantasy_values).replace("'", "\""))
         return fantasy_values
 
     def calculate_streaks(self, pid):

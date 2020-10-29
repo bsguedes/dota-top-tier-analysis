@@ -14,9 +14,9 @@ import calendar
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
-YEARS = [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
-# YEARS = [2020]
-MONTH = None
+# YEARS = [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+YEARS = [2020]
+MONTH = 10
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
 REDOWNLOAD_SMALL_FILES = False
@@ -28,10 +28,10 @@ BEST_TEAM = None
 
 parameters = {
     PNK: {
-        'min_matches': 30,
-        'min_couple_matches': 10,
+        'min_matches': 4,
+        'min_couple_matches': 3,
         'min_party_size': 3,
-        'min_matches_with_hero': 3
+        'min_matches_with_hero': 2
     },
     BLAZING_DOTA: {
         'min_matches': 4,
@@ -234,6 +234,7 @@ if __name__ == '__main__':
     downloader.download_heroes()
     downloader.download_player_data(players, replacements, override=DOWNLOAD_PLAYERS)
     discord_data = None  # downloader.download_discord()
+    fantasy_data = downloader.download_fantasy()
     unique_matches = p.get_matches(replacements, month=MONTH, ranked_only=False)
     to_parse = downloader.download_matches(unique_matches, download_again=REDOWNLOAD_SMALL_FILES)
     matches_json = Parser.load_matches(unique_matches)
@@ -315,13 +316,20 @@ if __name__ == '__main__':
         s.add_fantasy_slide(fantasy_values, 'offlane')
         s.add_fantasy_slide(fantasy_values, 'support')
         s.add_fantasy_slide(fantasy_values, 'hard support')
+        s.add_fantasy_data(fantasy_data, 'hard carry')
+        s.add_fantasy_data(fantasy_data, 'mid')
+        s.add_fantasy_data(fantasy_data, 'offlane')
+        s.add_fantasy_data(fantasy_data, 'support')
+        s.add_fantasy_data(fantasy_data, 'hard support')
 
         s.add_divider_slide("%s Players" % TEAM_NAME, 'Roles, Pairings and Most Played Heroes')
         s.add_player_summary(p.player_descriptor, MIN_MATCHES)
         for item in sorted(p.player_descriptor, key=lambda e: e['rating'], reverse=True):
             if item['matches'] > 0:
                 s.add_player_data_slide(item)
-                s.add_player_tables_slide(item, fantasy_values[item['name']] if item['name'] in fantasy_values else None)
+                s.add_player_tables_slide(item, {
+                    c['position']: c['current_value']
+                    for c in fantasy_data if c['name'] == item['name']})
                 if MONTH is None:
                     s.add_player_activity_data(item)
 
