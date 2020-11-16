@@ -41,6 +41,8 @@ class Roles:
             composition = '%i-%i-%i (%i roaming)' % (len(safe_players), len(mid_players),
                                                      len(off_players), len(roamers))
 
+        partners = [sorted(safe_players), sorted(mid_players), sorted(off_players)]
+
         if len(mid_players) == 1:
             result_roles[1] = mid_players[0]
             mid_players.remove(result_roles[1])
@@ -83,13 +85,23 @@ class Roles:
             pos += 1
 
         positions = {x: roles()[result_roles.index(x)+1] for x in result_roles if x > 9}
-        return {'composition': composition, 'positions': positions}
+        return {'composition': composition, 'positions': positions, 'partners': [p for p in partners if len(p) >= 2]}
 
     @staticmethod
     def max_gpm(players, team_players):
         gpm_list = {k['account_id']: k['gold_per_min'] for k in team_players if k['account_id'] in players}
         m = max(gpm_list.items(), key=operator.itemgetter(1))
         return m[0]
+
+    @staticmethod
+    def hard_carry(players, team_players):
+
+        return None
+
+    @staticmethod
+    def hard_support(players, team_players):
+
+        return None
 
     @staticmethod
     def max_wards(players, team_players):

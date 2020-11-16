@@ -564,6 +564,24 @@ class Slides:
         Slides.create_table(slide, longest, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
                             widths=widths, hyperlink=[0])
 
+    def add_advantage_chart(self, data, type):
+        slide = self.add_slide(5, 152, 251, 152)
+        title_shape = slide.shapes.title
+        title_shape.text = '%s average minute performance [%%]' % self.team_name
+
+        data = {a: int(b * 10000) / 100 for a, b in zip(range(len(data)), data)}
+
+        chart_data = ChartData()
+        chart_data.categories = data.keys()
+        chart_data.add_series(type, data.values())
+        graphic_frame = slide.shapes.add_chart(XL_CHART_TYPE.LINE, Inches(0.5), Inches(1.5), Inches(9),
+                                               Inches(6),
+                                               chart_data)
+        chart = graphic_frame.chart
+        chart.has_legend = False
+        category_axis = chart.category_axis
+        category_axis.tick_labels.font.size = Pt(8)
+
     def add_win_rate_by_date(self, input_data, label):
         slide = self.add_slide(5, 152, 251, 152)
         title_shape = slide.shapes.title
@@ -847,6 +865,49 @@ class Slides:
                                              height=Inches(0.3))
             i += 1
 
+    def add_fantasy_ranking(self, fantasy_scores):
+        slide = self.add_slide(5, 74, 222, 255)
+        slide.shapes.title.text = 'Current Fantasy Ranking'
+        i = 0
+        top = 2
+        left = 0.3
+        pic_size = 0.32
+        row = 0.36
+
+        Slides.text_box(slide, 'PnKasino Player', left, top - left, font_size=12, bold=True)
+        Slides.text_box(slide, 'SCORE', left + 1.3, top - left, font_size=12, bold=True)
+        Slides.text_box(slide, 'Reward', left + 2, top - left, font_size=12, bold=True)
+        Slides.text_box(slide, 'Prize', left + 2.7, top - left, font_size=12, bold=True)
+        Slides.text_box(slide, 'Team Cost', left + 3.4, top - left, font_size=12)
+
+        Slides.text_box(slide, 'Hard Carry', left + 4.3, top - left, font_size=12, bold=True, alignment=PP_ALIGN.CENTER)
+        Slides.text_box(slide, 'Mid', left + 4.3 + 1 * (0.6 + pic_size), top - left, font_size=12, bold=True, alignment=PP_ALIGN.CENTER)
+        Slides.text_box(slide, 'Offlane', left + 4.3 + 2 * (0.6 + pic_size), top - left, font_size=12, bold=True, alignment=PP_ALIGN.CENTER)
+        Slides.text_box(slide, 'Support', left + 4.3 + 3 * (0.6 + pic_size), top - left, font_size=12, bold=True, alignment=PP_ALIGN.CENTER)
+        Slides.text_box(slide, 'Hard Support', left + 4.3 + 4 * (0.6 + pic_size), top - left, font_size=12, bold=True, alignment=PP_ALIGN.CENTER)
+
+        for player in fantasy_scores:
+            name = player['real_name'] if player['real_name'] is not None else player['name']
+            Slides.text_box(slide, name, left, top + row * i, font_size=12, bold=True)
+            Slides.text_box(slide, "%.2f" % player['total_score'], left + 1.3, top + row * i, font_size=12, bold=True)
+            Slides.text_box(slide, "%i ₭" % player['earnings'], left + 2, top + row * i, font_size=12, bold=True)
+            if player['bonus'] > 0:
+                Slides.text_box(slide, "%i ₭" % player['bonus'], left + 2.7, top + row * i, font_size=12, bold=True)
+            Slides.text_box(slide, "%i ₭" % player['cost'], left + 3.4, top + row * i, font_size=12)
+            j = 0
+            for pos in ['hard_carry', 'mid', 'offlane', 'support', 'hard_support']:
+                if pos in player['team']:
+                    pic_path = 'data/pics/%s.jpg' % self.players[player['team'][pos]['card']]
+                    if os.path.isfile(pic_path):
+                        slide.shapes.add_picture(pic_path, Inches(left + 4.45 + j * (0.6 + pic_size)),
+                                                 Inches(top + row * i), height=Inches(pic_size))
+                    if player['team'][pos]['points'] > 0:
+                        Slides.text_box(slide, "%.2f" % player['team'][pos]['points'],
+                                        left + 4.45 + pic_size + j * (0.6 + pic_size),
+                                        top + row * i, font_size=12)
+                j += 1
+            i += 1
+
     def add_fantasy_slide(self, fantasy_values, role):
         slide = self.add_slide(5, 123, 111, 255)
         slide.shapes.title.text = 'Score for the period (%s)' % role.title()
@@ -871,7 +932,7 @@ class Slides:
                                            Inches(row_width - 0.1))
                     Slides.text_box(slide, c['player'], left + column_width * i, top + row_width * j + 0.2,
                                     width=player_size, font_size=12, alignment=PP_ALIGN.CENTER, bold=True)
-                    Slides.text_box(slide, str(c['coins']), left + column_width * i,
+                    Slides.text_box(slide, "%.2f" % c['coins'], left + column_width * i,
                                     top + row_width * j + spacing,
                                     width=player_size, font_size=16, alignment=PP_ALIGN.CENTER, bold=True)
                     pic_path = 'data/pics/%s.jpg' % self.players[c['player']]
@@ -892,8 +953,7 @@ class Slides:
         row_width = 2.5
         column_width = 1.1
         values = sorted([v for v in fantasy_values if v['position'] == role],
-                        key=lambda e: e['current_value'],
-                        reverse=True)
+                        key=lambda e: e['current_value'], reverse=True)
         for i in range(x):
             for j in range(y):
                 if j * x + i < len(values):
@@ -904,18 +964,17 @@ class Slides:
                                            Inches(row_width - 0.1))
                     Slides.text_box(slide, c['name'], left + column_width * i, top + row_width * j + 0.2,
                                     width=player_size, font_size=12, alignment=PP_ALIGN.CENTER, bold=True)
-                    Slides.text_box(slide, str(c['current_value']), left + column_width * i,
+                    Slides.text_box(slide, "%i ₭" % c['current_value'], left + column_width * i,
                                     top + row_width * j + spacing - 0.23,
                                     width=player_size, font_size=16, alignment=PP_ALIGN.CENTER, bold=True)
+                    Slides.text_box(slide, "%i ₭" % c['old_value'], left + column_width * i,
+                                    top + row_width * j + spacing + 0.07,
+                                    width=player_size, font_size=11, alignment=PP_ALIGN.CENTER, bold=False)
                     if c['variation'] != 0:
-                        Slides.text_box(slide, str(c['old_value']), left + column_width * i,
-                                        top + row_width * j + spacing + 0.07,
-                                        width=player_size, font_size=11, alignment=PP_ALIGN.CENTER, bold=False)
                         Slides.text_box(slide, "%s%.1f %%" % ('+' if c['variation'] > 0 else '', c['variation'] * 100),
                                         left + column_width * i,
                                         top + row_width * j + spacing + 0.3,
                                         width=player_size, font_size=11, alignment=PP_ALIGN.CENTER, bold=True)
-
 
                     pic_path = 'data/pics/%s.jpg' % self.players[c['name']]
                     if os.path.isfile(pic_path):
@@ -982,6 +1041,17 @@ class Slides:
         formats = ['%s', '%.1f', '%s', '%s', '%.2f %%']
         widths = [5, 1, 1, 1, 1]
         Slides.create_table(slide, trios, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
+                            widths=widths)
+
+    def add_lane_partners(self, partners, text):
+        slide = self.add_slide(5, 180, 140, 255)
+        slide.shapes.title.text = "%s %s Lane Partners" % (self.team_name, text)
+
+        headers = ['Players', 'Rating', 'Wins', 'Losses', 'Matches', 'Win Rate']
+        keys = ['lane', 'rating', 'wins', 'losses', 'matches', 'wr']
+        formats = ['%s', '%.2f', '%s', '%s', '%s', '%.2f %%']
+        widths = [4, 1, 1, 1, 1, 1]
+        Slides.create_table(slide, partners, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
                             widths=widths)
 
     def add_couples(self, couples, text):

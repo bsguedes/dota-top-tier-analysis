@@ -16,19 +16,19 @@ BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
 # YEARS = [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
 YEARS = [2020]
-MONTH = 10
+MONTH = 11
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
 REDOWNLOAD_SMALL_FILES = False
 BEST_TEAM = None
 # BEST_TEAM = ['Zé', 'Nuvah', 'Chaos', 'Older', 'Alidio']
 
-# PnK monthly parameters: 4, 3, 3, 2
+# PnK monthly parameters: 3, 3, 3, 2
 # PnK year parameters: 30, 10, 3, 3
 
 parameters = {
     PNK: {
-        'min_matches': 4,
+        'min_matches': 3,
         'min_couple_matches': 3,
         'min_party_size': 3,
         'min_matches_with_hero': 2
@@ -51,7 +51,8 @@ replacement_list = {
         'Fallenzão': [331461200],
         'kkz': [116647196, 92129470],
         'Kiddy': [409605487, 242249397, 189723196, 187217964, 365319706],
-        'Alidio': [495078]
+        'Alidio': [495078],
+        'Roshan': [93345002]
     },
     BLAZING_DOTA: {
         'flesch': [372670607]
@@ -154,6 +155,8 @@ categories = [
     # Category(1, 'discord_avg', unit='%', text='time spoken on Discord per total game duration', rule='discord_avg',
     #         reverse=False),
     # Category(1, 'discord', unit='min', text='time spoken on Discord', rule='discord'),
+    Category(10, 'fantasy_value', unit='₭', text='total fantasy cards worth', rule='fantasy_value', avg_format='%i'),
+    Category(5, 'kasino_net_worth', unit='₭', text='total PnKasino worth in ₭', rule='fantasy_worth', avg_format='%i'),
     Category(4, 'hard carry', unit='%', text='hard carry win rate', rule='position'),
     Category(4, 'mid', unit='%', text='mid win rate', rule='position'),
     Category(4, 'offlane', unit='%', text='offlane win rate', rule='position'),
@@ -235,6 +238,7 @@ if __name__ == '__main__':
     downloader.download_player_data(players, replacements, override=DOWNLOAD_PLAYERS)
     discord_data = None  # downloader.download_discord()
     fantasy_data = downloader.download_fantasy()
+    fantasy_scores = downloader.download_fantasy_scores()
     unique_matches = p.get_matches(replacements, month=MONTH, ranked_only=False)
     to_parse = downloader.download_matches(unique_matches, download_again=REDOWNLOAD_SMALL_FILES)
     matches_json = Parser.load_matches(unique_matches)
@@ -251,6 +255,12 @@ if __name__ == '__main__':
             tiers.append((tier, c))
         elif c.rule == 'discord' and TEAM_NAME == PNK:
             tier = Tier(c.weight, p.discord(discord_ids, discord_data), 'Total time spoken on Discord')
+            tiers.append((tier, c))
+        elif c.rule == 'fantasy_value' and TEAM_NAME == PNK:
+            tier = Tier(c.weight, p.fantasy_value_tiers(fantasy_data), 'Sum of Fantasy Cards in PnKoins')
+            tiers.append((tier, c))
+        elif c.rule == 'fantasy_worth' and TEAM_NAME == PNK:
+            tier = Tier(c.weight, p.fantasy_worth(fantasy_scores), 'Player worth in PnKoins on PnKasino')
             tiers.append((tier, c))
         elif c.rule == 'discord_avg' and TEAM_NAME == PNK:
             tier = Tier(c.weight, p.discord(discord_ids, discord_data, avg=True),
@@ -277,6 +287,7 @@ if __name__ == '__main__':
                 tiers.append((tier_max, c))
 
     fantasy_values = p.fantasy(tiers)
+    fantasy_scores = p.calculate_fantasy_score(fantasy_values, fantasy_scores)
 
     if BEST_TEAM is not None:
         combinations = p.best_team(BEST_TEAM)
@@ -293,8 +304,12 @@ if __name__ == '__main__':
         s.add_five_player_compositions(p.five_player_compositions, p.full_party_matches)
         s.add_match_summary_by_player(p.match_summary_by_player, p.match_summary_by_team, p.min_party_size)
         s.add_top_fifteen(p.top_comebacks, p.top_throws, p.top_fast_wins, p.top_fast_losses, p.longest_matches)
+        s.add_advantage_chart(p.gold_variance, 'Gold Advantage')
+        s.add_advantage_chart(p.xp_variance, 'Experience Advantage')
         s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES))
         s.add_best_team_by_player(p.evaluate_best_team_by_hero_player(MIN_COUPLE_MATCHES/2))
+        s.add_lane_partners(p.lane_partners[0:15], 'Best')
+        s.add_lane_partners(p.lane_partners[-15:][::-1], 'Worst')
         s.add_couples(p.player_couples[0:10], 'Best')
         s.add_couples(p.player_couples[-10:][::-1], 'Worst')
         s.add_trios(p.trios[0:15], 'Best')
@@ -311,6 +326,7 @@ if __name__ == '__main__':
         s.add_win_rate_heroes(p.against_heroes, 'Against')
 
         s.add_divider_slide("%s Fantasy Game" % TEAM_NAME, 'Fantasy Game based on Player Performance')
+        s.add_fantasy_ranking(fantasy_scores)
         s.add_fantasy_slide(fantasy_values, 'hard carry')
         s.add_fantasy_slide(fantasy_values, 'mid')
         s.add_fantasy_slide(fantasy_values, 'offlane')

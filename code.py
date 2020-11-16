@@ -63,6 +63,9 @@ class Parser:
         self.match_skill = []
         self.min_matches_with_hero = min_matches_with_hero
         self.rivals = []
+        self.lane_partners = []
+        self.gold_variance = [[] for _ in range(180)]
+        self.xp_variance = [[] for _ in range(180)]
 
     @staticmethod
     def load_matches(unique_matches):
@@ -193,6 +196,7 @@ class Parser:
         account_ids = [v for k, v in self.players.items()]
         rivals_names = {}
         replacements = {}
+        lane_players = {}
         if rep is not None:
             for k, v_l in rep.items():
                 for v in v_l:
@@ -259,9 +263,48 @@ class Parser:
                     obj['comeback'] = -1 * min(gold_adv + [0]) if 'comeback' not in obj else obj['comeback']
                     obj['throw'] = max(gold_adv + [0]) if 'throw' not in obj else obj['throw']
                     match_summary[match_id]['comeback_throw'] = obj['comeback'] if p['win'] > 0 else obj['throw']
+                    match_summary[match_id]['our_gold_lead'] = []
+                    gold_radiant = [p['gold_t'] for p in obj['players'][0:5]]
+                    gold_dire = [p['gold_t'] for p in obj['players'][5:]]
+                    if not any(g is None for g in gold_radiant):
+                        if match_summary[match_id]['is_radiant']:
+                            our_gold = [sum(x) for x in zip(*gold_radiant)]
+                            their_gold = [sum(x) for x in zip(*gold_dire)]
+                        else:
+                            our_gold = [sum(x) for x in zip(*gold_dire)]
+                            their_gold = [sum(x) for x in zip(*gold_radiant)]
+                        gold_idx = 0
+                        for our, their in zip(our_gold, their_gold):
+                            self.gold_variance[gold_idx].append(our / their - 1 if their != 0 else 0)
+                            gold_idx += 1
+                    xp_radiant = [p['xp_t'] for p in obj['players'][0:5]]
+                    xp_dire = [p['xp_t'] for p in obj['players'][5:]]
+                    if not any(g is None for g in xp_radiant):
+                        if match_summary[match_id]['is_radiant']:
+                            our_xp = [sum(x) for x in zip(*xp_radiant)]
+                            their_xp = [sum(x) for x in zip(*xp_dire)]
+                        else:
+                            our_xp = [sum(x) for x in zip(*xp_dire)]
+                            their_xp = [sum(x) for x in zip(*xp_radiant)]
+                        xp_idx = 0
+                        for our, their in zip(our_xp, their_xp):
+                            self.xp_variance[xp_idx].append(our / their - 1 if their != 0 else 0)
+                            xp_idx += 1
+
             if 'lane_role' in obj['players'][0]:
                 match_summary[match_id]['roles'] = Roles.evaluate_roles(match_summary[match_id],
                                                                         [x for x in obj['players'] if 'lane_role' in x])
+                for lane in match_summary[match_id]['roles']['partners']:
+                    if all(p in account_ids for p in lane):
+                        lane_string = ', '.join([inv_p[p] for p in lane])
+                        if lane_string not in lane_players:
+                            lane_players[lane_string] = {'lane': lane_string, 'matches': 0, 'wins': 0,
+                                                         'rating': 0, 'losses': 0, 'wr': 0}
+                        lane_players[lane_string]['matches'] += 1
+                        if match_summary[match_id]['win']:
+                            lane_players[lane_string]['wins'] += 1
+                        else:
+                            lane_players[lane_string]['losses'] += 1
             match_summary[match_id]['has_abandon'] = sum([o['abandons'] for o in obj['players']]) > 0
             match_summary[match_id]['duration'] = obj['duration']
             match_summary[match_id]['items'] = items.evaluate_items([x for x in obj['players'] if
@@ -343,6 +386,14 @@ class Parser:
                 })
         self.match_summary = match_summary
 
+        self.gold_variance = [sum(x)/len(x) if len(x) > 0 else 0 for x in self.gold_variance]
+        while self.gold_variance[-1] == 0:
+            self.gold_variance.pop(-1)
+
+        self.xp_variance = [sum(x) / len(x) if len(x) > 0 else 0 for x in self.xp_variance]
+        while self.xp_variance[-1] == 0:
+            self.xp_variance.pop(-1)
+
         csv_file = [['Name', 'Image'] + line]
         for player, values in chart_csv.items():
             player_line = [inv_p[player], player]
@@ -352,6 +403,12 @@ class Parser:
                 player_line.append(total)
             csv_file.append(player_line)
         print(csv_file)
+
+        for lane, data in lane_players.items():
+            data['rating'] = rating(data['wins'], data['losses'])
+            data['wr'] = win_rate(data['wins'], data['matches'])
+        self.lane_partners = sorted([v for _, v in lane_players.items() if v['matches'] >= self.min_matches / 2],
+                                    key=lambda e: (-e['rating'], e['losses']))
 
         #with open('chart.csv', mode='w') as file:
         #    employee_writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -962,6 +1019,26 @@ class Parser:
                        self.player_descriptor if len(p['streaks']) > 0 and p['matches'] >= self.min_matches],
                       key=lambda e: e.score, reverse=True)
 
+    def fantasy_value_tiers(self, fantasy_data):
+        players = {}
+        for item in fantasy_data:
+            player_name = item['name']
+            if player_name not in players:
+                players[player_name] = 0
+            players[player_name] += item['current_value']
+        return sorted([TierItem(name, v, '%s fantasy cards are worth %d ₭ on PnKasino' % (name, v)) for
+                       name, v in players.items()], key=lambda e: e.score, reverse=True)
+
+    def fantasy_worth(self, fantasy_scores):
+        player_names = [k for k, _ in self.players.items()]
+        player_scores = {}
+        for item in fantasy_scores:
+            player_name = item['real_name']
+            if player_name in player_names:
+                player_scores[player_name] = item['worth']
+        return sorted([TierItem(name, v, '%s\'s net worth on PnKasino is %d ₭' % (name, v)) for
+                       name, v in player_scores.items()], key=lambda e: e.score, reverse=True)
+
     def discord(self, ids, data, avg=False):
         inv_id = {v: k for k, v in ids.items()}
         player_ids = [k for k, _ in inv_id.items()]
@@ -1040,6 +1117,25 @@ class Parser:
             win_rate_by_month[i]['wr'] = win_rate(win_rate_by_month[i]['wins'], win_rate_by_month[i]['matches'])
         return win_rate_by_month
 
+    def calculate_fantasy_score(self, fantasy_values, fantasy_scores):
+        for player_data in fantasy_scores:
+            for position, data in player_data['team'].items():
+                if data['card'] in fantasy_values and position.replace('_', ' ') in fantasy_values[data['card']]:
+                    data['points'] = fantasy_values[data['card']][position.replace('_', ' ')] / 500
+                else:
+                    data['points'] = 0
+            player_data['total_score'] = sum(t['points'] for p, t in player_data['team'].items())
+            player_data['earnings'] = int(player_data['total_score'] ** 3) // 100 * 10
+            player_data['bonus'] = 0
+        ranking = sorted(fantasy_scores, key=lambda e: (-e['total_score'], e['cost']))
+        bonus = [5000, 3000, 1500]
+        for i in range(min(3, len(ranking))):
+            ranking[i]['bonus'] = bonus[i]
+
+        print(str({'rewards': fantasy_scores}).replace("'", "\""))
+
+        return ranking
+
     def fantasy(self, tiers):
         tier_fantasy = {
             'Zé': {},
@@ -1106,7 +1202,7 @@ class Parser:
                         fantasy_count[category][role] = i
 
         BASE = 100
-        POND = 5
+        POND = 4
         ADJUST = 1
 
         for i in range(5):
