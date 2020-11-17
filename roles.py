@@ -50,39 +50,56 @@ class Roles:
             result_roles[1] = Roles.max_gpm(mid_players, team_players)
             mid_players.remove(result_roles[1])
 
-        if len(safe_players) > len(off_players):
-            result_roles[0] = Roles.max_gpm(safe_players, team_players)
-            safe_players.remove(result_roles[0])
-            if len(off_players) > 0:
-                result_roles[2] = Roles.max_gpm(off_players, team_players)
-                off_players.remove(result_roles[2])
-        elif len(off_players) > len(safe_players):
-            result_roles[0] = Roles.max_gpm(off_players, team_players)
-            off_players.remove(result_roles[0])
-            if len(safe_players) > 0:
-                result_roles[2] = Roles.max_gpm(safe_players, team_players)
-                safe_players.remove(result_roles[2])
-        elif len(off_players) > 0 or len(safe_players) > 0:
-            result_roles[0] = Roles.max_gpm(safe_players + off_players, team_players)
-            if result_roles[0] in safe_players:
-                safe_players.remove(result_roles[0])
-                result_roles[2] = Roles.max_gpm(off_players, team_players)
-                off_players.remove(result_roles[2])
-            else:
-                off_players.remove(result_roles[0])
-                result_roles[2] = Roles.max_gpm(safe_players, team_players)
-                safe_players.remove(result_roles[2])
-
         rest_of_players = safe_players + mid_players + off_players + roamers
-        pos = 0
-        while -1 in result_roles:
-            if result_roles[pos] == -1:
-                if pos >= 3:
-                    result_roles[pos] = Roles.max_wards(rest_of_players, team_players)
-                else:
-                    result_roles[pos] = Roles.max_gpm(rest_of_players, team_players)
-                rest_of_players.remove(result_roles[pos])
-            pos += 1
+
+        hc_points = {p: 0 for p in rest_of_players}
+        targets = [p for p in team_players if result_roles[1] != p['account_id']]
+        params = ['last_hits', 'hero_damage', 'kills', 'total_gold']
+        weights = [2, 1, 0, 4]
+        for player in targets:
+            pid = player['account_id']
+            if pid in safe_players:
+                hc_points[pid] += 108
+            for param, w in zip(params, weights):
+                if player[param] == max(targets, key=lambda e: e[param])[param]:
+                    hc_points[pid] += 100 + w
+        ordered = sorted(hc_points.items(), key=lambda k: -k[1])
+        result_roles[0] = ordered[0][0]
+        hc_lane = 1 if result_roles[0] in safe_players else 3
+
+        if hc_lane == 1:
+            off_candidates = roamers if len(off_players) == 0 else off_players
+        else:
+            off_candidates = roamers if len(safe_players) == 0 else safe_players
+        off_points = {p: 0 for p in off_candidates}
+        targets = [p for p in team_players if p['account_id'] in off_candidates]
+        params = ['last_hits', 'hero_damage', 'kills', 'total_gold']
+        weights = [2, 1, 0, 4]
+        for player in targets:
+            pid = player['account_id']
+            for param, w in zip(params, weights):
+                if player[param] == max(targets, key=lambda e: e[param])[param]:
+                    off_points[pid] += 100 + w
+        ordered = sorted(off_points.items(), key=lambda k: -k[1])
+        result_roles[2] = ordered[0][0]
+
+        remaining = [p for p in rest_of_players if p not in result_roles]
+        hs_points = {p: 0 for p in remaining}
+        targets = [p for p in team_players if p['account_id'] in remaining]
+        params = ['last_hits', 'sen_placed', 'obs_placed', 'total_gold']
+        order = [-1, 1, 1, -1]
+        weights = [0, 1, 2, 4]
+
+        for player in targets:
+            pid = player['account_id']
+            if player['lane_role'] == hc_lane:
+                hs_points[pid] += 208
+            for param, w, o in zip(params, weights, order):
+                if player[param] == max(targets, key=lambda e: o * e[param])[param]:
+                    hs_points[pid] += 100 + w
+        ordered = sorted(hs_points.items(), key=lambda k: -k[1])
+        result_roles[4] = ordered[0][0]
+        result_roles[3] = ordered[1][0]
 
         positions = {x: roles()[result_roles.index(x)+1] for x in result_roles if x > 9}
         return {'composition': composition, 'positions': positions, 'partners': [p for p in partners if len(p) >= 2]}
@@ -92,16 +109,6 @@ class Roles:
         gpm_list = {k['account_id']: k['gold_per_min'] for k in team_players if k['account_id'] in players}
         m = max(gpm_list.items(), key=operator.itemgetter(1))
         return m[0]
-
-    @staticmethod
-    def hard_carry(players, team_players):
-
-        return None
-
-    @staticmethod
-    def hard_support(players, team_players):
-
-        return None
 
     @staticmethod
     def max_wards(players, team_players):

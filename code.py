@@ -208,6 +208,7 @@ class Parser:
                              'players': [],
                              'our_ranks': [],
                              'enemy_ranks': [],
+                             'match_id': v['match_id'],
                              'player_desc': {}} for k, v in matches.items()}
         self.win_rate_by_hour = {str(i): {'wins': 0, 'losses': 0, 'matches': 0, 'wr': 0} for i in range(24)}
         self.win_rate_by_weekday = {i: {'wins': 0, 'losses': 0, 'matches': 0, 'wr': 0} for i in calendar.day_abbr}

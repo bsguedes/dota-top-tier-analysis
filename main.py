@@ -16,7 +16,7 @@ BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
 # YEARS = [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
 YEARS = [2020]
-MONTH = 11
+MONTH = None
 DOWNLOAD_PLAYERS = False
 PRINT_TIERS = False
 REDOWNLOAD_SMALL_FILES = False
@@ -50,7 +50,7 @@ replacement_list = {
     PNK: {
         'Fallenzão': [331461200],
         'kkz': [116647196, 92129470],
-        'Kiddy': [409605487, 242249397, 189723196, 187217964, 365319706],
+        'Kiddy': [409605487, 242249397, 189723196, 365319706],
         'Alidio': [495078],
         'Roshan': [93345002]
     },

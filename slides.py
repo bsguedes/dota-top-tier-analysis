@@ -241,7 +241,7 @@ class Slides:
         headers = ['Name', 'Rating', 'Matches', 'Win Rate', 'Win Rate w/o', 'Wins', 'Losses', 'Heroes', 'Versat.']
         keys = ['name', 'rating', 'matches', win_rate_lambda, win_rate_without_lambda,
                 'wins', losses_lambda, hero_count_lambda, 'versatility']
-        formats = ['%s', '%.1f', '%s', '%.2f %%', '%.2f %%', '%s', '%s', '%s', '%.3f']
+        formats = ['%s', '%.2f', '%s', '%.2f %%', '%.2f %%', '%s', '%s', '%s', '%.3f']
         widths = [1.5, 1, 1, 1, 1, 1, 1, 1, 1]
 
         players = sorted([p for p in player_descriptors if p['matches'] >= min_matches],
@@ -291,7 +291,7 @@ class Slides:
         tx_box = slide.shapes.add_textbox(Inches(1.6), Inches(1.5), Inches(1.75), Inches(0.5))
         tf = tx_box.text_frame
         p = tf.paragraphs[0]
-        p.text = '%.1f' % desc['rating']
+        p.text = '%.2f' % desc['rating']
         p.font.bold = True
         p.font.size = Pt(28)
         p.alignment = PP_ALIGN.RIGHT
