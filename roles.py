@@ -71,6 +71,8 @@ class Roles:
             off_candidates = roamers if len(off_players) == 0 else off_players
         else:
             off_candidates = roamers if len(safe_players) == 0 else safe_players
+        if len(off_candidates) == 0:
+            off_candidates = [x for x in rest_of_players if x != result_roles[0]]
         off_points = {p: 0 for p in off_candidates}
         targets = [p for p in team_players if p['account_id'] in off_candidates]
         params = ['last_hits', 'hero_damage', 'kills', 'total_gold']

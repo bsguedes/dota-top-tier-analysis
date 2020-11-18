@@ -9,6 +9,7 @@ from pptx.enum.text import PP_ALIGN
 from pptx.enum.chart import XL_CHART_TYPE
 from pptx.enum.chart import XL_LEGEND_POSITION
 from pptx.enum.chart import XL_LABEL_POSITION
+from pptx.enum.chart import XL_TICK_LABEL_POSITION
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.chart.data import ChartData
 from pptx.chart.data import CategoryChartData
@@ -238,17 +239,43 @@ class Slides:
         losses_lambda = lambda d: d['matches'] - d['wins']
         hero_count_lambda = lambda d: len([1 for _, h in d['heroes'].items() if h['matches'] > 0])
 
-        headers = ['Name', 'Rating', 'Matches', 'Win Rate', 'Win Rate w/o', 'Wins', 'Losses', 'Heroes', 'Versat.']
+        headers = ['Name', 'Rating', 'Matches', 'Win Rate', 'Win Rate w/o',
+                   'Wins', 'Losses', 'Heroes', 'Versat.', 'MMR Change']
         keys = ['name', 'rating', 'matches', win_rate_lambda, win_rate_without_lambda,
-                'wins', losses_lambda, hero_count_lambda, 'versatility']
-        formats = ['%s', '%.2f', '%s', '%.2f %%', '%.2f %%', '%s', '%s', '%s', '%.3f']
-        widths = [1.5, 1, 1, 1, 1, 1, 1, 1, 1]
+                'wins', losses_lambda, hero_count_lambda, 'versatility', 'mmr_var']
+        formats = ['%s', '%.2f', '%s', '%.2f %%', '%.2f %%', '%s', '%s', '%s', '%.3f', '%s']
+        widths = [1.4, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9]
 
         players = sorted([p for p in player_descriptors if p['matches'] >= min_matches],
                          key=lambda e: e['rating'],
                          reverse=True)
         Slides.create_table(slide, players, headers, keys, formats, Inches(0.25), Inches(1.5), Inches(9.5), 1, 12, 14,
                             widths=widths)
+
+    def add_player_mmr(self, mmr_changes):
+        slide = self.add_slide(5, 222, 200, 178)
+        title_shape = slide.shapes.title
+        title_shape.text = 'MMR Change in party %s games' % self.team_name
+
+        if len(mmr_changes) > 0:
+            chart_data = CategoryChartData()
+            chart_data.categories = [p['name'] for p in mmr_changes]
+            chart_data.add_series('MMR', [p['mmr'] for p in mmr_changes])
+
+            x, y, cx, cy = Inches(0.5), Inches(1.5), Inches(9), Inches(6)
+            chart = slide.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, x, y, cx, cy, chart_data).chart
+            category_axis = chart.category_axis
+            category_axis.tick_labels.font.size = Pt(12)
+            category_axis.tick_label_position = XL_TICK_LABEL_POSITION.LOW
+            value_axis = chart.value_axis
+            tick_labels = value_axis.tick_labels
+            tick_labels.font.size = Pt(12)
+
+            plot = chart.plots[0]
+            plot.has_data_labels = True
+            data_labels = plot.data_labels
+            data_labels.font.size = Pt(12)
+            data_labels.font.color.rgb = RGBColor(0, 0, 0)
 
     def add_player_data_slide(self, desc):
         slide = self.add_slide(5, 255, 229, 204)
@@ -528,7 +555,7 @@ class Slides:
 
         headers = ['Match ID', 'Gold', 'Players']
         keys = ['match', 'gold', 'players']
-        formats = ['%s', '%s', '%s']
+        formats = ['%i', '%s', '%s']
         widths = [2, 2, 5]
         Slides.create_table(slide, comebacks, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
                             widths=widths, hyperlink=[0])
@@ -543,7 +570,7 @@ class Slides:
         title_shape = slide.shapes.title
         headers = ['Match ID', 'Time [min]', 'Players']
         keys = ['match', 'time', 'players']
-        formats = ['%s', '%02d:%02d', '%s']
+        formats = ['%i', '%02d:%02d', '%s']
         title_shape.text = 'Top 15 %s Fast Wins (no abandons)' % self.team_name
         Slides.create_table(slide, fast_wins, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
                             widths=widths, hyperlink=[0])
@@ -559,7 +586,7 @@ class Slides:
         title_shape.text = 'Top 15 %s Longest Matches' % self.team_name
         headers = ['Match ID', 'Gold', 'Players', 'Win?']
         keys = ['match', 'time', 'players', 'win']
-        formats = ['%s', '%02d:%02d', '%s', '%s']
+        formats = ['%i', '%02d:%02d', '%s', '%s']
         widths = [1.7, 1.7, 3.9, 1.7]
         Slides.create_table(slide, longest, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
                             widths=widths, hyperlink=[0])
@@ -723,7 +750,7 @@ class Slides:
         slide = self.add_slide(5, 152, 251, 152)
         title_shape = slide.shapes.title
         title_shape.text = 'Match Summary by Player'
-        headers = ['Player', 'Total Matches', 'Matches with %s' % self.team_name, '%% with %s' % self.team_name,
+        headers = ['Player', 'Total Matches', 'with party >= 2 %s', '%% with %s' % self.team_name,
                    'with party >= %s' % party_size]
         keys = ['player', 'matches', 'team_matches', 'perc_with_team', 'matches_party']
         formats = ['%s', '%s', '%s', '%.2f %%', '%s']
@@ -1248,7 +1275,7 @@ class Slides:
                 tf.paragraphs[0].font.bold = True
                 txt_box = slide.shapes.add_textbox(left + Inches(2.5), Inches(2.35 + 0.42 * i), width, height)
                 tf = txt_box.text_frame
-                Slides.hyperlink_sequence(tf.paragraphs[0], ['%s' % i for i in matches], 5)
+                Slides.hyperlink_sequence(tf.paragraphs[0], ['%i' % i for i in matches], 5)
                 tf.paragraphs[0].font.size = Pt(12)
                 i += 1
         else:

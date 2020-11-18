@@ -70,11 +70,22 @@ class Parser:
     @staticmethod
     def load_matches(unique_matches):
         matches = list()
-        for match_id, _ in unique_matches.items():
-            with open('matches/%i.json' % match_id, 'r', encoding='utf-8') as f:
-                content = Parser.clear_content(json.loads(f.read()))
-                if all(p['hero_id'] is not None and p['hero_id'] > 0 for p in content['players']):
-                    matches.append({'id': match_id, 'content': content, 'date': fix_time(content['start_time'])})
+        for match_id, player_list in unique_matches.items():
+            if int(match_id) - match_id == 0:
+                with open('matches/%i.json' % match_id, 'r', encoding='utf-8') as f:
+                    content = Parser.clear_content(json.loads(f.read()))
+                    if all(p['hero_id'] is not None and p['hero_id'] > 0 for p in content['players']):
+                        matches.append({'id': match_id, 'content': content, 'date': fix_time(content['start_time'])})
+            else:
+                with open('matches/%i.json' % int(match_id), 'r', encoding='utf-8') as f:
+                    content = Parser.clear_content(json.loads(f.read()))
+                    if all(p['hero_id'] is not None and p['hero_id'] > 0 for p in content['players']):
+                        team_is_radiant = player_list[0][1]
+                        for player in content['players']:
+                            if (not player['isRadiant'] and team_is_radiant) or \
+                               (not team_is_radiant and player['isRadiant']):
+                                player['account_id'] *= 10
+                        matches.append({'id': match_id, 'content': content, 'date': fix_time(content['start_time'])})
         return sorted(matches, key=lambda e: e['date'])
 
     @staticmethod
@@ -194,6 +205,7 @@ class Parser:
         inv_h = {h['localized_name']: h['id'] for h in hs_json}
         inv_p = {v: k for k, v in self.players.items()}
         account_ids = [v for k, v in self.players.items()]
+        mmr_var = {}
         rivals_names = {}
         replacements = {}
         lane_players = {}
@@ -257,6 +269,12 @@ class Parser:
                                                                                'runes': runes,
                                                                                'apm': apm}
                     match_summary[match_id]['win'] = p['win'] > 0
+
+                    if obj['lobby_type'] in [5, 6, 7]:
+                        if p['account_id'] not in mmr_var:
+                            mmr_var[p['account_id']] = 0
+                        mmr_var[p['account_id']] += 20 if match_summary[match_id]['win'] else -20
+
                     match_summary[match_id]['start_time'] = obj['start_time']
                     match_summary[match_id]['is_radiant'] = p['isRadiant']
                     gold_adv = [] if obj['radiant_gold_adv'] is None else obj['radiant_gold_adv']                  
@@ -725,6 +743,7 @@ class Parser:
                 'streaks': self.calculate_streaks(pid),
                 'months': self.calculate_months(pid),
                 'mmr': int(mmrs[pid]),
+                'mmr_var': mmr_var[pid] if pid in mmr_var else "-",
                 'radiant_wr': win_rate(
                     len([1 for _, d in match_summary.items() if pid in d['players'] and d['win'] and d['is_radiant']]),
                     len([1 for _, d in match_summary.items() if pid in d['players'] and d['is_radiant']])),
@@ -875,7 +894,7 @@ class Parser:
                     total_matches[name] += 1
                     if not o['match_id'] in matches:
                         matches[o['match_id']] = []
-                    matches[o['match_id']].append(name)
+                    matches[o['match_id']].append((name, o['player_slot'] < 100))
         if replacement is not None:
             for name, pid_array in replacement.items():
                 i = 0
@@ -896,9 +915,25 @@ class Parser:
                             total_matches[name] += 1
                             if not o['match_id'] in matches:
                                 matches[o['match_id']] = []
-                            matches[o['match_id']].append(name)
+                            matches[o['match_id']].append((name, o['player_slot'] < 100))
+
+        duplicates = []
+        split_matches = {}
+        for match_id, players_list in matches.items():
+            if len(players_list) > 5:
+                radiant_team = [p for p in players_list if p[1]]
+                dire_team = [p for p in players_list if not p[1]]
+                if len(radiant_team) >= 2 and len(dire_team) >= 2:
+                    split_matches[match_id + 0.1] = radiant_team
+                    split_matches[match_id + 0.2] = dire_team
+                    duplicates.append(match_id)
+        for match in duplicates:
+            matches.pop(match)
+        for match_id, players_list in split_matches.items():
+            matches[match_id] = players_list
+
         for i in range(5):
-            self.matches_by_party_size.append(len({k: v for k, v in matches.items() if len(v) == i + 1}))
+            self.matches_by_party_size.append(len({k: v for k, v in matches.items() if len(v[0]) == i + 1}))
             print('Matches played by party of size %i: %s' % (i + 1, self.matches_by_party_size[i]))
         
         print('')                    
@@ -906,19 +941,19 @@ class Parser:
         sorted_matches.reverse()
 
         for name, match_count in sorted_matches:
-            matches_with_team = len([i for i, v in matches.items() if len(v) >= 2 and name in v])
-            matches_with_party = len([i for i, v in matches.items() if len(v) >= self.min_party_size and name in v])
-            percentage_with_team = matches_with_team / match_count if match_count > 0 else 0
+            with_team = len([i for i, v in matches.items() if len(v) >= 2 and name in [x[0] for x in v]])
+            with_party = len([i for i, v in matches.items() if len(v) >= self.min_party_size and name in [x[0] for x in v]])
+            percentage_with_team = with_team / match_count if match_count > 0 else 0
             self.match_summary_by_player.append(
                 {
                     'player': name,
                     'matches': match_count,
-                    'team_matches': matches_with_team,
+                    'team_matches': with_team,
                     'perc_with_team': 100 * percentage_with_team,
-                    'matches_party': matches_with_party
+                    'matches_party': with_party
                 })
             print('%s played %i matches -- %i matches (%.2f %%) played with %s'
-                  % (name, match_count, matches_with_team, 100 * percentage_with_team, self.team_name))
+                  % (name, match_count, with_team, 100 * percentage_with_team, self.team_name))
 
         self.match_summary_by_team = sorted(self.match_summary_by_player, key=lambda v: v['team_matches'], reverse=True)
         return {k: v for k, v in matches.items() if
@@ -1079,6 +1114,16 @@ class Parser:
                                 '%s worst loss streak: %s matches' % (p['name'], abs(min(0, min(p['streaks']))))) for p
                        in self.player_descriptor if len(p['streaks']) > 0 and p['matches'] >= self.min_matches],
                       key=lambda e: e.score)
+
+    def mmr_change(self):
+        mmr_list = []
+        for player in self.player_descriptor:
+            if player['mmr_var'] != '-':
+                mmr_list.append({
+                    'name': player['name'],
+                    'mmr': player['mmr_var']
+                })
+        return sorted(mmr_list, key=lambda e:-e['mmr'])
 
     def versatility(self, values):
         ver_factor = 20

@@ -18,6 +18,7 @@ TEAM_NAME = PNK
 YEARS = [2020]
 MONTH = None
 DOWNLOAD_PLAYERS = False
+ONLY_RANKED = False
 PRINT_TIERS = False
 REDOWNLOAD_SMALL_FILES = False
 BEST_TEAM = None
@@ -28,10 +29,10 @@ BEST_TEAM = None
 
 parameters = {
     PNK: {
-        'min_matches': 3,
-        'min_couple_matches': 3,
+        'min_matches': 3 if MONTH is not None else 30,
+        'min_couple_matches': 3 if MONTH is not None else 10,
         'min_party_size': 3,
-        'min_matches_with_hero': 2
+        'min_matches_with_hero': 2 if MONTH is not None else 3
     },
     BLAZING_DOTA: {
         'min_matches': 4,
@@ -123,7 +124,8 @@ player_list = {
         # 'Ghago': 106159466,
         'Gordito': 130714929,
         # 'Scar': 29806143,
-        'JohnMirolho': 56828892
+        'JohnMirolho': 56828892,
+        'Sgt.Peçanha': 125536148
     },
     BLAZING_DOTA: {
         'Pogo': 121639063,
@@ -239,7 +241,7 @@ if __name__ == '__main__':
     discord_data = None  # downloader.download_discord()
     fantasy_data = downloader.download_fantasy()
     fantasy_scores = downloader.download_fantasy_scores()
-    unique_matches = p.get_matches(replacements, month=MONTH, ranked_only=False)
+    unique_matches = p.get_matches(replacements, month=MONTH, ranked_only=ONLY_RANKED)
     to_parse = downloader.download_matches(unique_matches, download_again=REDOWNLOAD_SMALL_FILES)
     matches_json = Parser.load_matches(unique_matches)
     tier_positions = p.identify_heroes(replacements, matches_json, min_couple_matches=MIN_COUPLE_MATCHES)
@@ -340,6 +342,7 @@ if __name__ == '__main__':
 
         s.add_divider_slide("%s Players" % TEAM_NAME, 'Roles, Pairings and Most Played Heroes')
         s.add_player_summary(p.player_descriptor, MIN_MATCHES)
+        s.add_player_mmr(p.mmr_change())
         for item in sorted(p.player_descriptor, key=lambda e: e['rating'], reverse=True):
             if item['matches'] > 0:
                 s.add_player_data_slide(item)

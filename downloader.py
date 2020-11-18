@@ -75,7 +75,8 @@ def download_matches(unique_matches, override=False, download_again=False):
     print('Found %s matches' % len(unique_matches))
     if not os.path.exists('matches'):
         os.makedirs('matches')
-    for match_id in unique_matches:
+    for mid in unique_matches:
+        match_id = int(mid)
         file_name = 'matches/%s.json' % match_id
         if override or not os.path.isfile(file_name):
             start = time.time()
