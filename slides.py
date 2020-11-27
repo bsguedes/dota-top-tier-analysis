@@ -84,7 +84,7 @@ class Slides:
                     tf.paragraphs[0].font.size = Pt(12)
                     Slides.text_box(slide, 'yes' if match['win'] else 'no', left + 1.1, top + row * (r + 1),
                                     font_size=11)
-                    Slides.text_box(slide, "%s:%s" % (match['duration'] // 60, match['duration'] % 60),
+                    Slides.text_box(slide, '%02d:%02d' % (match['duration'] // 60, match['duration'] % 60),
                                     left + 1.6, top + row * (r + 1), font_size=11)
                     for player in match['players']:
                         for pos, i in zip(['hard carry', 'mid', 'offlane', 'support', 'hard support'], range(5)):
