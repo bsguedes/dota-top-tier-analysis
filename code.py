@@ -248,7 +248,10 @@ class Parser:
             for p in obj['players']:
                 team_fight_index += 1
                 if p['account_id'] in replacements:
-                    p['account_id'] = self.players[replacements[p['account_id']]]
+                    if not self.players[replacements[p['account_id']]] in [e['account_id'] for e in obj['players']]:
+                        p['account_id'] = self.players[replacements[p['account_id']]]
+                    else:
+                        p['account_id'] += 1
                 if p['account_id'] in account_ids:
                     match_summary[match_id]['lobby_type'] = lobby_type()[obj['lobby_type']]
                     match_summary[match_id]['skill'] = obj['skill']

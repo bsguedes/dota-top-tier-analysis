@@ -59,7 +59,7 @@ class Slides:
         spacing = 0.7
 
         for c in range(math.ceil(len(data) / rows)):
-            slide = self.add_slide(5, 130, 110, 246)
+            slide = self.add_slide(5, 244, 244, 244)
             title_shape = slide.shapes.title
             title_shape.text = 'Match Summary with Roles'
 

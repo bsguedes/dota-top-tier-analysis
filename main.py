@@ -64,7 +64,7 @@ replacement_list = {
     PNK: {
         'Fallenzão': [331461200],
         'kkz': [116647196, 92129470],
-        'Kiddy': [409605487, 242249397, 189723196, 365319706],
+        'Kiddy': [409605487, 242249397, 189723196, 365319706, 29806143],
         'Alidio': [495078],
         'Roshan': [93345002]
     },
@@ -354,6 +354,10 @@ if __name__ == '__main__':
         s.add_fantasy_data(fantasy_data, 'support')
         s.add_fantasy_data(fantasy_data, 'hard support')
 
+        if MODE == 0:
+            s.add_divider_slide("%s Match Details" % TEAM_NAME, 'With players and positions per match')
+            s.add_match_roles_summary(p.role_summary())
+
         s.add_win_rate_heroes(p.with_heroes, 'Playing')
         s.add_most_played([v for v in p.most_played_heroes if v['matches'] > 0], True)
         s.add_most_played([v for v in p.most_played_heroes if v['matches'] == 0], False)
@@ -401,10 +405,6 @@ if __name__ == '__main__':
             for category in popular_vote.votes:
                 s.add_popular_vote_category_slides(category)
             s.add_top_five_slides(popular_vote.get_top_five())
-
-        if MODE == 0:
-            s.add_divider_slide("%s Match Details" % TEAM_NAME, 'With players and positions per match')
-            s.add_match_roles_summary(p.role_summary())
 
     s.save()
 
