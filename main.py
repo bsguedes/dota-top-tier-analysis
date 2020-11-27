@@ -14,11 +14,18 @@ import calendar
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
-# YEARS = [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
-YEARS = [2020]
-MONTH = None
-DOWNLOAD_PLAYERS = False
+ALL_TIME_YEARS = [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+CURRENT_MONTH = 11
+CURRENT_YEAR = 2020
+
+# Modes
+# 0: current month
+# 1: current year
+# 2: all time
+MODE = 0
+DOWNLOAD_PLAYERS = True
 ONLY_RANKED = False
+
 PRINT_TIERS = False
 REDOWNLOAD_SMALL_FILES = False
 BEST_TEAM = None
@@ -26,13 +33,19 @@ BEST_TEAM = None
 
 # PnK monthly parameters: 3, 3, 3, 2
 # PnK year parameters: 30, 10, 3, 3
+# PnK all-time parameters: 50, 15, 3, 4
+
+pnk_parameters = [[3, 3, 3, 2], [30, 10, 3, 3], [50, 15, 3, 4]]
+
+YEARS = ALL_TIME_YEARS if MODE == 2 else [CURRENT_YEAR]
+MONTH = CURRENT_MONTH if MODE == 0 else None
 
 parameters = {
     PNK: {
-        'min_matches': 3 if MONTH is not None else 30,
-        'min_couple_matches': 3 if MONTH is not None else 10,
-        'min_party_size': 3,
-        'min_matches_with_hero': 2 if MONTH is not None else 3
+        'min_matches': pnk_parameters[MODE][0],
+        'min_couple_matches': pnk_parameters[MODE][1],
+        'min_party_size': pnk_parameters[MODE][2],
+        'min_matches_with_hero': pnk_parameters[MODE][3]
     },
     BLAZING_DOTA: {
         'min_matches': 4,
@@ -139,10 +152,11 @@ player_list = {
 }
 
 popular_vote = None
-if TEAM_NAME == PNK and 2018 in YEARS:
-    popular_vote = PopularVotePnK2018()
-elif TEAM_NAME == PNK and 2019 in YEARS:
-    popular_vote = PopularVotePnK2019()
+if MODE == 1:
+    if TEAM_NAME == PNK and 2018 in YEARS:
+        popular_vote = PopularVotePnK2018()
+    elif TEAM_NAME == PNK and 2019 in YEARS:
+        popular_vote = PopularVotePnK2019()
 achievements = None
 
 categories = [
@@ -308,8 +322,10 @@ if __name__ == '__main__':
         s.add_top_fifteen(p.top_comebacks, p.top_throws, p.top_fast_wins, p.top_fast_losses, p.longest_matches)
         s.add_advantage_chart(p.gold_variance, 'Gold Advantage')
         s.add_advantage_chart(p.xp_variance, 'Experience Advantage')
-        s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES))
-        s.add_best_team_by_player(p.evaluate_best_team_by_hero_player(MIN_COUPLE_MATCHES/2))
+        s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES, True), 'Best')
+        s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES, False), 'Worst')
+        s.add_best_team_by_player(p.evaluate_best_team_by_hero_player(MIN_COUPLE_MATCHES / 2, True), 'Best')
+        s.add_best_team_by_player(p.evaluate_best_team_by_hero_player(MIN_COUPLE_MATCHES / 2, False), 'Worst')
         s.add_lane_partners(p.lane_partners[0:15], 'Best')
         s.add_lane_partners(p.lane_partners[-15:][::-1], 'Worst')
         s.add_couples(p.player_couples[0:10], 'Best')
@@ -322,10 +338,8 @@ if __name__ == '__main__':
         s.add_win_rate_by_date(p.win_rate_by_weekday, 'Weekday')
         if MONTH is None:
             s.add_win_rate_by_date(p.win_rate_by_month, 'Month')
-        s.add_win_rate_heroes(p.with_heroes, 'Playing')
-        s.add_most_played([v for v in p.most_played_heroes if v['matches'] > 0], True)
-        s.add_most_played([v for v in p.most_played_heroes if v['matches'] == 0], False)
-        s.add_win_rate_heroes(p.against_heroes, 'Against')
+        s.add_hero_lanes(p.hero_lane_partners[0:10], 'Best')
+        s.add_hero_lanes(p.hero_lane_partners[-10:][::-1], 'Worst')
 
         s.add_divider_slide("%s Fantasy Game" % TEAM_NAME, 'Fantasy Game based on Player Performance')
         s.add_fantasy_ranking(fantasy_scores)
@@ -339,6 +353,11 @@ if __name__ == '__main__':
         s.add_fantasy_data(fantasy_data, 'offlane')
         s.add_fantasy_data(fantasy_data, 'support')
         s.add_fantasy_data(fantasy_data, 'hard support')
+
+        s.add_win_rate_heroes(p.with_heroes, 'Playing')
+        s.add_most_played([v for v in p.most_played_heroes if v['matches'] > 0], True)
+        s.add_most_played([v for v in p.most_played_heroes if v['matches'] == 0], False)
+        s.add_win_rate_heroes(p.against_heroes, 'Against')
 
         s.add_divider_slide("%s Players" % TEAM_NAME, 'Roles, Pairings and Most Played Heroes')
         s.add_player_summary(p.player_descriptor, MIN_MATCHES)
@@ -382,6 +401,11 @@ if __name__ == '__main__':
             for category in popular_vote.votes:
                 s.add_popular_vote_category_slides(category)
             s.add_top_five_slides(popular_vote.get_top_five())
+
+        if MODE == 0:
+            s.add_divider_slide("%s Match Details" % TEAM_NAME, 'With players and positions per match')
+            s.add_match_roles_summary(p.role_summary())
+
     s.save()
 
     print('')

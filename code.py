@@ -64,6 +64,7 @@ class Parser:
         self.min_matches_with_hero = min_matches_with_hero
         self.rivals = []
         self.lane_partners = []
+        self.hero_lane_partners = []
         self.gold_variance = [[] for _ in range(180)]
         self.xp_variance = [[] for _ in range(180)]
 
@@ -126,7 +127,7 @@ class Parser:
             'wins_if_no_first_blood': win_nfb
         }
 
-    def evaluate_best_team_by_hero_player(self, min_matches):
+    def evaluate_best_team_by_hero_player(self, min_matches, is_best):
         role_dict = {}
         result_dict = {}
         inv_p = {v: k for k, v in self.players.items()}
@@ -136,18 +137,19 @@ class Parser:
                 for p in hero['played_by']:
                     if p['roles'][r]['matches'] >= min_matches:
                         role_dict[r].append({'player': p['id'], 'hero': hero['id'], 'data': p['roles'][r]})
+        fact = -1 if is_best else 1
         for _, r in roles().items():
-            s = sorted(role_dict[r], key=lambda e: e['data']['rating'], reverse=True)
+            s = sorted(role_dict[r], key=lambda e: (fact * e['data']['rating'], fact * e['data']['matches']))
             result_dict[r] = list()
             for i in range(min(5, len(s))):
                 m = s[i]
-                if m['data']['rating'] > 0:
+                if m['data']['rating'] > 0 or not is_best:
                     result_dict[r].append({'hero_id': m['hero'], 'hero_name': self.heroes[m['hero']],
                                            'rating': m['data']['rating'],
                                            'player_id': m['player'], 'player_name': inv_p[m['player']], 'role': r})
         return result_dict
 
-    def evaluate_best_team_by_hero(self, min_matches):
+    def evaluate_best_team_by_hero(self, min_matches, is_best):
         role_dict = {}
         result_dict = {}
         for _, r in roles().items():
@@ -155,10 +157,11 @@ class Parser:
         for hero in self.hero_statistics:
             for r in hero['roles']:
                 rtg = rating(r['wins'], matches=r['matches'])
-                if rtg > 0 and r['matches'] >= min_matches:
-                    role_dict[r['role']].append({'hero': hero['id'], 'rating': rtg})
+                if (rtg > 0 or not is_best) and r['matches'] >= min_matches:
+                    role_dict[r['role']].append({'hero': hero['id'], 'rating': rtg, 'matches': r['matches']})
+        fact = -1 if is_best else 1
         for _, r in roles().items():
-            s = sorted(role_dict[r], key=lambda e: e['rating'], reverse=True)
+            s = sorted(role_dict[r], key=lambda e: (fact * e['rating'], fact * e['matches']))
             result_dict[r] = list()
             for i in range(min(5, len(s))):
                 m = s[i]
@@ -209,6 +212,7 @@ class Parser:
         rivals_names = {}
         replacements = {}
         lane_players = {}
+        lane_heroes = {}
         if rep is not None:
             for k, v_l in rep.items():
                 for v in v_l:
@@ -626,6 +630,34 @@ class Parser:
                         hero_positions[player_hero_in_match[mid][pid]][pos]['wins'] += 1
                         player_hero_position[pos][(pid, player_hero_in_match[mid][pid])]['wins'] += 1
                         player_win_pos[pid][pos] += 1
+
+                for partner in v['roles']['partners']:
+                    if len(partner) == 2 and all(pid in inv_p for pid in partner):
+                        heroes = sorted([player_hero_in_match[mid][pid] for pid in partner])
+                        hero_lane_string = ', '.join([str(h) for h in heroes])
+                        if hero_lane_string not in lane_heroes:
+                            lane_heroes[hero_lane_string] = {
+                                'hero_ids': heroes,
+                                'hero_names': [self.heroes[h] for h in heroes],
+                                'matches': 0,
+                                'wins': 0,
+                                'rating': 0,
+                                'losses': 0,
+                                'wr': 0
+                            }
+                        lane_heroes[hero_lane_string]['matches'] += 1
+                        if match_summary[mid]['win']:
+                            lane_heroes[hero_lane_string]['wins'] += 1
+                        else:
+                            lane_heroes[hero_lane_string]['losses'] += 1
+
+        for heroes, data in lane_heroes.items():
+            data['rating'] = rating(data['wins'], data['losses'])
+            data['wr'] = win_rate(data['wins'], data['matches'])
+        self.hero_lane_partners = sorted([v for _, v in lane_heroes.items()
+                                          if v['matches'] >= (self.min_matches_with_hero - 1) * 2],
+                                         key=lambda e: (-e['rating'], e['losses']))
+
         for pid, v in player_positions.items():
             pp = player_positions[pid]
             ppp = {a: '%i (%.2f %%)' % (
@@ -1163,6 +1195,21 @@ class Parser:
             win_rate_by_month[i]['wr'] = win_rate(win_rate_by_month[i]['wins'], win_rate_by_month[i]['matches'])
         return win_rate_by_month
 
+    def role_summary(self):
+        return [
+            {
+                'match_id': match_id,
+                'players': [
+                    {
+                        'player_id': pid,
+                        'position': position,
+                        'hero_id': self.player_heroes_in_match[match_id][pid]
+                    } for pid, position in match_data['roles']['positions'].items()],
+                'win': match_data['win'],
+                'duration': match_data['duration'],
+                'lane': match_data['roles']['composition']
+            } for match_id, match_data in self.match_summary.items()]
+
     def calculate_fantasy_score(self, fantasy_values, fantasy_scores):
         for player_data in fantasy_scores:
             for position, data in player_data['team'].items():
@@ -1178,6 +1225,7 @@ class Parser:
         for i in range(min(3, len(ranking))):
             ranking[i]['bonus'] = bonus[i]
 
+        print('Monthly rewards')
         print(str({'rewards': fantasy_scores}).replace("'", "\""))
 
         return ranking
@@ -1199,7 +1247,8 @@ class Parser:
             'Pringles': {},
             'Kiddy': {},
             'Xupito': {},
-            'JohnMirolho': {}
+            'JohnMirolho': {},
+            'tiago': {}
         }
         fantasy_roles = ['hard carry', 'mid', 'offlane', 'support', 'hard support']
         fantasy_categories = ['hard carry', 'mid', 'offlane', 'support', 'hard support', 'xp_per_min', 'gold_per_min',
@@ -1248,7 +1297,7 @@ class Parser:
                         fantasy_count[category][role] = i
 
         BASE = 100
-        POND = 4
+        POND = 4 if len(self.years) == 1 else 3
         ADJUST = 1
 
         for i in range(5):
@@ -1275,7 +1324,16 @@ class Parser:
                 if role_desc['matches'] <= self.min_matches_with_hero:
                     fantasy_values[player][role] = 0
 
+        print('Updated Fantasy Values')
         print(str(fantasy_values).replace("'", "\""))
+        print('')
+
+        if len(self.years) > 1:
+            print('Add as new player')
+            for player, data in fantasy_values.items():
+                print(str({'player': player, 'roles': data}).replace("'", "\""))
+            print('')
+
         return fantasy_values
 
     def calculate_streaks(self, pid):

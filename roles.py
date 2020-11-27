@@ -76,9 +76,13 @@ class Roles:
         off_points = {p: 0 for p in off_candidates}
         targets = [p for p in team_players if p['account_id'] in off_candidates]
         params = ['last_hits', 'hero_damage', 'kills', 'total_gold']
-        weights = [2, 1, 0, 4]
+        weights = [4, 1, 0, 2]
+        min_t = min(10, len(targets[0]['lh_t']))
+        max_lh_t = max(targets, key=lambda e: e['lh_t'][min_t])['lh_t'][min_t]
         for player in targets:
             pid = player['account_id']
+            if player['lh_t'][min_t] == max_lh_t:
+                off_points[pid] += 108
             for param, w in zip(params, weights):
                 if player[param] == max(targets, key=lambda e: e[param])[param]:
                     off_points[pid] += 100 + w

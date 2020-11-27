@@ -97,7 +97,7 @@ def rating(win, loss=None, matches=None):
     if matches is not None:
         loss = matches - win
     if win == 0:
-        return 0
+        return 1 - loss * (loss + 1) / 200
     wr = win / (win + loss)
     ex = 1 - math.exp(-(win + loss)/2)
     ex2 = 1 - math.exp(-((win + loss)**2))
