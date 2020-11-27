@@ -199,9 +199,10 @@ class PnKAchievements(AchievementBase):
     def __init__(self, players, matches):
         AchievementBase.__init__(self, players, matches)
         self.add_ach(WinWithPlayerAchievement('Toxic Couple', ['Baco', 'Alidio']))
-        self.add_ach(WinWithPlayerAchievement('I AM ARCHON', ['Scrider', 'Older']))
+        # self.add_ach(WinWithPlayerAchievement('I AM ARCHON', ['Scrider', 'Older']))
         self.add_ach(WinWithPlayerAchievement('Feldmann Brothers', ['Lotus', 'Pringles']))
-        self.add_ach(WinWithPlayerAchievement('Scrider Brothers', ['Scrider', 'Gordito']))
+        # self.add_ach(WinWithPlayerAchievement('Scrider Brothers', ['Scrider', 'Gordito']))
+        self.add_ach(WinWithPlayerAchievement('Alves Brothers', ['Kiddy', 'Xupito']))
         self.add_ach(WinWithPlayerAchievement('Cold Blood', ['Baco', 'Alidio', 'Chuvisco']))
         self.add_ach(WinWithoutPlayerAchievement('No Immortals Allowed', ['kkz', 'Kiddy']))
         self.add_ach(StreakAchievement('Bela Tentativa', -2, same_hero=True))
@@ -209,12 +210,11 @@ class PnKAchievements(AchievementBase):
         self.add_ach(ItemSequenceAchievement('Primeiro Rad, depois Aghanim', ['radiance', 'ultimate_scepter'],
                                              'Build a Radiance and an Aghanim`s Scepter, in this order.'))
         self.add_ach(WinWithoutPlayerAchievement('Subs Captain', ['Zé']))
-        self.add_ach(PlayerOnParameterAchievement('Vem Tranquilo', 'Scrider', 'kills', 'kill count',
-                                                  lowest=False, win=True))
+        # self.add_ach(PlayerOnParameterAchievement('Vem Tranquilo', 'Scrider', 'kills', 'kill count',
+        #                                          lowest=False, win=True))
         self.add_ach(WinCarriedByAchievement('Pushing Far From Your Friends', 'Nuvah', 'Lina'))
         self.add_ach(WinCarriedByAchievement('Heavier than a Black Hole', 'Alidio', 'Wraith King'))
-        self.add_ach(WinCarriedByAchievement('My Big Hero Pool', 'Chuvisco', 'Ursa',
-                                             unless=True))
+        self.add_ach(WinCarriedByAchievement('My Big Hero Pool', 'Chuvisco', 'Ursa', unless=True))
         self.add_ach(WinCarriedByAchievement('Best Hooks for Enemy Team', 'Cristian', 'Pudge'))
         self.add_ach(WinWithPlayerOnRoleAchievement('Olderiagace', 'Older', 'hard carry'))
         self.add_ach(StreakAchievement('All Green Profile', 8))

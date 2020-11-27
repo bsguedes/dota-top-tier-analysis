@@ -922,7 +922,8 @@ class Parser:
             for o in obj:
                 m = gmtime(int(fix_time(o['start_time']))).tm_mon
                 y = gmtime(int(fix_time(o['start_time']))).tm_year
-                if ((last_days is not None and (calendar.timegm(gmtime()) - fix_time(int(o['start_time']))) < last_days * 86400)
+                if ((last_days is not None
+                     and (calendar.timegm(gmtime()) - fix_time(int(o['start_time']))) < last_days * 86400)
                         or (last_days is None and month is not None and y in self.years and m == month)
                         or (last_days is None and month is None and y in self.years)
                         and (not ranked_only or o['lobby_type'] in [5, 6, 7])):
@@ -968,7 +969,7 @@ class Parser:
             matches[match_id] = players_list
 
         for i in range(5):
-            self.matches_by_party_size.append(len({k: v for k, v in matches.items() if len(v[0]) == i + 1}))
+            self.matches_by_party_size.append(len({k: v for k, v in matches.items() if len(v) == i + 1}))
             print('Matches played by party of size %i: %s' % (i + 1, self.matches_by_party_size[i]))
         
         print('')                    
