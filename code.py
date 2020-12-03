@@ -1217,7 +1217,7 @@ class Parser:
                 'win': match_data['win'],
                 'duration': match_data['duration'],
                 'lane': match_data['roles']['composition']
-            } for match_id, match_data in self.match_summary.items()]
+            } for match_id, match_data in self.match_summary.items() if 'roles' in match_data]
 
     def calculate_fantasy_score(self, fantasy_values, fantasy_scores):
         inv_r = {v: k for k, v in roles().items()}

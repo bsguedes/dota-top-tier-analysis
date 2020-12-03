@@ -23,7 +23,7 @@ CURRENT_YEAR = 2020
 # 1: current year
 # 2: all time
 MODE = 0
-DOWNLOAD_PLAYERS = True
+DOWNLOAD_PLAYERS = False
 ONLY_RANKED = False
 
 PRINT_TIERS = False
