@@ -950,6 +950,7 @@ class Slides:
         top = 2
         left = 0.3
         pic_size = 0.32
+        column = 0.7
         row = 0.36
 
         Slides.text_box(slide, 'PnKasino Player', left, top - left, font_size=12, bold=True)
@@ -959,10 +960,10 @@ class Slides:
         Slides.text_box(slide, 'Team Cost', left + 3.4, top - left, font_size=12)
 
         Slides.text_box(slide, 'Hard Carry', left + 4.3, top - left, font_size=12, bold=True, alignment=PP_ALIGN.CENTER)
-        Slides.text_box(slide, 'Mid', left + 4.3 + 1 * (0.6 + pic_size), top - left, font_size=12, bold=True, alignment=PP_ALIGN.CENTER)
-        Slides.text_box(slide, 'Offlane', left + 4.3 + 2 * (0.6 + pic_size), top - left, font_size=12, bold=True, alignment=PP_ALIGN.CENTER)
-        Slides.text_box(slide, 'Support', left + 4.3 + 3 * (0.6 + pic_size), top - left, font_size=12, bold=True, alignment=PP_ALIGN.CENTER)
-        Slides.text_box(slide, 'Hard Support', left + 4.3 + 4 * (0.6 + pic_size), top - left, font_size=12, bold=True, alignment=PP_ALIGN.CENTER)
+        Slides.text_box(slide, 'Mid', left + 4.3 + 1 * (column + pic_size), top - left, font_size=12, bold=True, alignment=PP_ALIGN.CENTER)
+        Slides.text_box(slide, 'Offlane', left + 4.3 + 2 * (column + pic_size), top - left, font_size=12, bold=True, alignment=PP_ALIGN.CENTER)
+        Slides.text_box(slide, 'Support', left + 4.3 + 3 * (column + pic_size), top - left, font_size=12, bold=True, alignment=PP_ALIGN.CENTER)
+        Slides.text_box(slide, 'Hard Support', left + 4.3 + 4 * (column + pic_size), top - left, font_size=12, bold=True, alignment=PP_ALIGN.CENTER)
 
         for player in fantasy_scores:
             name = player['real_name'] if player['real_name'] is not None else player['name']
@@ -975,14 +976,38 @@ class Slides:
             j = 0
             for pos in ['hard_carry', 'mid', 'offlane', 'support', 'hard_support']:
                 if pos in player['team']:
+                    if player['silver'] == j + 1:
+                        shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE,
+                                               Inches(left + 4.437 + j * (column + pic_size)),
+                                               Inches(top + row * i - 0.013),
+                                               Inches(pic_size + 0.026),
+                                               Inches(pic_size + 0.026))
+                        shape.fill.solid()
+                        shape.fill.fore_color.rgb = RGBColor(128, 128, 128)
+                        shape.line.color.rgb = RGBColor(128, 128, 128)
+
+                    if player['gold'] == j + 1:
+                        shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE,
+                                               Inches(left + 4.43 + j * (column + pic_size)),
+                                               Inches(top + row * i - 0.02),
+                                               Inches(pic_size + 0.04),
+                                               Inches(pic_size + 0.04))
+                        shape.fill.solid()
+                        shape.fill.fore_color.rgb = RGBColor(232, 170, 0)
+                        shape.line.color.rgb = RGBColor(232, 170, 0)
+
                     pic_path = 'data/pics/%s.jpg' % self.players[player['team'][pos]['card']]
                     if os.path.isfile(pic_path):
-                        slide.shapes.add_picture(pic_path, Inches(left + 4.45 + j * (0.6 + pic_size)),
+                        slide.shapes.add_picture(pic_path, Inches(left + 4.45 + j * (column + pic_size)),
                                                  Inches(top + row * i), height=Inches(pic_size))
+
                     if player['team'][pos]['points'] > 0:
                         Slides.text_box(slide, "%.2f" % player['team'][pos]['points'],
-                                        left + 4.45 + pic_size + j * (0.6 + pic_size),
-                                        top + row * i, font_size=12)
+                                        left + 4.45 + pic_size + j * (column + pic_size),
+                                        top + row * i, font_size=12,
+                                        bold=player['silver'] == j + 1 or player['gold'] == j + 1,
+                                        color=RGBColor(232, 170, 0) if player['gold'] == j + 1 else
+                                        (RGBColor(128, 128, 128) if player['silver'] == j + 1 else None))
                 j += 1
             i += 1
 
@@ -998,7 +1023,13 @@ class Slides:
         top = 1.5
         row_width = 2.5
         column_width = 1.1
-        values = sorted([{'player': p, 'coins': v[role] / 500} for p, v in fantasy_values.items() if v[role] > 0],
+        values = sorted([
+            {
+                'player': p,
+                'coins': v[role] / 500,
+                'silver': v['silver'][role] if role in v['silver'] else 0,
+                'gold': v['gold'][role] if role in v['gold'] else 0
+            } for p, v in fantasy_values.items() if v[role] > 0],
                         key=lambda e: e['coins'], reverse=True)
         for i in range(x):
             for j in range(y):
@@ -1011,8 +1042,14 @@ class Slides:
                     Slides.text_box(slide, c['player'], left + column_width * i, top + row_width * j + 0.2,
                                     width=player_size, font_size=12, alignment=PP_ALIGN.CENTER, bold=True)
                     Slides.text_box(slide, "%.2f" % c['coins'], left + column_width * i,
-                                    top + row_width * j + spacing,
+                                    top + row_width * j + spacing - 0.2,
                                     width=player_size, font_size=16, alignment=PP_ALIGN.CENTER, bold=True)
+                    Slides.text_box(slide, "%.2f" % (c['silver'] + c['coins']), left + column_width * i,
+                                    top + row_width * j + spacing + 0.1, color=RGBColor(192, 192, 192),
+                                    width=player_size, font_size=12, alignment=PP_ALIGN.CENTER, bold=True)
+                    Slides.text_box(slide, "%.2f" % (c['gold'] + c['silver'] + c['coins']), left + column_width * i,
+                                    top + row_width * j + spacing + 0.3, color=RGBColor(255, 215, 0),
+                                    width=player_size, font_size=12, alignment=PP_ALIGN.CENTER, bold=True)
                     pic_path = 'data/pics/%s.jpg' % self.players[c['player']]
                     if os.path.isfile(pic_path):
                         slide.shapes.add_picture(pic_path, Inches(left + 0.1 + column_width * i),
@@ -1493,12 +1530,14 @@ class Slides:
         fill.fore_color.rgb = RGBColor(r, g, b)
 
     @staticmethod
-    def text_box(slide, text, left, top, width=None, font_size=None, alignment=None, bold=False):
+    def text_box(slide, text, left, top, width=None, font_size=None, alignment=None, bold=False, color=None):
         width = width if width is not None else 1
         tx_box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(0.4))
         tf = tx_box.text_frame
         tf.text = text
         tf.paragraphs[0].font.bold = bold
+        if color is not None:
+            tf.paragraphs[0].font.color.rgb = color
         if font_size is not None:
             tf.paragraphs[0].font.size = Pt(font_size)
         if alignment is not None:

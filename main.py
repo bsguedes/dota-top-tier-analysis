@@ -73,6 +73,13 @@ replacement_list = {
     }
 }
 
+forced_replacements = {
+    5725364669: {365319706: 'kkz'},
+    5725394131: {365319706: 'kkz'},
+    5725426780: {365319706: 'kkz'},
+    5725452578: {365319706: 'kkz'},
+}
+
 discord_ids = {
     'Zé': 139193879134994432,
     'Chaos': 291727771967946754,
@@ -258,7 +265,8 @@ if __name__ == '__main__':
     unique_matches = p.get_matches(replacements, month=MONTH, ranked_only=ONLY_RANKED)
     to_parse = downloader.download_matches(unique_matches, download_again=REDOWNLOAD_SMALL_FILES)
     matches_json = Parser.load_matches(unique_matches)
-    tier_positions = p.identify_heroes(replacements, matches_json, min_couple_matches=MIN_COUPLE_MATCHES)
+    tier_positions = p.identify_heroes(replacements, matches_json, forced_replacements,
+                                       min_couple_matches=MIN_COUPLE_MATCHES)
 
     tiers = []
     for c in categories:

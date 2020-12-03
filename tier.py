@@ -2,11 +2,12 @@ import math
 
 
 class TierItem:
-    def __init__(self, name, score, text, number=None, scores_per_role=None):
+    def __init__(self, name, score, text, number=None, scores_per_role=None, totals_per_role=None):
         self.name = name
         self.score = score
         self.text = text
         self.score_per_role = scores_per_role
+        self.totals_per_role = totals_per_role
         self.number = float(score) if number is None else number
 
     def __repr__(self):

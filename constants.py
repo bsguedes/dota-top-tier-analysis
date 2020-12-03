@@ -96,13 +96,23 @@ def win_rate(wins, matches):
 def rating(win, loss=None, matches=None):
     if matches is not None:
         loss = matches - win
-    if win == 0:
-        return 1 - loss * (loss + 1) / 200
-    wr = win / (win + loss)
-    ex = 1 - math.exp(-(win + loss)/2)
-    ex2 = 1 - math.exp(-((win + loss)**2))
-    sg = 1 / (1 + math.exp(-(win-loss)/3))
-    return 7 * wr * ex + 2 * math.sqrt(sg) + ex2
+    exp_factor = 1 - math.exp(-win/5)
+    phat = (win + 1)/(loss + (win + 1))
+    n = win + loss + 1
+    z = 1.96
+    plus_factor = 4 * (phat + z*z/(2*n) - z * math.sqrt((phat*(1-phat)+z*z/(4*n))/n))/(1+z*z/n)
+    minus_factor = 5 * (phat + z*z/(2*n) + z * math.sqrt((phat*(1-phat)+z*z/(4*n))/n))/(1+z*z/n)
+    rat = exp_factor + plus_factor + minus_factor
+    if rat > 0:
+        return rat
+    else:
+        if win == 0:
+            return 1 - loss * (loss + 1) / 200
+        wr = win / (win + loss)
+        ex = 1 - math.exp(-(win + loss)/2)
+        ex2 = 1 - math.exp(-((win + loss)**2))
+        sg = 1 / (1 + math.exp(-(win-loss)/3))
+        return 7 * wr * ex + 2 * math.sqrt(sg) + ex2
 
 
 def sequence(strings, maximum=None):

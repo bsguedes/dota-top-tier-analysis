@@ -200,7 +200,7 @@ class Parser:
             })
         return ret
 
-    def identify_heroes(self, rep, matches, min_couple_matches=10):
+    def identify_heroes(self, rep, matches, forced_replacements, min_couple_matches=10):
         matches = {o['id']: o['content'] for o in matches}
         hs = open('data/heroes.json', 'r', encoding='utf-8').read()
         hs_json = json.loads(hs)
@@ -248,10 +248,14 @@ class Parser:
             for p in obj['players']:
                 team_fight_index += 1
                 if p['account_id'] in replacements:
-                    if not self.players[replacements[p['account_id']]] in [e['account_id'] for e in obj['players']]:
-                        p['account_id'] = self.players[replacements[p['account_id']]]
-                    else:
-                        p['account_id'] += 1
+                    if match_id in forced_replacements:
+                        if p['account_id'] in forced_replacements[match_id]:
+                            p['account_id'] = self.players[forced_replacements[match_id][p['account_id']]]
+                    if p['account_id'] in replacements:
+                        if not self.players[replacements[p['account_id']]] in [e['account_id'] for e in obj['players']]:
+                            p['account_id'] = self.players[replacements[p['account_id']]]
+                        else:
+                            p['account_id'] += 1
                 if p['account_id'] in account_ids:
                     match_summary[match_id]['lobby_type'] = lobby_type()[obj['lobby_type']]
                     match_summary[match_id]['skill'] = obj['skill']
@@ -891,7 +895,8 @@ class Parser:
                     vl = avg_fmt % tf(averages[name])
                     avg_block = ('(avg %s %s)' % (vl, unit)) if len(unit) > 0 else ('(avg %s)' % vl)
                     txt = '%s has %i %s in %i matches %s' % (name, totals[name], text, matches_played[name], avg_block)
-                    results_avg.append(TierItem(name, vl, txt, tf(averages[name]), average_per_role[name]))
+                    results_avg.append(TierItem(name, vl, txt, tf(averages[name]),
+                                                average_per_role[name], totals_per_role[name]))
             if not has_max:
                 return results_avg, None
 
@@ -1215,10 +1220,22 @@ class Parser:
             } for match_id, match_data in self.match_summary.items()]
 
     def calculate_fantasy_score(self, fantasy_values, fantasy_scores):
+        inv_r = {v: k for k, v in roles().items()}
         for player_data in fantasy_scores:
             for position, data in player_data['team'].items():
-                if data['card'] in fantasy_values and position.replace('_', ' ') in fantasy_values[data['card']]:
-                    data['points'] = fantasy_values[data['card']][position.replace('_', ' ')] / 500
+                pos = position.replace('_', ' ')
+                if data['card'] in fantasy_values and pos in fantasy_values[data['card']]:
+                    data['points'] = fantasy_values[data['card']][pos] / 500
+                    if player_data['silver'] == inv_r[pos] or player_data['gold'] == inv_r[pos]:
+                        p = roles()[player_data['silver']]
+                        name = data['card']
+                        ps = fantasy_values[name]['silver'][p]
+                        data['points'] += ps
+                    if player_data['gold'] == inv_r[pos]:
+                        p = roles()[player_data['gold']]
+                        name = data['card']
+                        ps = fantasy_values[name]['gold'][p]
+                        data['points'] += ps
                 else:
                     data['points'] = 0
             player_data['total_score'] = sum(t['points'] for p, t in player_data['team'].items())
@@ -1230,8 +1247,12 @@ class Parser:
             ranking[i]['bonus'] = bonus[i]
 
         print('Monthly rewards')
-        print(str({'rewards': fantasy_scores}).replace("'", "\""))
-
+        print(str({'rewards': [
+            {
+                'name': p['name'],
+                'earnings': p['earnings'],
+                'bonus': p['bonus']
+            } for p in fantasy_scores]}).replace("'", "\""))
         return ranking
 
     def fantasy(self, tiers):
@@ -1254,12 +1275,22 @@ class Parser:
             'JohnMirolho': {},
             'tiago': {}
         }
+        tier_silver = {player: {} for player, _ in tier_fantasy.items()}
+        tier_gold = {player: {} for player, _ in tier_fantasy.items()}
         fantasy_roles = ['hard carry', 'mid', 'offlane', 'support', 'hard support']
         fantasy_categories = ['hard carry', 'mid', 'offlane', 'support', 'hard support', 'xp_per_min', 'gold_per_min',
-                              'stuns', 'hero_healing', 'damage_taken', 'tower_damage', 'kills', 'assists', 'obs_placed']
+                              'stuns', 'hero_healing', 'damage_taken', 'tower_damage', 'kills', 'assists', 'obs_placed',
+                              'last_hits', 'stuns', 'observer_kills', 'multi_kills', 'kill_streaks',
+                              'courier_kills', 'creeps_stacked']
+        silver = ['last_hits', 'kills', 'damage_taken', 'stuns', 'observer_kills']
+        silver_weights = [0.0003, 0.005, 0.000002, 0.001, 0.02]
+        gold = ['multi_kills', 'kill_streaks', 'assists', 'courier_kills', 'creeps_stacked']
+        gold_weights = [0.7, 0.5, 0.005, 0.3, 0.03]
 
-        for p, _ in tier_fantasy.items():
-            tier_fantasy[p] = {c: {} for c in fantasy_categories}
+        for player, _ in tier_fantasy.items():
+            tier_fantasy[player] = {category: {} for category in fantasy_categories}
+            tier_silver[player] = {category: {} for category in silver}
+            tier_gold[player] = {category: {} for category in gold}
 
         fantasy_weights = {
             'hard carry': [5, 0, 0, 0, 0],
@@ -1283,10 +1314,24 @@ class Parser:
 
         for t in tiers:
             category = t[1].parameter
-            if category in fantasy_categories and not t[0].is_max:
+            tier = t[0]
+            if category in silver and not tier.is_max:
+                for role in fantasy_roles:
+                    for tier_item in tier.scores_array:
+                        if tier_item.name in fantasy_players:
+                            tier_silver[tier_item.name][category][role] = tier_item.totals_per_role[role]
+            if category in gold and not tier.is_max:
+                for role in fantasy_roles:
+                    for tier_item in tier.scores_array:
+                        if tier_item.name in fantasy_players:
+                            if role not in tier_gold[tier_item.name][category]:
+                                tier_gold[tier_item.name][category][role] = 0
+                            if t[1].unit not in ['double kills', 'triple kills', 'kills']:
+                                tier_gold[tier_item.name][category][role] += tier_item.totals_per_role[role]
+            if category in fantasy_categories and not tier.is_max:
                 if category in fantasy_roles:
                     i = 0
-                    for tier_item in t[0].scores_array:
+                    for tier_item in tier.scores_array:
                         if tier_item.name in fantasy_players:
                             tier_fantasy[tier_item.name][category][category] = i
                             i += 1
@@ -1294,7 +1339,7 @@ class Parser:
                 else:
                     for role in fantasy_roles:
                         i = 0
-                        for tier_item in t[0].players_sorted_by_role(role):
+                        for tier_item in tier.players_sorted_by_role(role):
                             if tier_item in fantasy_players:
                                 tier_fantasy[tier_item][category][role] = i
                                 i += 1
@@ -1304,18 +1349,18 @@ class Parser:
         POND = 4 if len(self.years) == 1 else 3
         ADJUST = 1
 
-        for i in range(5):
-            for c in fantasy_categories:
-                for p, d in tier_fantasy.items():
-                    if "value_%s" % i not in d:
-                        d["value_%s" % i] = 0
-                    if c in d:
-                        r = fantasy_roles[i]
-                        w = (1 + fantasy_weights[c][i] * POND / 100.0)
-                        b = fantasy_weights[c][i] * BASE
-                        if r in d[c]:
-                            points = b * w ** int(fantasy_count[c][r] / 2 - d[c][r])
-                            d["value_%s" % i] += points
+        for idx_role in range(5):
+            for category in fantasy_categories:
+                for _, data in tier_fantasy.items():
+                    if "value_%s" % idx_role not in data:
+                        data["value_%s" % idx_role] = 0
+                    if category in data and category in fantasy_weights:
+                        role_name = fantasy_roles[idx_role]
+                        w = (1 + fantasy_weights[category][idx_role] * POND / 100.0)
+                        b = fantasy_weights[category][idx_role] * BASE
+                        if role_name in data[category]:
+                            points = b * w ** int(fantasy_count[category][role_name] / 2 - data[category][role_name])
+                            data["value_%s" % idx_role] += points
 
         fantasy_values = {}
 
@@ -1337,6 +1382,16 @@ class Parser:
             for player, data in fantasy_values.items():
                 print(str({'player': player, 'roles': data}).replace("'", "\""))
             print('')
+
+        for player, data in fantasy_values.items():
+            data['silver'] = {}
+            data['gold'] = {}
+            for i in range(5):
+                if fantasy_roles[i] in tier_silver[player][silver[i]]:
+                    data['silver'][fantasy_roles[i]] = tier_silver[player][silver[i]][fantasy_roles[i]] * \
+                                                       silver_weights[i]
+                if fantasy_roles[i] in tier_gold[player][gold[i]]:
+                    data['gold'][fantasy_roles[i]] = tier_gold[player][gold[i]][fantasy_roles[i]] * gold_weights[i]
 
         return fantasy_values
 
