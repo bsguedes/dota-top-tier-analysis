@@ -988,10 +988,10 @@ class Slides:
 
                     if player['gold'] == j + 1:
                         shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE,
-                                               Inches(left + 4.43 + j * (column + pic_size)),
-                                               Inches(top + row * i - 0.02),
-                                               Inches(pic_size + 0.04),
-                                               Inches(pic_size + 0.04))
+                                               Inches(left + 4.437 + j * (column + pic_size)),
+                                               Inches(top + row * i - 0.013),
+                                               Inches(pic_size + 0.026),
+                                               Inches(pic_size + 0.026))
                         shape.fill.solid()
                         shape.fill.fore_color.rgb = RGBColor(232, 170, 0)
                         shape.line.color.rgb = RGBColor(232, 170, 0)
