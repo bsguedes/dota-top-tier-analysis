@@ -100,8 +100,8 @@ def rating(win, loss=None, matches=None):
     phat = (win + 1)/(loss + (win + 1))
     n = win + loss + 1
     z = 1.96
-    plus_factor = 4 * (phat + z*z/(2*n) - z * math.sqrt((phat*(1-phat)+z*z/(4*n))/n))/(1+z*z/n)
-    minus_factor = 5 * (phat + z*z/(2*n) + z * math.sqrt((phat*(1-phat)+z*z/(4*n))/n))/(1+z*z/n)
+    plus_factor = 4.5 * (phat + z*z/(2*n) - z * math.sqrt((phat*(1-phat)+z*z/(4*n))/n))/(1+z*z/n)
+    minus_factor = 4.5 * (phat + z*z/(2*n) + z * math.sqrt((phat*(1-phat)+z*z/(4*n))/n))/(1+z*z/n)
     rat = exp_factor + plus_factor + minus_factor
     if rat > 0:
         return rat

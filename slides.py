@@ -180,13 +180,13 @@ class Slides:
                         p.font.size = Pt(24)
                         p.font.bold = True
 
-                        tx_box = slide.shapes.add_textbox(Inches(1.8), Inches(5.05) + i * Inches(0.8), Inches(1.5),
+                        tx_box = slide.shapes.add_textbox(Inches(2), Inches(5.05) + i * Inches(0.8), Inches(1.5),
                                                           Inches(0.5))
                         p = tx_box.text_frame.paragraphs[0]
                         p.text = '%i-%i (%.2f %% wr)' % (s[i]['wins'], s[i]['matches'] - s[i]['wins'], s[i]['wr'])
-                        p.font.size = Pt(18)
+                        p.font.size = Pt(15)
 
-                        tx_box = slide.shapes.add_textbox(Inches(1.8), Inches(4.75) + i * Inches(0.8), Inches(1.5),
+                        tx_box = slide.shapes.add_textbox(Inches(2), Inches(4.75) + i * Inches(0.8), Inches(1.5),
                                                           Inches(0.5))
                         p = tx_box.text_frame.paragraphs[0]
                         p.text = '%s' % s[i]['name']
@@ -328,7 +328,7 @@ class Slides:
             data_labels.font.size = Pt(12)
             data_labels.font.color.rgb = RGBColor(0, 0, 0)
 
-    def add_player_data_slide(self, desc):
+    def add_player_data_slide(self, desc, min_matches_with_hero):
         slide = self.add_slide(5, 255, 229, 204)
         title_shape = slide.shapes.title
         title_shape.text = desc['name']
@@ -393,9 +393,12 @@ class Slides:
         p = tf.paragraphs[0]
         p.text = 'Best heroes by rating'
         p.font.size = Pt(16)
-        heroes = sorted(desc['heroes'].items(), key=lambda e: e[1]['rating'], reverse=True)
+
+        filtered_heroes = [e for e in desc['heroes'].items() if e[1]['matches'] >= min_matches_with_hero]
+
+        heroes = sorted(filtered_heroes, key=lambda e: e[1]['rating'], reverse=True)
         for i in range(4):
-            if heroes[i][1]['rating'] > 0:
+            if len(heroes) > i and heroes[i][1]['rating'] > 0:
                 pic_path = 'data/heroes/%s.jpg' % heroes[i][0]
                 slide.shapes.add_picture(pic_path, Inches(0.5), Inches(4.2) + i * Inches(0.8), height=Inches(0.7))
                 tx_box = slide.shapes.add_textbox(Inches(1.9), Inches(4.3) + i * Inches(0.8), Inches(1.6), Inches(0.4))
@@ -420,9 +423,9 @@ class Slides:
         p = tf.paragraphs[0]
         p.text = 'Most played heroes'
         p.font.size = Pt(16)
-        s = sorted(heroes, key=lambda e: e[1]['matches'], reverse=True)
+        s = sorted(desc['heroes'].items(), key=lambda e: e[1]['matches'], reverse=True)
         for i in range(4):
-            if s[i][1]['matches'] > 0:
+            if len(s) > i and s[i][1]['matches'] > 0:
                 pic_path = 'data/heroes/%s.jpg' % s[i][0]
                 slide.shapes.add_picture(pic_path, Inches(4), Inches(4.2) + i * Inches(0.8), height=Inches(0.7))
                 tx_box = slide.shapes.add_textbox(Inches(5.5), Inches(4.3) + i * Inches(0.8), Inches(1.6), Inches(0.4))
@@ -436,9 +439,9 @@ class Slides:
         p = tf.paragraphs[0]
         p.text = 'Worst rating against'
         p.font.size = Pt(16)
-        s = sorted(heroes, key=lambda e: e[1]['inv_rating'], reverse=True)
+        s = sorted(desc['heroes'].items(), key=lambda e: e[1]['inv_rating'], reverse=True)
         for i in range(4):
-            if s[i][1]['matches_against'] > 0:
+            if len(s) > i and s[i][1]['matches_against'] > 0:
                 pic_path = 'data/heroes/%s.jpg' % s[i][0]
                 slide.shapes.add_picture(pic_path, Inches(6.5), Inches(4.2) + i * Inches(0.8), height=Inches(0.7))
                 tx_box = slide.shapes.add_textbox(Inches(7.9), Inches(4.3) + i * Inches(0.8), Inches(1.6), Inches(0.4))
@@ -944,7 +947,7 @@ class Slides:
             i += 1
 
     def add_fantasy_ranking(self, fantasy_scores):
-        slide = self.add_slide(5, 74, 222, 255)
+        slide = self.add_slide(5, 104, 252, 255)
         slide.shapes.title.text = 'Current Fantasy Ranking'
         i = 0
         top = 2
@@ -983,8 +986,8 @@ class Slides:
                                                Inches(pic_size + 0.026),
                                                Inches(pic_size + 0.026))
                         shape.fill.solid()
-                        shape.fill.fore_color.rgb = RGBColor(128, 128, 128)
-                        shape.line.color.rgb = RGBColor(128, 128, 128)
+                        shape.fill.fore_color.rgb = RGBColor(192, 192, 192)
+                        shape.line.color.rgb = RGBColor(192, 192, 192)
 
                     if player['gold'] == j + 1:
                         shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE,
@@ -1005,7 +1008,7 @@ class Slides:
                         Slides.text_box(slide, "%.2f" % player['team'][pos]['points'],
                                         left + 4.45 + pic_size + j * (column + pic_size),
                                         top + row * i, font_size=12,
-                                        bold=player['silver'] == j + 1 or player['gold'] == j + 1,
+                                        bold=player['silver'] == (j + 1) or player['gold'] == (j + 1),
                                         color=RGBColor(232, 170, 0) if player['gold'] == j + 1 else
                                         (RGBColor(128, 128, 128) if player['silver'] == j + 1 else None))
                 j += 1
@@ -1096,10 +1099,12 @@ class Slides:
                         slide.shapes.add_picture(pic_path, Inches(left + 0.1 + column_width * i),
                                                  Inches(top + row_width * j + 0.7), height=Inches(pic_size))
 
-    def add_best_team(self, best_team, text):
-        slide = self.add_slide(5, 152, 251, 152) if text == 'Best' else self.add_slide(5, 255, 12, 12)
+    def add_best_team(self, best_team, text, matches):
+        slide = self.add_slide(5, 152, 251, 152) if text == 'Best' else self.add_slide(5, 255, 60, 60)
         slide.shapes.title.text = "%s Team by Hero Performance" % text
         i = 0
+        Slides.text_box(slide, "Minimum %i or more matches for that hero on that role." % matches,
+                        1, 0.1, font_size=9)
         for r in roles().values():
             if len(best_team[r]) > 0:
                 pic_path = 'data/heroes/%s.jpg' % best_team[r][0]['hero_id']
@@ -1138,6 +1143,8 @@ class Slides:
         slide = self.add_slide(5, 104, 222, 255)
         title_shape = slide.shapes.title
         title_shape.text = '%s Rivals' % self.team_name
+        Slides.text_box(slide, "Rivals with 2 or more matches against %s." % self.team_name,
+                        1, 0.1, font_size=9)
 
         headers = ['Rival Name', 'ID', 'Wins', 'Matches', 'Win Rate']
         keys = ['name', 'id', 'wins', 'matches', 'wr']
@@ -1146,10 +1153,12 @@ class Slides:
         Slides.create_table(slide, rivals, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
                             widths=widths, hyperlink=[1], hyperlink_type='players')
 
-    def add_trios(self, trios, text):
+    def add_trios(self, trios, text, matches):
         slide = self.add_slide(5, 255, 105, 180)
         title_shape = slide.shapes.title
         title_shape.text = '%s 15 %s Trios' % (text, self.team_name)
+        Slides.text_box(slide, "Minimum %i or more matches by these trios on the same match." % matches,
+                        1, 0.1, font_size=9)
 
         headers = ['Players', 'Rating', 'Wins', 'Matches', 'Win Rate']
         keys = ['players', 'rating', 'wins', 'matches', 'wr']
@@ -1158,10 +1167,11 @@ class Slides:
         Slides.create_table(slide, trios, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
                             widths=widths)
 
-    def add_lane_partners(self, partners, text):
+    def add_lane_partners(self, partners, text, matches):
         slide = self.add_slide(5, 180, 140, 255)
         slide.shapes.title.text = "%s %s Lane Partners" % (self.team_name, text)
-
+        Slides.text_box(slide, "Minimum %i or more matches by these players on the same lane." % matches,
+                        1, 0.1, font_size=9)
         headers = ['Players', 'Rating', 'Wins', 'Losses', 'Matches', 'Win Rate']
         keys = ['lane', 'rating', 'wins', 'losses', 'matches', 'wr']
         formats = ['%s', '%.2f', '%s', '%s', '%s', '%.2f %%']
@@ -1169,9 +1179,11 @@ class Slides:
         Slides.create_table(slide, partners, headers, keys, formats, Inches(0.5), Inches(1.5), Inches(9), 1, 13, 15,
                             widths=widths)
 
-    def add_hero_lanes(self, couples, text):
+    def add_hero_lanes(self, couples, text, matches):
         slide = self.add_slide(5, 220, 125, 180)
         slide.shapes.title.text = "%s %s Heroes on Same Lane" % (text, self.team_name)
+        Slides.text_box(slide, "Minimum %i or more matches by these heroes on the same lane." % matches,
+                        1, 0.1, font_size=9)
         y = 5
         x = 2
         left = 0.6
@@ -1209,10 +1221,52 @@ class Slides:
                                     left + column_width * i + player_size, line_space * j + top + 0.7,
                                     width=spacing, alignment=PP_ALIGN.CENTER, font_size=12)
 
-    def add_couples(self, couples, text):
+    def add_hero_player_couples(self, couples, text, matches):
+        slide = self.add_slide(5, 122, 105, 234)
+        slide.shapes.title.text = "%s %s Hero-Player Pairs" % (self.team_name, text)
+        Slides.text_box(slide, "Minimum %i or more matches by these players with these heroes." % matches,
+                        1, 0.1, font_size=9)
+        y = 5
+        x = 2
+        left = 0.6
+        player_size = 1
+        pic_size = 0.8
+        spacing = 2
+        top = 1.2
+        column_width = 4.8
+        for i in range(x):
+            for j in range(y):
+                if i * y + j < len(couples):
+                    c = couples[i * y + j]
+                    Slides.text_box(slide, c['player_name'], left + column_width * i, top * (1 + j),
+                                    width=player_size, font_size=14, alignment=PP_ALIGN.CENTER, bold=True)
+                    Slides.text_box(slide, c['hero_name'], left + player_size + spacing + column_width * i,
+                                    top * (1 + j),
+                                    width=player_size, font_size=14, alignment=PP_ALIGN.CENTER, bold=True)
+                    pic_path = 'data/pics/%s.jpg' % c['player_id']
+                    if os.path.isfile(pic_path):
+                        slide.shapes.add_picture(pic_path, Inches(left + 0.1 + column_width * i),
+                                                 Inches(top * (1 + j) + 0.35), height=Inches(pic_size))
+                    pic_path = 'data/heroes/%s.jpg' % c['hero_id']
+                    if os.path.isfile(pic_path):
+                        slide.shapes.add_picture(pic_path,
+                                                 Inches(left + 0.1 + player_size + spacing + column_width * i),
+                                                 Inches(top * (1 + j) + 0.45), height=Inches(pic_size) - 0.2)
+                    Slides.text_box(slide, '%.2f' % c['rating'], left + column_width * i + player_size, top * (1 + j),
+                                    width=spacing, alignment=PP_ALIGN.CENTER, font_size=24, bold=True)
+                    Slides.text_box(slide, '%.2f %%' % c['wr'], left + column_width * i + player_size,
+                                    top * (1 + j) + 0.5,
+                                    width=spacing, alignment=PP_ALIGN.CENTER, font_size=16)
+                    Slides.text_box(slide, '%s matches (%s - %s)' % (c['matches'], c['wins'], c['losses']),
+                                    left + column_width * i + player_size, top * (1 + j) + 0.9,
+                                    width=spacing, alignment=PP_ALIGN.CENTER, font_size=12)
+
+    def add_couples(self, couples, text, matches):
         inv_p = {v: k for k, v in self.players.items()}
         slide = self.add_slide(5, 255, 105, 180)
         slide.shapes.title.text = "%s %s Couples" % (self.team_name, text)
+        Slides.text_box(slide, "Minimum %i or more matches by these players on the same match." % matches,
+                        1, 0.1, font_size=9)
         y = 5
         x = 2
         left = 0.6
@@ -1248,10 +1302,12 @@ class Slides:
                                     left + column_width * i + player_size, top * (1 + j) + 0.9,
                                     width=spacing, alignment=PP_ALIGN.CENTER, font_size=12)
 
-    def add_best_team_by_player(self, best_team, text):
-        slide = self.add_slide(5, 152, 251, 152) if text == 'Best' else self.add_slide(5, 255, 12, 12)
+    def add_best_team_by_player(self, best_team, text, matches):
+        slide = self.add_slide(5, 152, 251, 152) if text == 'Best' else self.add_slide(5, 255, 60, 60)
         slide.shapes.title.text = "%s Player/Hero by Position" % text
         i = 0
+        Slides.text_box(slide, "Minimum %i or more matches by that player for that hero on that role." % matches,
+                        1, 0.1, font_size=9)
         for r in roles().values():
             if len(best_team[r]) > 0:
                 tx_box = slide.shapes.add_textbox(Inches(0.5 + 1.8 * i), Inches(1.5), Inches(1.6), Inches(0.4))

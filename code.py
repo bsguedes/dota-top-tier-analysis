@@ -65,6 +65,7 @@ class Parser:
         self.rivals = []
         self.lane_partners = []
         self.hero_lane_partners = []
+        self.hero_player_couples = []
         self.gold_variance = [[] for _ in range(180)]
         self.xp_variance = [[] for _ in range(180)]
 
@@ -698,6 +699,21 @@ class Parser:
                                 key=lambda z: (z['rating'], z['wins']), reverse=True)
         } for hero_name, value in ss], key=lambda l: l['name'])
 
+        self.hero_player_couples = sorted([
+            {
+                'player_name': player['name'],
+                'hero_name': hero['name'],
+                'hero_id': hero['id'],
+                'player_id': self.players[player['name']],
+                'wins': player['wins'],
+                'losses': player['matches'] - player['wins'],
+                'rating': player['rating'],
+                'wr': player['wr'],
+                'matches': player['matches']
+            } for hero in self.hero_statistics for player in hero['played_by']
+            if player['matches'] >= self.min_matches_with_hero
+        ], key=lambda e: -e['rating'])
+
         tier_dict = dict()
         for _, pos_n in roles().items():
             avg = {k: player_win_pos[v][pos_n] / player_positions[v][pos_n] for k, v in self.players.items()
@@ -1181,8 +1197,9 @@ class Parser:
     def calculate_top_heroes(self, pid):
         hero_ids = []
         for hero in self.hero_statistics:
-            if len(hero['played_by']) > 0:
-                max_rating = max(hero['played_by'], key=lambda x: x['rating'])['rating']
+            valid = [h for h in hero['played_by'] if h['matches'] >= self.min_matches_with_hero]
+            if len(valid) > 0:
+                max_rating = max(valid, key=lambda x: x['rating'])['rating']
                 if max_rating > 0:
                     e = [h for h in hero['played_by'] if h['id'] == pid]
                     if len(e) == 1 and e[0]['rating'] == max_rating and e[0]['matches'] >= self.min_matches_with_hero:
@@ -1226,20 +1243,21 @@ class Parser:
                 pos = position.replace('_', ' ')
                 if data['card'] in fantasy_values and pos in fantasy_values[data['card']]:
                     data['points'] = fantasy_values[data['card']][pos] / 500
-                    if player_data['silver'] == inv_r[pos] or player_data['gold'] == inv_r[pos]:
+                    if player_data['silver'] == inv_r[pos]:
                         p = roles()[player_data['silver']]
                         name = data['card']
-                        ps = fantasy_values[name]['silver'][p]
+                        ps = fantasy_values[name]['silver'][p] if p in fantasy_values[name]['silver'] else 0
                         data['points'] += ps
                     if player_data['gold'] == inv_r[pos]:
                         p = roles()[player_data['gold']]
                         name = data['card']
-                        ps = fantasy_values[name]['gold'][p]
-                        data['points'] += ps
+                        ps = fantasy_values[name]['gold'][p] if p in fantasy_values[name]['gold'] else 0
+                        pss = fantasy_values[name]['silver'][p] if p in fantasy_values[name]['silver'] else 0
+                        data['points'] += ps + pss
                 else:
                     data['points'] = 0
             player_data['total_score'] = sum(t['points'] for p, t in player_data['team'].items())
-            player_data['earnings'] = int(player_data['total_score'] ** 3) // 100 * 10
+            player_data['earnings'] = int(player_data['total_score'] ** 3) // 150 * 10
             player_data['bonus'] = 0
         ranking = sorted(fantasy_scores, key=lambda e: (-e['total_score'], e['cost']))
         bonus = [5000, 3000, 1500]

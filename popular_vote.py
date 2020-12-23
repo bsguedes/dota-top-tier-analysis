@@ -1,3 +1,348 @@
+class PopularVotePnK2020:
+    def __init__(self):
+        self.top_five = ['kkz', 'Kiddy', 'Chuvisco', 'Zé', 'Lotus']
+        self.votes = [
+            {
+                'category': 'Partida do Ano',
+                'options': [
+                    'Mix via Matchmaking',
+                    'Mix team Xupito vs team Lotus',
+                    '40k de Comeback',
+                ],
+                'votes': [7, 2, 7],
+            },
+            {
+                'category': 'Highlight do Ano',
+                'options': [
+                    'Rampage Alidio de Medusa',
+                    'Combo Invoker Shaker Tide',
+                    'Kiddy salvando Xupito de Smoke',
+                    'Zé Spectre Sayajin',
+                    'Rolo Compressor do PnK',
+                    'Glimpse e Flecha da Mirana',
+                ],
+                'votes': [4, 3, 1, 2, 2, 4],
+                'winner': ['Alidio', 'Older', 'JohnMirolho']
+            },
+            {
+                'category': 'Melhor x1 do Ano',
+                'options': [
+                    'Lotus x Xupito de Pangolier',
+                    'Lotus x Xupito de Windrunner',
+                    'Pringles x Kiddy de Lina',
+                    'Pringles x Kiddy de Mars',
+                    'Pringles x Kiddy de SF',
+                ],
+                'votes': [4, 5, 6, 0, 1],
+                'winner': ['Pringles', 'Kiddy']
+            },
+            {
+                'category': 'Toxic Player Award',
+                'options': [
+                    'Baco',
+                    'Chuvisco',
+                    'Alidio',
+                    'Pringles',
+                    'Lotus',
+                ],
+                'votes': [0, 4, 8, 1, 3],
+                'winner': 'Alidio'
+            },
+            {
+                'category': 'Prêmio Older Istari de Melhor Pessoa',
+                'options': [
+                    'tiago',
+                    'tchepo',
+                    'Xupito',
+                    'Keera',
+                    'JohnMirolho',
+                ],
+                'votes': [0, 5, 5, 2, 4],
+                'winner': ['tchepo', 'Xupito']
+            },
+            {
+                'category': 'Streamer do Ano',
+                'options': [
+                    'Alidio',
+                    'Baco',
+                    'Pringles',
+                    'Kiddy',
+                    'Chaos',
+                ],
+                'votes': [6, 7, 0, 2, 1],
+                'winner': 'Baco'
+            },
+            {
+                'category': 'Try hard do Ano',
+                'options': [
+                    'Pringles',
+                    'Kiddy',
+                    'Lotus',
+                    'Chuvisco',
+                    'Older',
+                    'kkz',
+                ],
+                'votes': [6, 1, 2, 2, 4, 1],
+                'winner': 'Pringles'
+            },
+            {
+                'category': 'Prêmio Saudade',
+                'options': [
+                    'Scrider',
+                    'Osaka',
+                    'Gilberto',
+                    'Shadow',
+                    'Fallenzão',
+                ],
+                'votes': [9, 2, 1, 2, 2],
+                'winner': 'Scrider'
+            },
+            {
+                'category': 'Treta/Discussão do Ano',
+                'options': [
+                    'Montar computador da China by Scrider',
+                    'O que é try hard?',
+                    'Panelinha do Clã',
+                    'Chuvisco não aceita críticas?',
+                    'Alidio expulso do Discord do PnK',
+                ],
+                'votes': [2, 1, 2, 10, 1],
+                'winner': 'Chuvisco'
+            },
+            {
+                'category': 'Bordão do Ano',
+                'options': [
+                    'SVENON',
+                    'Joao ta ai?',
+                    'Eu queria dizer que... tu é um irmão velho.... 6 são foda',
+                    'Eu juro que vou fazer de tudo pra perder esse jogo',
+                    'It is what it is',
+                    'Vai tá tudo esquematiz...hahaha huhuhui tstststs aaaaaiiiii',
+                ],
+                'votes': [3, 1, 4, 2, 1, 5],
+                'winner': 'Baco'
+            },
+            {
+                'category': 'Jogo Alternativo do Ano',
+                'options': [
+                    'Fall Guys',
+                    'Among Us',
+                    'Chess',
+                    'WoW',
+                    'Plasmophobia',
+                    'Hades',
+                ],
+                'votes': [4, 9, 2, 0, 0, 1],
+            },
+            {
+                'category': 'Acontecimentos não dotísticos do ano',
+                'options': [
+                    'Chaos ganhando um buraco na testa',
+                    'Gigante ganhando Skin no Poker',
+                    'Nuvah ganhando no Poker às 4 da manhã',
+                    'Baco visitando Alidio no Canadá',
+                    'Fundação da Tchepo Esfirras Co.',
+                    'Noivado do Chuvisco',
+                ],
+                'votes': [2, 1, 1, 5, 5, 2],
+                'winner': ['tchepo', 'Baco', 'Alidio']
+            },
+            {
+                'category': 'Acontecimentos dotísticos do grupo',
+                'options': [
+                    'Chuvisco Divine maior ganho de mmr que não é da época do HoN',
+                    'Criação do PnKasino by Older',
+                    'Chegada do tiago no grupo',
+                    'Chegada do JohnMirolho no grupo',
+                ],
+                'votes': [3, 7, 3, 3],
+                'winner': 'Older'
+            },
+            {
+                'category': 'Melhor Discord Server',
+                'options': [
+                    'KingKiddy',
+                    'Cold Blood',
+                    'PnK Gaming',
+                ],
+                'votes': [1, 5, 10],
+            },
+            {
+                'category': 'Best Brothers',
+                'options': [
+                    'Lotus e Pringles',
+                    'Kiddy e Xupito',
+                    'Roshan e Sioux',
+                ],
+                'votes': [5, 10, 1],
+                'winner': ['Kiddy', 'Xupito']
+            },
+            {
+                'category': 'Counter Strike Player of the Year',
+                'options': [
+                    'Alidio',
+                    'Baco',
+                    'Chuvisco',
+                    'Zé',
+                    'tchepo',
+                    'Nuvah',
+                    'kkz',
+                    'Gigante',
+                    'Chaos',
+                ],
+                'votes': [0, 2, 5, 2, 0, 0, 0, 7, 0],
+            },
+            {
+                'category': 'Chess Player of the Year',
+                'options': [
+                    'Cristian',
+                    'Nuvah',
+                    'Zé',
+                    'Chuvisco',
+                ],
+                'votes': [5, 9, 2, 0],
+                'winner': 'Nuvah'
+            },
+            {
+                'category': 'Poker Player of the Year',
+                'options': [
+                    'Zé',
+                    'Nuvah',
+                    'Gigante',
+                    'tchepo',
+                ],
+                'votes': [1, 13, 2, 0],
+                'winner': 'Nuvah'
+            },
+            {
+                'category': 'Melhor Estiquer',
+                'options': [
+                    ['11.png', 'Zé Tenista'],
+                    ['12.png', 'Lazy Xupito'],
+                    ['13.png', 'Passando com a 4x4'],
+                    ['14.png', 'Chaos Crossfiteiro'],
+                    ['15.png', 'Nerd Lotus'],
+                    ['16.png', 'Kiddy Lanchador']
+                ],
+                'votes': [3, 3, 5, 4, 0, 1],
+                'winner': ['13.png', 'Xupito']
+            },
+            {
+                'category': 'Melhor Estiquer do Baco',
+                'options': [
+                    ['b11.png', 'Baco Comunista'],
+                    ['b12.png', 'Baco Lutador'],
+                    ['b13.png', 'Baco Adolescente'],
+                    ['b14.png', 'Baco Testudo'],
+                    ['b15.png', 'Baco Sentado?'],
+                    ['b16.png', 'Baco Jovem']
+                ],
+                'votes': [0, 3, 2, 7, 0, 4],
+                'winner': ['b14.png', 'Baco Testudo']
+            },
+            {
+                'category': 'Melhor Estiquer Shitpost',
+                'options': [
+                    ['21.png', 'Menina'],
+                    ['22.png', 'Cachorro'],
+                    ['23.png', 'Trump'],
+                    ['24.png', 'Menino'],
+                    ['25.png', 'Gato'],
+                ],
+                'votes': [2, 12, 2, 0, 0],
+                'winner': ['22.png', 'Cachorro']
+            },
+            {
+                'category': 'Melhor Coach (prêmio "Não Cala a Boca")',
+                'options': [
+                    'tchepo',
+                    'Chuvisco',
+                    'kkz',
+                    'Baco',
+                    'Nuvah',
+                    'Zé',
+                ],
+                'votes': [1, 5, 6, 2, 1, 1],
+                'winner': 'kkz'
+            },
+            {
+                'category': 'Melhor Posição 1',
+                'options': [
+                    'kkz',
+                    'Kiddy',
+                    'Alidio',
+                    'Pringles',
+                    'Baco',
+                    'Chuvisco',
+                    '',
+                ],
+                'votes': [7, 4, 0, 2, 1, 2],
+                'winner': 'kkz'
+            },
+            {
+                'category': 'Melhor Posição 2',
+                'options': [
+                    'Kiddy',
+                    'Zé',
+                    'kkz',
+                    'Chaos',
+                    'Nuvah',
+                    'Pringles',
+                    'Cristian',
+                ],
+                'votes': [5, 3, 4, 0, 2, 1, 1],
+                'winner': 'Kiddy'
+            },
+            {
+                'category': 'Melhor Posição 3',
+                'options': [
+                    'Roshan',
+                    'Xupito',
+                    'tiago',
+                    'Chuvisco',
+                    'Chaos',
+                    'Alidio',
+                ],
+                'votes': [0, 5, 0, 8, 1, 2],
+                'winner': 'Chuvisco'
+            },
+            {
+                'category': 'Melhor Posição 4',
+                'options': [
+                    'Zé',
+                    'Xupito',
+                    'JohnMirolho',
+                    'Cristian',
+                    'tchepo',
+                    'Older',
+                    'Lotus',
+                ],
+                'votes': [11, 1, 1, 1, 2, 0, 0],
+                'winner': 'Zé'
+            },
+            {
+                'category': 'Melhor Posição 5',
+                'options': [
+                    'tchepo',
+                    'Older',
+                    'Baco',
+                    'Lotus',
+                    'Nuvah',
+                    'JohnMirolho',
+                ],
+                'votes': [0, 3, 4, 5, 1, 3],
+                'winner': 'Lotus'
+            },
+        ]
+        self.message = 'Popular Vote thanks to Tier Guedes and Cap'
+
+    def get_categories(self):
+        return self.votes
+
+    def get_top_five(self):
+        return self.top_five
+
+
 class PopularVotePnK2019:
 
     def __init__(self):
@@ -186,6 +531,7 @@ class PopularVotePnK2019:
 
     def get_top_five(self):
         return self.top_five
+
 
 class PopularVotePnK2018:
 

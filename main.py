@@ -5,7 +5,7 @@ from code import Parser
 from tier import Tier, T
 import downloader
 from slides import Slides
-from popular_vote import PopularVotePnK2018, PopularVotePnK2019
+from popular_vote import PopularVotePnK2018, PopularVotePnK2019, PopularVotePnK2020
 from achievements import PnKAchievements
 import time
 import calendar
@@ -22,7 +22,7 @@ CURRENT_YEAR = 2020
 # 0: current month
 # 1: current year
 # 2: all time
-MODE = 0
+MODE = 2
 DOWNLOAD_PLAYERS = False
 ONLY_RANKED = False
 
@@ -35,7 +35,7 @@ BEST_TEAM = None
 # PnK year parameters: 30, 10, 3, 3
 # PnK all-time parameters: 50, 15, 3, 4
 
-pnk_parameters = [[3, 3, 3, 2], [30, 10, 3, 3], [50, 15, 3, 4]]
+pnk_parameters = [[4, 4, 3, 2], [30, 10, 3, 3], [50, 15, 3, 4]]
 
 YEARS = ALL_TIME_YEARS if MODE == 2 else [CURRENT_YEAR]
 MONTH = CURRENT_MONTH if MODE == 0 else None
@@ -164,6 +164,8 @@ if MODE == 1:
         popular_vote = PopularVotePnK2018()
     elif TEAM_NAME == PNK and 2019 in YEARS:
         popular_vote = PopularVotePnK2019()
+    elif TEAM_NAME == PNK and 2020 in YEARS:
+        popular_vote = PopularVotePnK2020()
 achievements = None
 
 categories = [
@@ -330,42 +332,48 @@ if __name__ == '__main__':
         s.add_top_fifteen(p.top_comebacks, p.top_throws, p.top_fast_wins, p.top_fast_losses, p.longest_matches)
         s.add_advantage_chart(p.gold_variance, 'Gold Advantage')
         s.add_advantage_chart(p.xp_variance, 'Experience Advantage')
-        s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES, True), 'Best')
-        s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES, False), 'Worst')
-        s.add_best_team_by_player(p.evaluate_best_team_by_hero_player(MIN_COUPLE_MATCHES / 2, True), 'Best')
-        s.add_best_team_by_player(p.evaluate_best_team_by_hero_player(MIN_COUPLE_MATCHES / 2, False), 'Worst')
-        s.add_lane_partners(p.lane_partners[0:15], 'Best')
-        s.add_lane_partners(p.lane_partners[-15:][::-1], 'Worst')
-        s.add_couples(p.player_couples[0:10], 'Best')
-        s.add_couples(p.player_couples[-10:][::-1], 'Worst')
-        s.add_trios(p.trios[0:15], 'Best')
-        s.add_trios(p.trios[-15:][::-1], 'Worst')
+        s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES, True), 'Best', MIN_COUPLE_MATCHES)
+        s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES, False), 'Worst', MIN_COUPLE_MATCHES)
+        s.add_best_team_by_player(p.evaluate_best_team_by_hero_player(MIN_COUPLE_MATCHES / 2, True), 'Best',
+                                  MIN_COUPLE_MATCHES / 2)
+        s.add_best_team_by_player(p.evaluate_best_team_by_hero_player(MIN_COUPLE_MATCHES / 2, False), 'Worst',
+                                  MIN_COUPLE_MATCHES / 2)
+        s.add_lane_partners(p.lane_partners[0:15], 'Best', MIN_MATCHES / 2)
+        s.add_lane_partners(p.lane_partners[-15:][::-1], 'Worst', MIN_MATCHES / 2)
+        s.add_couples(p.player_couples[0:10], 'Best', MIN_COUPLE_MATCHES)
+        s.add_couples(p.player_couples[-10:][::-1], 'Worst', MIN_COUPLE_MATCHES)
+        s.add_hero_player_couples(p.hero_player_couples[0:10], 'Best', MIN_MATCHES_WITH_HERO)
+        s.add_hero_player_couples(p.hero_player_couples[-10:][::-1], 'Worst', MIN_MATCHES_WITH_HERO)
+        s.add_trios(p.trios[0:15], 'Best', MIN_COUPLE_MATCHES)
+        s.add_trios(p.trios[-15:][::-1], 'Worst', MIN_COUPLE_MATCHES)
         s.add_rivals(p.rivals[0:15])
         s.add_compositions(p.compositions)
         s.add_win_rate_by_date(p.win_rate_by_hour, 'Hour')
         s.add_win_rate_by_date(p.win_rate_by_weekday, 'Weekday')
         if MONTH is None:
             s.add_win_rate_by_date(p.win_rate_by_month, 'Month')
-        s.add_hero_lanes(p.hero_lane_partners[0:10], 'Best')
-        s.add_hero_lanes(p.hero_lane_partners[-10:][::-1], 'Worst')
+        s.add_hero_lanes(p.hero_lane_partners[0:10], 'Best', (MIN_MATCHES_WITH_HERO - 1) * 2)
+        s.add_hero_lanes(p.hero_lane_partners[-10:][::-1], 'Worst', (MIN_MATCHES_WITH_HERO - 1) * 2)
 
-        s.add_divider_slide("%s Fantasy Game" % TEAM_NAME, 'Fantasy Game based on Player Performance')
-        s.add_fantasy_ranking(fantasy_scores)
-        s.add_fantasy_slide(fantasy_values, 'hard carry')
-        s.add_fantasy_slide(fantasy_values, 'mid')
-        s.add_fantasy_slide(fantasy_values, 'offlane')
-        s.add_fantasy_slide(fantasy_values, 'support')
-        s.add_fantasy_slide(fantasy_values, 'hard support')
-        s.add_fantasy_data(fantasy_data, 'hard carry')
-        s.add_fantasy_data(fantasy_data, 'mid')
-        s.add_fantasy_data(fantasy_data, 'offlane')
-        s.add_fantasy_data(fantasy_data, 'support')
-        s.add_fantasy_data(fantasy_data, 'hard support')
+        if MODE == 0:
+            s.add_divider_slide("%s Fantasy Game" % TEAM_NAME, 'Fantasy Game based on Player Performance')
+            s.add_fantasy_ranking(fantasy_scores)
+            s.add_fantasy_slide(fantasy_values, 'hard carry')
+            s.add_fantasy_slide(fantasy_values, 'mid')
+            s.add_fantasy_slide(fantasy_values, 'offlane')
+            s.add_fantasy_slide(fantasy_values, 'support')
+            s.add_fantasy_slide(fantasy_values, 'hard support')
+            s.add_fantasy_data(fantasy_data, 'hard carry')
+            s.add_fantasy_data(fantasy_data, 'mid')
+            s.add_fantasy_data(fantasy_data, 'offlane')
+            s.add_fantasy_data(fantasy_data, 'support')
+            s.add_fantasy_data(fantasy_data, 'hard support')
 
         if MODE == 0:
             s.add_divider_slide("%s Match Details" % TEAM_NAME, 'With players and positions per match')
             s.add_match_roles_summary(p.role_summary())
 
+        s.add_divider_slide("%s Hero Summary" % TEAM_NAME, 'Most and least played heroes')
         s.add_win_rate_heroes(p.with_heroes, 'Playing')
         s.add_most_played([v for v in p.most_played_heroes if v['matches'] > 0], True)
         s.add_most_played([v for v in p.most_played_heroes if v['matches'] == 0], False)
@@ -376,7 +384,7 @@ if __name__ == '__main__':
         s.add_player_mmr(p.mmr_change())
         for item in sorted(p.player_descriptor, key=lambda e: e['rating'], reverse=True):
             if item['matches'] > 0:
-                s.add_player_data_slide(item)
+                s.add_player_data_slide(item, MIN_MATCHES_WITH_HERO)
                 s.add_player_tables_slide(item, {
                     c['position']: c['current_value']
                     for c in fantasy_data if c['name'] == item['name']})
