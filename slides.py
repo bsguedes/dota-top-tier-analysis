@@ -1251,7 +1251,7 @@ class Slides:
                     if os.path.isfile(pic_path):
                         slide.shapes.add_picture(pic_path,
                                                  Inches(left + 0.1 + player_size + spacing + column_width * i),
-                                                 Inches(top * (1 + j) + 0.45), height=Inches(pic_size) - 0.2)
+                                                 Inches(top * (1 + j) + 0.45), height=Inches(pic_size - 0.2))
                     Slides.text_box(slide, '%.2f' % c['rating'], left + column_width * i + player_size, top * (1 + j),
                                     width=spacing, alignment=PP_ALIGN.CENTER, font_size=24, bold=True)
                     Slides.text_box(slide, '%.2f %%' % c['wr'], left + column_width * i + player_size,
