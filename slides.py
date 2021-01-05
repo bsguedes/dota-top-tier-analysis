@@ -1221,6 +1221,45 @@ class Slides:
                                     left + column_width * i + player_size, line_space * j + top + 0.7,
                                     width=spacing, alignment=PP_ALIGN.CENTER, font_size=12)
 
+    def add_spammers(self, couples):
+        slide = self.add_slide(5, 234, 185, 90)
+        slide.shapes.title.text = "%s Hero Spammers" % self.team_name
+        y = 5
+        x = 2
+        left = 0.6
+        player_size = 1
+        pic_size = 0.8
+        spacing = 2
+        top = 1.2
+        column_width = 4.8
+        for i in range(x):
+            for j in range(y):
+                if i * y + j < len(couples):
+                    c = couples[i * y + j]
+                    Slides.text_box(slide, c['player_name'], left + column_width * i, top * (1 + j),
+                                    width=player_size, font_size=14, alignment=PP_ALIGN.CENTER, bold=True)
+                    Slides.text_box(slide, c['hero_name'], left + player_size + spacing + column_width * i,
+                                    top * (1 + j),
+                                    width=player_size, font_size=14, alignment=PP_ALIGN.CENTER, bold=True)
+                    pic_path = 'data/pics/%s.jpg' % c['player_id']
+                    if os.path.isfile(pic_path):
+                        slide.shapes.add_picture(pic_path, Inches(left + 0.1 + column_width * i),
+                                                 Inches(top * (1 + j) + 0.35), height=Inches(pic_size))
+                    pic_path = 'data/heroes/%s.jpg' % c['hero_id']
+                    if os.path.isfile(pic_path):
+                        slide.shapes.add_picture(pic_path,
+                                                 Inches(left + 0.1 + player_size + spacing + column_width * i),
+                                                 Inches(top * (1 + j) + 0.45), height=Inches(pic_size - 0.2))
+                    Slides.text_box(slide, '%s' % c['matches'], left + column_width * i + player_size,
+                                    top * (1 + j) + 0.1,
+                                    width=spacing, alignment=PP_ALIGN.CENTER, font_size=24, bold=True)
+                    Slides.text_box(slide, '%.2f %%' % c['wr'], left + column_width * i + player_size,
+                                    top * (1 + j) + 0.55,
+                                    width=spacing, alignment=PP_ALIGN.CENTER, font_size=16)
+                    Slides.text_box(slide, 'rating %.2f, (%s - %s)' % (c['rating'], c['wins'], c['losses']),
+                                    left + column_width * i + player_size, top * (1 + j) + 0.9,
+                                    width=spacing, alignment=PP_ALIGN.CENTER, font_size=12)
+
     def add_hero_player_couples(self, couples, text, matches):
         slide = self.add_slide(5, 122, 105, 234)
         slide.shapes.title.text = "%s %s Hero-Player Pairs" % (self.team_name, text)

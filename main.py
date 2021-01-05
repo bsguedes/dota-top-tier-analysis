@@ -15,15 +15,15 @@ PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
 ALL_TIME_YEARS = [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
-CURRENT_MONTH = 12
-CURRENT_YEAR = 2020
+CURRENT_MONTH = 1
+CURRENT_YEAR = 2021
 
 # Modes
 # 0: current month
 # 1: current year
 # 2: all time
-MODE = 2
-DOWNLOAD_PLAYERS = False
+MODE = 0
+DOWNLOAD_PLAYERS = True
 ONLY_RANKED = False
 
 PRINT_TIERS = False
@@ -35,7 +35,7 @@ BEST_TEAM = None
 # PnK year parameters: 30, 10, 3, 3
 # PnK all-time parameters: 50, 15, 3, 4
 
-pnk_parameters = [[4, 4, 3, 2], [30, 10, 3, 3], [50, 15, 3, 4]]
+pnk_parameters = [[4, 4, 3, 2], [30, 10, 3, 5], [50, 15, 3, 10]]
 
 YEARS = ALL_TIME_YEARS if MODE == 2 else [CURRENT_YEAR]
 MONTH = CURRENT_MONTH if MODE == 0 else None
@@ -182,16 +182,16 @@ categories = [
     # Category(1, 'discord', unit='min', text='time spoken on Discord', rule='discord'),
     Category(10, 'fantasy_value', unit='₭', text='total fantasy cards worth', rule='fantasy_value', avg_format='%i'),
     Category(5, 'kasino_net_worth', unit='₭', text='total PnKasino worth in ₭', rule='fantasy_worth', avg_format='%i'),
-    Category(4, 'hard carry', unit='%', text='hard carry win rate', rule='position'),
-    Category(4, 'mid', unit='%', text='mid win rate', rule='position'),
-    Category(4, 'offlane', unit='%', text='offlane win rate', rule='position'),
-    Category(4, 'support', unit='%', text='support win rate', rule='position'),
-    Category(4, 'hard support', unit='%', text='hard support win rate', rule='position'),
+    Category(5, 'hard carry', unit='%', text='hard carry win rate', rule='position'),
+    Category(5, 'mid', unit='%', text='mid win rate', rule='position'),
+    Category(5, 'offlane', unit='%', text='offlane win rate', rule='position'),
+    Category(5, 'support', unit='%', text='support win rate', rule='position'),
+    Category(5, 'hard support', unit='%', text='hard support win rate', rule='position'),
     Category(4, 'xp_per_min', unit='xpm', text='xpm'),
     Category(4, 'total_gold', unit='gold', text='total gold'),
     Category(6, 'gold_per_min', unit='gpm', text='gpm'),
     Category(8, 'hero_damage', unit='dmg', text='hero damage'),
-    Category(5, 'hero_healing', unit='heal', text='hero healing'),
+    Category(8, 'hero_healing', unit='heal', text='hero healing'),
     Category(5, 'tower_damage', unit='dmg', text='tower damage'),
     Category(5, 'damage_taken', unit='dmg', reverse=False, text='damage taken', rule='accumulate', minimize=True),
     Category(5, 'teamfight_participation', unit='%', text='team fight participation',
@@ -219,7 +219,7 @@ categories = [
     Category(8, 'purchase', unit='gold', text='gold in support items', rule='support_gold'),
     Category(8, 'firstblood_claimed', unit='first bloods', text='first blood kills', has_max=False, avg_format='%.3f'),
     Category(5, 'creeps_stacked', unit='creeps', text='creeps stacked'),
-    Category(5, 'observer_kills', unit='wards', text='wards removed', rule='ward_kill'),
+    Category(8, 'observer_kills', unit='wards', text='wards removed', rule='ward_kill'),
     Category(2, 'courier_kills', unit='couriers', text='couriers killed', avg_format='%.3f'),
     Category(2, 'purchase_tpscroll', unit='TPs', text='TPs purchased'),
     Category(2, 'purchase', unit='tomes', text='tomes of knowledge purchased', rule='tome_of_knowledge'),
@@ -262,8 +262,9 @@ if __name__ == '__main__':
     downloader.download_heroes()
     downloader.download_player_data(players, replacements, override=DOWNLOAD_PLAYERS)
     discord_data = None  # downloader.download_discord()
-    fantasy_data = downloader.download_fantasy()
-    fantasy_scores = downloader.download_fantasy_scores()
+    if TEAM_NAME == PNK:
+        fantasy_data = downloader.download_fantasy()
+        fantasy_scores = downloader.download_fantasy_scores()
     unique_matches = p.get_matches(replacements, month=MONTH, ranked_only=ONLY_RANKED)
     to_parse = downloader.download_matches(unique_matches, download_again=REDOWNLOAD_SMALL_FILES)
     matches_json = Parser.load_matches(unique_matches)
@@ -312,8 +313,9 @@ if __name__ == '__main__':
                                 is_max=True)
                 tiers.append((tier_max, c))
 
-    fantasy_values = p.fantasy(tiers)
-    fantasy_scores = p.calculate_fantasy_score(fantasy_values, fantasy_scores)
+    if TEAM_NAME == PNK:
+        fantasy_values = p.fantasy(tiers)
+        fantasy_scores = p.calculate_fantasy_score(fantasy_values, fantasy_scores)
 
     if BEST_TEAM is not None:
         combinations = p.best_team(BEST_TEAM)
@@ -344,6 +346,7 @@ if __name__ == '__main__':
         s.add_couples(p.player_couples[-10:][::-1], 'Worst', MIN_COUPLE_MATCHES)
         s.add_hero_player_couples(p.hero_player_couples[0:10], 'Best', MIN_MATCHES_WITH_HERO)
         s.add_hero_player_couples(p.hero_player_couples[-10:][::-1], 'Worst', MIN_MATCHES_WITH_HERO)
+        s.add_spammers(p.hero_spammers[0:10])
         s.add_trios(p.trios[0:15], 'Best', MIN_COUPLE_MATCHES)
         s.add_trios(p.trios[-15:][::-1], 'Worst', MIN_COUPLE_MATCHES)
         s.add_rivals(p.rivals[0:15])
@@ -352,10 +355,10 @@ if __name__ == '__main__':
         s.add_win_rate_by_date(p.win_rate_by_weekday, 'Weekday')
         if MONTH is None:
             s.add_win_rate_by_date(p.win_rate_by_month, 'Month')
-        s.add_hero_lanes(p.hero_lane_partners[0:10], 'Best', (MIN_MATCHES_WITH_HERO - 1) * 2)
-        s.add_hero_lanes(p.hero_lane_partners[-10:][::-1], 'Worst', (MIN_MATCHES_WITH_HERO - 1) * 2)
+        s.add_hero_lanes(p.hero_lane_partners[0:10], 'Best', MIN_MATCHES_WITH_HERO)
+        s.add_hero_lanes(p.hero_lane_partners[-10:][::-1], 'Worst', MIN_MATCHES_WITH_HERO)
 
-        if MODE == 0:
+        if MODE == 0 and TEAM_NAME == PNK:
             s.add_divider_slide("%s Fantasy Game" % TEAM_NAME, 'Fantasy Game based on Player Performance')
             s.add_fantasy_ranking(fantasy_scores)
             s.add_fantasy_slide(fantasy_values, 'hard carry')

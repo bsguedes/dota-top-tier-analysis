@@ -66,6 +66,7 @@ class Parser:
         self.lane_partners = []
         self.hero_lane_partners = []
         self.hero_player_couples = []
+        self.hero_spammers = []
         self.gold_variance = [[] for _ in range(180)]
         self.xp_variance = [[] for _ in range(180)]
 
@@ -232,7 +233,7 @@ class Parser:
         self.win_rate_by_month = {i: {'wins': 0, 'losses': 0, 'matches': 0, 'wr': 0} for i in calendar.month_abbr[1:]}
 
         start_dt = date(2015, 1, 4)
-        end_dt = date(2020, 6, 21)
+        end_dt = date(2020, 12, 31)
         file = []
         line = []
         for dt in daterange(start_dt, end_dt):
@@ -441,10 +442,10 @@ class Parser:
         self.lane_partners = sorted([v for _, v in lane_players.items() if v['matches'] >= self.min_matches / 2],
                                     key=lambda e: (-e['rating'], e['losses']))
 
-        #with open('chart.csv', mode='w') as file:
-        #    employee_writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        #    for row in csv_file:
-        #        employee_writer.writerow(row)
+        with open('chart.csv', mode='w') as file:
+            employee_writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            for row in csv_file:
+                employee_writer.writerow(row)
 
         r_wins = sum([1 for mid, data in self.match_summary.items() if data['is_radiant'] and data['win']])
         r_matches = sum([1 for mid, data in self.match_summary.items() if data['is_radiant']])
@@ -663,7 +664,7 @@ class Parser:
             data['rating'] = rating(data['wins'], data['losses'])
             data['wr'] = win_rate(data['wins'], data['matches'])
         self.hero_lane_partners = sorted([v for _, v in lane_heroes.items()
-                                          if v['matches'] >= (self.min_matches_with_hero - 1) * 2],
+                                          if v['matches'] >= self.min_matches_with_hero],
                                          key=lambda e: (-e['rating'], e['losses']))
 
         for pid, v in player_positions.items():
@@ -713,6 +714,8 @@ class Parser:
             } for hero in self.hero_statistics for player in hero['played_by']
             if player['matches'] >= self.min_matches_with_hero
         ], key=lambda e: -e['rating'])
+
+        self.hero_spammers = sorted(self.hero_player_couples, key=lambda e: (-e['matches'], -e['rating']))
 
         tier_dict = dict()
         for _, pos_n in roles().items():
@@ -1301,9 +1304,9 @@ class Parser:
                               'last_hits', 'stuns', 'observer_kills', 'multi_kills', 'kill_streaks',
                               'courier_kills', 'creeps_stacked']
         silver = ['last_hits', 'kills', 'damage_taken', 'stuns', 'observer_kills']
-        silver_weights = [0.0003, 0.005, 0.000002, 0.001, 0.02]
+        silver_weights = [0.00033333, 0.00625, 0.0000025, 0.001, 0.008]
         gold = ['multi_kills', 'kill_streaks', 'assists', 'courier_kills', 'creeps_stacked']
-        gold_weights = [0.7, 0.5, 0.005, 0.3, 0.03]
+        gold_weights = [0.625, 0.625, 0.00625, 0.25, 0.033333]
 
         for player, _ in tier_fantasy.items():
             tier_fantasy[player] = {category: {} for category in fantasy_categories}
