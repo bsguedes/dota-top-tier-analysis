@@ -14,8 +14,8 @@ import calendar
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
-ALL_TIME_YEARS = [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
-CURRENT_MONTH = 1
+ALL_TIME_YEARS = [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021]
+CURRENT_MONTH = 3
 CURRENT_YEAR = 2021
 
 # Modes
@@ -23,7 +23,7 @@ CURRENT_YEAR = 2021
 # 1: current year
 # 2: all time
 MODE = 0
-DOWNLOAD_PLAYERS = True
+DOWNLOAD_PLAYERS = False
 ONLY_RANKED = False
 
 PRINT_TIERS = False
@@ -66,7 +66,8 @@ replacement_list = {
         'kkz': [116647196, 92129470],
         'Kiddy': [409605487, 242249397, 189723196, 365319706, 29806143],
         'Alidio': [495078],
-        'Roshan': [93345002]
+        'Roshan': [93345002],
+        'Baco': [290673560]
     },
     BLAZING_DOTA: {
         'flesch': [372670607]
@@ -79,6 +80,8 @@ forced_replacements = {
     5725426780: {365319706: 'kkz'},
     5725452578: {365319706: 'kkz'},
 }
+
+exclude_ids = [5810881572]
 
 discord_ids = {
     'Zé': 139193879134994432,
@@ -265,7 +268,7 @@ if __name__ == '__main__':
     if TEAM_NAME == PNK:
         fantasy_data = downloader.download_fantasy()
         fantasy_scores = downloader.download_fantasy_scores()
-    unique_matches = p.get_matches(replacements, month=MONTH, ranked_only=ONLY_RANKED)
+    unique_matches = p.get_matches(replacements, exclude_ids, month=MONTH, ranked_only=ONLY_RANKED)
     to_parse = downloader.download_matches(unique_matches, download_again=REDOWNLOAD_SMALL_FILES)
     matches_json = Parser.load_matches(unique_matches)
     tier_positions = p.identify_heroes(replacements, matches_json, forced_replacements,
@@ -313,9 +316,9 @@ if __name__ == '__main__':
                                 is_max=True)
                 tiers.append((tier_max, c))
 
-    if TEAM_NAME == PNK:
-        fantasy_values = p.fantasy(tiers)
-        fantasy_scores = p.calculate_fantasy_score(fantasy_values, fantasy_scores)
+    # if TEAM_NAME == PNK:
+    #    fantasy_values = p.fantasy(tiers)
+    #    fantasy_scores = p.calculate_fantasy_score(fantasy_values, fantasy_scores)
 
     if BEST_TEAM is not None:
         combinations = p.best_team(BEST_TEAM)
@@ -334,8 +337,8 @@ if __name__ == '__main__':
         s.add_top_fifteen(p.top_comebacks, p.top_throws, p.top_fast_wins, p.top_fast_losses, p.longest_matches)
         s.add_advantage_chart(p.gold_variance, 'Gold Advantage')
         s.add_advantage_chart(p.xp_variance, 'Experience Advantage')
-        s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES, True), 'Best', MIN_COUPLE_MATCHES)
-        s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES, False), 'Worst', MIN_COUPLE_MATCHES)
+        s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES - 1, True), 'Best', MIN_COUPLE_MATCHES - 1)
+        s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES - 1, False), 'Worst', MIN_COUPLE_MATCHES - 1)
         s.add_best_team_by_player(p.evaluate_best_team_by_hero_player(MIN_COUPLE_MATCHES / 2, True), 'Best',
                                   MIN_COUPLE_MATCHES / 2)
         s.add_best_team_by_player(p.evaluate_best_team_by_hero_player(MIN_COUPLE_MATCHES / 2, False), 'Worst',
@@ -353,24 +356,25 @@ if __name__ == '__main__':
         s.add_compositions(p.compositions)
         s.add_win_rate_by_date(p.win_rate_by_hour, 'Hour')
         s.add_win_rate_by_date(p.win_rate_by_weekday, 'Weekday')
+        s.add_win_rate_by_match_len(p.win_rate_length_hist)
         if MONTH is None:
             s.add_win_rate_by_date(p.win_rate_by_month, 'Month')
         s.add_hero_lanes(p.hero_lane_partners[0:10], 'Best', MIN_MATCHES_WITH_HERO)
         s.add_hero_lanes(p.hero_lane_partners[-10:][::-1], 'Worst', MIN_MATCHES_WITH_HERO)
 
-        if MODE == 0 and TEAM_NAME == PNK:
-            s.add_divider_slide("%s Fantasy Game" % TEAM_NAME, 'Fantasy Game based on Player Performance')
-            s.add_fantasy_ranking(fantasy_scores)
-            s.add_fantasy_slide(fantasy_values, 'hard carry')
-            s.add_fantasy_slide(fantasy_values, 'mid')
-            s.add_fantasy_slide(fantasy_values, 'offlane')
-            s.add_fantasy_slide(fantasy_values, 'support')
-            s.add_fantasy_slide(fantasy_values, 'hard support')
-            s.add_fantasy_data(fantasy_data, 'hard carry')
-            s.add_fantasy_data(fantasy_data, 'mid')
-            s.add_fantasy_data(fantasy_data, 'offlane')
-            s.add_fantasy_data(fantasy_data, 'support')
-            s.add_fantasy_data(fantasy_data, 'hard support')
+        # if MODE == 0 and TEAM_NAME == PNK:
+        #    s.add_divider_slide("%s Fantasy Game" % TEAM_NAME, 'Fantasy Game based on Player Performance')
+        #    s.add_fantasy_ranking(fantasy_scores)
+        #    s.add_fantasy_slide(fantasy_values, 'hard carry')
+        #    s.add_fantasy_slide(fantasy_values, 'mid')
+        #    s.add_fantasy_slide(fantasy_values, 'offlane')
+        #    s.add_fantasy_slide(fantasy_values, 'support')
+        #    s.add_fantasy_slide(fantasy_values, 'hard support')
+        #    s.add_fantasy_data(fantasy_data, 'hard carry')
+        #    s.add_fantasy_data(fantasy_data, 'mid')
+        #    s.add_fantasy_data(fantasy_data, 'offlane')
+        #    s.add_fantasy_data(fantasy_data, 'support')
+        #    s.add_fantasy_data(fantasy_data, 'hard support')
 
         if MODE == 0:
             s.add_divider_slide("%s Match Details" % TEAM_NAME, 'With players and positions per match')

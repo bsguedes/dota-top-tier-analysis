@@ -59,7 +59,7 @@ class Roles:
         for player in targets:
             pid = player['account_id']
             if pid in safe_players:
-                hc_points[pid] += 108
+                hc_points[pid] += 208
             for param, w in zip(params, weights):
                 if player[param] == max(targets, key=lambda e: e[param])[param]:
                     hc_points[pid] += 100 + w

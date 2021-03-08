@@ -663,6 +663,13 @@ class Slides:
         category_axis = chart.category_axis
         category_axis.tick_labels.font.size = Pt(8)
 
+    def add_win_rate_by_match_len(self, input_data):
+        slide = self.add_slide(5, 152, 251, 152)
+        title_shape = slide.shapes.title
+        title_shape.text = '%s Win Rate by Game Duration [min]' % self.team_name
+
+        Slides.histogram_win_loss(slide, input_data, 'duration', 0.5, 1.5, 9, 5)
+
     def add_win_rate_by_date(self, input_data, label):
         slide = self.add_slide(5, 152, 251, 152)
         title_shape = slide.shapes.title
@@ -1637,6 +1644,26 @@ class Slides:
             tf.paragraphs[0].font.size = Pt(font_size)
         if alignment is not None:
             tf.paragraphs[0].alignment = alignment
+
+    @staticmethod
+    def histogram_win_loss(slide, data, category_label, left, top, width, height):
+        chart_data = ChartData()
+        chart_data.categories = [d[category_label] for d in data]
+        chart_data.add_series('Wins', [d['wins'] for d in data])
+        chart_data.add_series('Losses', [d['losses'] for d in data])
+        graphic_frame = slide.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED,
+                                               Inches(left), Inches(top), Inches(width), Inches(height),
+                                               chart_data)
+        chart = graphic_frame.chart
+        plot = chart.plots[0]
+        plot.has_data_labels = True
+        data_labels = plot.data_labels
+        data_labels.font.size = Pt(10)
+        data_labels.font.color.rgb = RGBColor(0x0A, 0x42, 0x80)
+        data_labels.position = XL_LABEL_POSITION.INSIDE_END
+        chart.has_legend = True
+        chart.legend.position = XL_LEGEND_POSITION.RIGHT
+        chart.legend.include_in_layout = False
 
     @staticmethod
     def create_table(slide, data, headers, keys, formats, left, top, width, height, font_size, header_size,

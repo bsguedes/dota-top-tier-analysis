@@ -47,6 +47,11 @@ class Parser:
         self.compositions = []
         self.win_rate_by_hour = {}
         self.win_rate_by_weekday = {}
+        self.win_rate_length_hist = [{
+            'duration': s,
+            'wins': 0,
+            'losses': 0
+        } for s in ['20-', '20-25', '25-30', '30-35', '35-40', '40-45', '45-50', '50-55', '55-60', '60-65', '65+']]
         self.win_rate_by_month = {}
         self.player_roles = {}
         self.player_heroes = {}
@@ -95,6 +100,9 @@ class Parser:
     def clear_content(content):
         for player in content['players']:
             player['damage'] = None
+            player['damage_inflictor'] = None
+            player['damage_inflictor_received'] = None
+            player['damage_taken'] = None
             player['damage_targets'] = None
             player['killed'] = None
             player['kills_log'] = None
@@ -339,6 +347,11 @@ class Parser:
                             lane_players[lane_string]['losses'] += 1
             match_summary[match_id]['has_abandon'] = sum([o['abandons'] for o in obj['players']]) > 0
             match_summary[match_id]['duration'] = obj['duration']
+            duration_index = min(len(self.win_rate_length_hist)-1, max(0, int((obj['duration'] / 60) / 5) - 4))
+            if match_summary[match_id]['win']:
+                self.win_rate_length_hist[duration_index]['wins'] += 1
+            else:
+                self.win_rate_length_hist[duration_index]['losses'] += 1
             match_summary[match_id]['items'] = items.evaluate_items([x for x in obj['players'] if
                                                                     x['account_id'] in account_ids])
             match_summary[match_id]['barracks'] = obj[
@@ -936,7 +949,7 @@ class Parser:
 
         return results_avg, results_max
 
-    def get_matches(self, replacement, month=None, last_days=None, ranked_only=False):
+    def get_matches(self, replacement, excluded, month=None, last_days=None, ranked_only=False):
         matches = dict()
         total_matches = {n: 0 for n, pid in self.players.items()}
         for name, _ in self.players.items():
@@ -952,9 +965,10 @@ class Parser:
                         or (last_days is None and month is None and y in self.years)
                         and (not ranked_only or o['lobby_type'] in [5, 6, 7])):
                     total_matches[name] += 1
-                    if not o['match_id'] in matches:
+                    if not o['match_id'] in matches and not o['match_id'] in excluded:
                         matches[o['match_id']] = []
-                    matches[o['match_id']].append((name, o['player_slot'] < 100))
+                    if not o['match_id'] in excluded:
+                        matches[o['match_id']].append((name, o['player_slot'] < 100))
         if replacement is not None:
             for name, pid_array in replacement.items():
                 i = 0
@@ -973,9 +987,10 @@ class Parser:
                                 or (last_days is None and month is None and y in self.years)
                                 and (not ranked_only or o['lobby_type'] in [5, 6, 7])):
                             total_matches[name] += 1
-                            if not o['match_id'] in matches:
+                            if not o['match_id'] in matches and not o['match_id'] in excluded:
                                 matches[o['match_id']] = []
-                            matches[o['match_id']].append((name, o['player_slot'] < 100))
+                            if not o['match_id'] in excluded:
+                                matches[o['match_id']].append((name, o['player_slot'] < 100))
 
         duplicates = []
         split_matches = {}
