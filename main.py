@@ -5,6 +5,7 @@ from code import Parser
 from tier import Tier, T
 import downloader
 from slides import Slides
+from book import Book
 from popular_vote import PopularVotePnK2018, PopularVotePnK2019, PopularVotePnK2020
 from achievements import PnKAchievements
 import time
@@ -15,14 +16,14 @@ PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
 ALL_TIME_YEARS = [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021]
-CURRENT_MONTH = 3
+CURRENT_MONTH = 12
 CURRENT_YEAR = 2021
 
 # Modes
 # 0: current month
 # 1: current year
 # 2: all time
-MODE = 0
+MODE = 1
 DOWNLOAD_PLAYERS = False
 ONLY_RANKED = False
 
@@ -79,9 +80,12 @@ forced_replacements = {
     5725394131: {365319706: 'kkz'},
     5725426780: {365319706: 'kkz'},
     5725452578: {365319706: 'kkz'},
+   # 5887513022: {130741370: 'Kiddy'},
+   # 5887571493: {130741370: 'Kiddy'},
+   # 5887855286: {130741370: 'Kiddy'},
 }
 
-exclude_ids = [5810881572]
+exclude_ids = [3014858421, 5810881572]
 
 discord_ids = {
     'Zé': 139193879134994432,
@@ -337,6 +341,8 @@ if __name__ == '__main__':
         s.add_top_fifteen(p.top_comebacks, p.top_throws, p.top_fast_wins, p.top_fast_losses, p.longest_matches)
         s.add_advantage_chart(p.gold_variance, 'Gold Advantage')
         s.add_advantage_chart(p.xp_variance, 'Experience Advantage')
+        s.add_best_player_by_pos(p.evaluate_best_team_by_player(MIN_COUPLE_MATCHES, True), 'Best', MIN_COUPLE_MATCHES)
+        s.add_best_player_by_pos(p.evaluate_best_team_by_player(MIN_COUPLE_MATCHES, False), 'Worst', MIN_COUPLE_MATCHES)
         s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES - 1, True), 'Best', MIN_COUPLE_MATCHES - 1)
         s.add_best_team(p.evaluate_best_team_by_hero(MIN_COUPLE_MATCHES - 1, False), 'Worst', MIN_COUPLE_MATCHES - 1)
         s.add_best_team_by_player(p.evaluate_best_team_by_hero_player(MIN_COUPLE_MATCHES / 2, True), 'Best',
@@ -376,7 +382,7 @@ if __name__ == '__main__':
         #    s.add_fantasy_data(fantasy_data, 'support')
         #    s.add_fantasy_data(fantasy_data, 'hard support')
 
-        if MODE == 0:
+        if MODE < 2:
             s.add_divider_slide("%s Match Details" % TEAM_NAME, 'With players and positions per match')
             s.add_match_roles_summary(p.role_summary())
 
@@ -430,6 +436,9 @@ if __name__ == '__main__':
             s.add_top_five_slides(popular_vote.get_top_five())
 
     s.save()
+
+    b = Book('', [2020], '', '', [])
+    b.save()
 
     print('')
     print("Running Time took %.2f seconds." % (time.time() - start))

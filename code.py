@@ -98,16 +98,23 @@ class Parser:
 
     @staticmethod
     def clear_content(content):
+        content['chat'] = None
+        content['cosmetics'] = None
         for player in content['players']:
             player['damage'] = None
             player['damage_inflictor'] = None
             player['damage_inflictor_received'] = None
-            player['damage_taken'] = None
             player['damage_targets'] = None
             player['killed'] = None
             player['kills_log'] = None
             player['lane_pos'] = None
             player['cosmetics'] = None
+            player['objectives'] = None
+            player['teamfights'] = None
+            player['sen_left_log'] = None
+            player['sen_log'] = None
+            player['obs_left_log'] = None
+            player['obs_log'] = None
         return content
 
     def bounties(self):
@@ -157,6 +164,27 @@ class Parser:
                     result_dict[r].append({'hero_id': m['hero'], 'hero_name': self.heroes[m['hero']],
                                            'rating': m['data']['rating'],
                                            'player_id': m['player'], 'player_name': inv_p[m['player']], 'role': r})
+        return result_dict
+
+    def evaluate_best_team_by_player(self, min_matches, is_best):
+        role_dict = {}
+        result_dict = {}
+        for _, r in roles().items():
+            role_dict[r] = list()
+        for pid, role_desc in self.player_roles.items():
+            for r in role_desc:
+                rtg = r['rating']
+                if (rtg > 0 or not is_best) and r['matches'] >= min_matches:
+                    role_dict[r['role']].append({'player_id': pid, 'rating': rtg, 'matches': r['matches']})
+        fact = -1 if is_best else 1
+        for _, r in roles().items():
+            s = sorted(role_dict[r], key=lambda e: (fact * e['rating'], fact * e['matches']))
+            result_dict[r] = list()
+            for i in range(min(5, len(s))):
+                m = s[i]
+                result_dict[r].append({'player_id': m['player_id'], 'player_name': self.inv_p[m['player_id']],
+                                       'rating': m['rating'],
+                                       'role': r})
         return result_dict
 
     def evaluate_best_team_by_hero(self, min_matches, is_best):
