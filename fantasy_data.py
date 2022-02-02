@@ -37,11 +37,13 @@ class FantasyData:
         return sorted([[player_name, player_data]
                        for player_name, player_data in self.roles[role][category]['players'].items()],
                       key=lambda x: -sum([self.roles[role][c]['players'][x[0]]['fantasy_score']
-                                          for c, _ in self.roles[role].items()]))
+                                          for c, _ in self.roles[role].items() if
+                                          c not in ['silver', 'gold']]))
 
     def get_players_score(self, role):
         result = sorted([[player_name, sum([self.roles[role][c]['players'][player_name]['fantasy_score']
-                                            for c, _ in self.roles[role].items()])] for cat_name, cat_data in
+                                            for c, _ in self.roles[role].items() if
+                                            c not in ['silver', 'gold']])] for cat_name, cat_data in
                          self.roles[role].items() for player_name, player_data in
                          cat_data['players'].items() if self.roles[role][cat_name]['weight'] == 5], key=lambda x: -x[1])
         return result

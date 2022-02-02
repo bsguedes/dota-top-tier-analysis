@@ -1209,6 +1209,8 @@ class Slides:
         Slides.text_box(slide, 'weight', left + 0.4, top - 0.2, font_size=9, bold=True)
 
         for category_name, category_data in fantasy_data.get_categories_at_role(role):
+            if category_name in ['silver', 'gold']:
+                continue
             i += 1
             Slides.text_box(slide, category_data['header'], left + 0.3 + column * i,
                             top, font_size=8, bold=True, width=0.6, wrap=True)
@@ -1237,6 +1239,24 @@ class Slides:
             j += 1
             Slides.text_box(slide, "%.2f" % player_score,
                             left + 0.35 + column * i, top + row * j, font_size=12, bold=True)
+
+        colors = {'silver': RGBColor(192, 192, 192), 'gold': RGBColor(232, 170, 0)}
+        for c_name in ['silver', 'gold']:
+            j = 0
+            i += 1
+            category = next(c for cn, c in fantasy_data.get_categories_at_role(role) if cn == c_name)
+            Slides.text_box(slide, category['header'], left + 0.35 + column * i, top, font_size=8,
+                            bold=True, color=colors[c_name], width=0.7, wrap=True)
+            for player_name, player_data in fantasy_data.get_players_at_category(role, c_name):
+                j += 1
+                Slides.text_box(slide, "%.2f" % player_data['fantasy_score'],
+                                left + 0.35 + column * i, top + row * j - 0.05, font_size=10, bold=True,
+                                color=colors[c_name])
+                value_format = "%." + str(category['decimal']) + "f%s"
+                Slides.text_box(slide, value_format % (player_data['value'] / category['multiplier'],
+                                                       category['unit']),
+                                left + 0.4 + column * i, top + row * j + 0.11, font_size=7,
+                                color=RGBColor(255, 255, 255))
 
     def add_fantasy_data(self, fantasy_values, role):
         slide = self.add_slide(5, 255, 111, 123)

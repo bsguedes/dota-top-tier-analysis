@@ -1459,7 +1459,11 @@ class Parser:
             'tower_damage': {'header': 'tower dmg', 'unit': 'k', 'multiplier': 1000, 'decimal': 1},
             'kills': {'header': 'kills', 'unit': '', 'multiplier': 1, 'decimal': 1},
             'assists': {'header': 'assists', 'unit': '', 'multiplier': 1, 'decimal': 1},
-            'obs_placed': {'header': 'wards', 'unit': '', 'multiplier': 1, 'decimal': 1}
+            'obs_placed': {'header': 'wards', 'unit': '', 'multiplier': 1, 'decimal': 1},
+            'deaths': {'header': '<1death /15min', 'unit': '', 'multiplier': 1, 'decimal': 0},
+            'purchase': {'header': 'utility items', 'unit': '', 'multiplier': 1, 'decimal': 0},
+            'camps_stacked': {'header': 'camps stacked', 'unit': '', 'multiplier': 1, 'decimal': 0},
+            'observer_kills': {'header': 'wards destroyed', 'unit': '', 'multiplier': 1, 'decimal': 0},
         }
 
         fantasy_count = {category: {role: 0 for role in fantasy_roles} for category in fantasy_categories}
@@ -1584,6 +1588,24 @@ class Parser:
                 print(str({'player': player, 'roles': data}).replace("'", "\""))
             print('')
 
+        for i in range(5):
+            fantasy_data.add_category(fantasy_roles[i], 'silver')
+            fantasy_data.add_category_properties(fantasy_roles[i], 'silver', silver_weights[i],
+                                                 {
+                                                     'header': fantasy_properties[silver[i]]['header'],
+                                                     'unit': fantasy_properties[silver[i]]['unit'],
+                                                     'multiplier': fantasy_properties[silver[i]]['multiplier'],
+                                                     'decimal': 0
+                                                 })
+            fantasy_data.add_category(fantasy_roles[i], 'gold')
+            fantasy_data.add_category_properties(fantasy_roles[i], 'gold', gold_weights[i],
+                                                 {
+                                                     'header': fantasy_properties[gold[i]]['header'],
+                                                     'unit': fantasy_properties[gold[i]]['unit'],
+                                                     'multiplier': fantasy_properties[gold[i]]['multiplier'],
+                                                     'decimal': 0
+                                                 })
+
         for player, data in fantasy_values.items():
             data['silver'] = {}
             data['gold'] = {}
@@ -1591,8 +1613,21 @@ class Parser:
                 if fantasy_roles[i] in tier_silver[player][silver[i]]:
                     data['silver'][fantasy_roles[i]] = tier_silver[player][silver[i]][fantasy_roles[i]] * \
                                                        silver_weights[i]
+                    if fantasy_data.player_in_role(fantasy_roles[i], player):
+                        fantasy_data.add_player_to_role(fantasy_roles[i], 'silver', player)
+                        fantasy_data.add_player_fantasy_score(fantasy_roles[i], 'silver', player,
+                                                              data['silver'][fantasy_roles[i]])
+                        fantasy_data.add_player_value(fantasy_roles[i], 'silver', player,
+                                                      tier_silver[player][silver[i]][fantasy_roles[i]])
+
                 if fantasy_roles[i] in tier_gold[player][gold[i]]:
                     data['gold'][fantasy_roles[i]] = tier_gold[player][gold[i]][fantasy_roles[i]] * gold_weights[i]
+                    if fantasy_data.player_in_role(fantasy_roles[i], player):
+                        fantasy_data.add_player_to_role(fantasy_roles[i], 'gold', player)
+                        fantasy_data.add_player_fantasy_score(fantasy_roles[i], 'gold', player,
+                                                              data['gold'][fantasy_roles[i]])
+                        fantasy_data.add_player_value(fantasy_roles[i], 'gold', player,
+                                                      tier_gold[player][gold[i]][fantasy_roles[i]])
 
         return fantasy_values, fantasy_data
 
