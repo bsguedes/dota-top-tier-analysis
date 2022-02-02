@@ -15,15 +15,15 @@ import calendar
 PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
-ALL_TIME_YEARS = [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021]
-CURRENT_MONTH = 12
-CURRENT_YEAR = 2021
+ALL_TIME_YEARS = [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022]
+CURRENT_MONTH = 1
+CURRENT_YEAR = 2022
 
 # Modes
 # 0: current month
 # 1: current year
 # 2: all time
-MODE = 1
+MODE = 0
 DOWNLOAD_PLAYERS = False
 ONLY_RANKED = False
 
@@ -65,7 +65,7 @@ replacement_list = {
     PNK: {
         'Fallenzão': [331461200],
         'kkz': [116647196, 92129470],
-        'Kiddy': [409605487, 242249397, 189723196, 365319706, 29806143],
+        'Kiddy': [409605487, 242249397, 189723196, 365319706, 29806143, 187217964],
         'Alidio': [495078],
         'Roshan': [93345002],
         'Baco': [290673560]
@@ -187,8 +187,10 @@ categories = [
     # Category(1, 'discord_avg', unit='%', text='time spoken on Discord per total game duration', rule='discord_avg',
     #         reverse=False),
     # Category(1, 'discord', unit='min', text='time spoken on Discord', rule='discord'),
-    Category(10, 'fantasy_value', unit='₭', text='total fantasy cards worth', rule='fantasy_value', avg_format='%i'),
-    Category(5, 'kasino_net_worth', unit='₭', text='total PnKasino worth in ₭', rule='fantasy_worth', avg_format='%i'),
+    Category(5, 'fantasy_value', unit='₭', text='total fantasy cards worth', rule='fantasy_value', avg_format='%i'),
+    Category(2, 'kasino_net_worth', unit='₭', text='total PnKasino worth in ₭', rule='coins_worth', avg_format='%i'),
+    Category(2, 'achievements', unit='heroes', text='hero pool size in PnKasino', rule='achievements', avg_format='%i'),
+    Category(5, 'fantasy_net_worth', unit='ƒ', text='total PnKasino worth in ƒ', rule='fantasy_worth', avg_format='%i'),
     Category(5, 'hard carry', unit='%', text='hard carry win rate', rule='position'),
     Category(5, 'mid', unit='%', text='mid win rate', rule='position'),
     Category(5, 'offlane', unit='%', text='offlane win rate', rule='position'),
@@ -215,6 +217,8 @@ categories = [
     Category(5, 'rune_pickups', unit='runes', text='runes picked up'),
     Category(8, 'obs_placed', unit='wards', text='observer wards placed'),
     Category(8, 'sen_placed', unit='sentries', text='sentry wards placed'),
+    Category(4, 'deaths', unit='%', text='matches <1 death/15 min', rule='deaths_per_15min',
+             has_max=False, apply_transform=T.percentage),
     Category(2, 'multi_kills', unit='double kills', text='double kills', rule='2', has_max=False, avg_format='%.3f'),
     Category(3, 'multi_kills', unit='triple kills', text='triple kills', rule='3', has_max=False, avg_format='%.3f'),
     Category(4, 'multi_kills', unit='ultra kills', text='ultra kills', rule='4', has_max=False, avg_format='%.3f'),
@@ -224,8 +228,11 @@ categories = [
     Category(3, 'purchase', unit='smokes', text='smokes purchased', rule='smoke_of_deceit', avg_format='%.3f'),
     Category(2, 'purchase', unit='gems', text='gems of true sight purchased', rule='gem', avg_format='%.3f'),
     Category(8, 'purchase', unit='gold', text='gold in support items', rule='support_gold'),
+    Category(8, 'purchase', unit='items', text='utility items', rule='utility_items'),
+    Category(8, 'purchase', unit='items', text='support items', rule='support_items'),
     Category(8, 'firstblood_claimed', unit='first bloods', text='first blood kills', has_max=False, avg_format='%.3f'),
-    Category(5, 'creeps_stacked', unit='creeps', text='creeps stacked'),
+    Category(8, 'camps_stacked', unit='camps', text='camps stacked'),
+    Category(4, 'creeps_stacked', unit='creeps', text='creeps stacked'),
     Category(8, 'observer_kills', unit='wards', text='wards removed', rule='ward_kill'),
     Category(2, 'courier_kills', unit='couriers', text='couriers killed', avg_format='%.3f'),
     Category(2, 'purchase_tpscroll', unit='TPs', text='TPs purchased'),
@@ -276,7 +283,7 @@ if __name__ == '__main__':
     to_parse = downloader.download_matches(unique_matches, download_again=REDOWNLOAD_SMALL_FILES)
     matches_json = Parser.load_matches(unique_matches)
     tier_positions = p.identify_heroes(replacements, matches_json, forced_replacements,
-                                       min_couple_matches=MIN_COUPLE_MATCHES)
+                                       min_couple_matches=MIN_MATCHES_WITH_HERO)
 
     tiers = []
     for c in categories:
@@ -291,10 +298,16 @@ if __name__ == '__main__':
             tier = Tier(c.weight, p.discord(discord_ids, discord_data), 'Total time spoken on Discord')
             tiers.append((tier, c))
         elif c.rule == 'fantasy_value' and TEAM_NAME == PNK:
-            tier = Tier(c.weight, p.fantasy_value_tiers(fantasy_data), 'Sum of Fantasy Cards in PnKoins')
+            tier = Tier(c.weight, p.fantasy_value_tiers(fantasy_data), 'Sum of Fantasy Cards in ƒ coins')
+            tiers.append((tier, c))
+        elif c.rule == 'coins_worth' and TEAM_NAME == PNK:
+            tier = Tier(c.weight, p.coins_worth(fantasy_scores), 'Player worth in PnKoins on PnKasino')
+            tiers.append((tier, c))
+        elif c.rule == 'achievements' and TEAM_NAME == PNK:
+            tier = Tier(c.weight, p.achievements(fantasy_scores), 'Hero pool size on PnKasino')
             tiers.append((tier, c))
         elif c.rule == 'fantasy_worth' and TEAM_NAME == PNK:
-            tier = Tier(c.weight, p.fantasy_worth(fantasy_scores), 'Player worth in PnKoins on PnKasino')
+            tier = Tier(c.weight, p.fantasy_worth(fantasy_scores), 'Player worth in ƒ on PnKasino')
             tiers.append((tier, c))
         elif c.rule == 'discord_avg' and TEAM_NAME == PNK:
             tier = Tier(c.weight, p.discord(discord_ids, discord_data, avg=True),
@@ -320,9 +333,9 @@ if __name__ == '__main__':
                                 is_max=True)
                 tiers.append((tier_max, c))
 
-    # if TEAM_NAME == PNK:
-    #    fantasy_values = p.fantasy(tiers)
-    #    fantasy_scores = p.calculate_fantasy_score(fantasy_values, fantasy_scores)
+    if TEAM_NAME == PNK:
+        fantasy_values, fantasy_data_object = p.fantasy(tiers)
+        fantasy_scores = p.calculate_fantasy_score(fantasy_values, fantasy_scores, fantasy_data_object)
 
     if BEST_TEAM is not None:
         combinations = p.best_team(BEST_TEAM)
@@ -368,21 +381,15 @@ if __name__ == '__main__':
         s.add_hero_lanes(p.hero_lane_partners[0:10], 'Best', MIN_MATCHES_WITH_HERO)
         s.add_hero_lanes(p.hero_lane_partners[-10:][::-1], 'Worst', MIN_MATCHES_WITH_HERO)
 
-        # if MODE == 0 and TEAM_NAME == PNK:
-        #    s.add_divider_slide("%s Fantasy Game" % TEAM_NAME, 'Fantasy Game based on Player Performance')
-        #    s.add_fantasy_ranking(fantasy_scores)
-        #    s.add_fantasy_slide(fantasy_values, 'hard carry')
-        #    s.add_fantasy_slide(fantasy_values, 'mid')
-        #    s.add_fantasy_slide(fantasy_values, 'offlane')
-        #    s.add_fantasy_slide(fantasy_values, 'support')
-        #    s.add_fantasy_slide(fantasy_values, 'hard support')
-        #    s.add_fantasy_data(fantasy_data, 'hard carry')
-        #    s.add_fantasy_data(fantasy_data, 'mid')
-        #    s.add_fantasy_data(fantasy_data, 'offlane')
-        #    s.add_fantasy_data(fantasy_data, 'support')
-        #    s.add_fantasy_data(fantasy_data, 'hard support')
+        if MODE < 2 and TEAM_NAME == PNK:
+            s.add_divider_slide("%s Fantasy Game" % TEAM_NAME, 'Fantasy Game based on Player Performance')
+            s.add_fantasy_ranking(fantasy_scores)
+            for role in ['hard carry', 'mid', 'offlane', 'support', 'hard support']:
+                s.add_fantasy_slide(fantasy_values, role, fantasy_data_object)
+                s.add_fantasy_details(fantasy_data_object, role)
+                s.add_fantasy_data(fantasy_data, role)
 
-        if MODE < 2:
+        if MODE == 0:
             s.add_divider_slide("%s Match Details" % TEAM_NAME, 'With players and positions per match')
             s.add_match_roles_summary(p.role_summary())
 
@@ -401,6 +408,7 @@ if __name__ == '__main__':
                 s.add_player_tables_slide(item, {
                     c['position']: c['current_value']
                     for c in fantasy_data if c['name'] == item['name']})
+                s.add_player_heroes_per_role_slide(item['name'], item['id'], p.heroes_role_for_player(item['id']))
                 if MONTH is None:
                     s.add_player_activity_data(item)
 

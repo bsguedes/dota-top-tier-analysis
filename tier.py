@@ -29,8 +29,10 @@ class Tier:
         self.tiers = self.get_tiers()
 
     def players_sorted_by_role(self, role):
-        ordered = [t.name for t in sorted([v for v in self.scores_array if v.score_per_role[role] is not None],
-                                          key=lambda e: e.score_per_role[role], reverse=self.reverse)]
+        ordered = sorted([[t.name, float(t.score_per_role[role])] for t in
+                   sorted([v for v in self.scores_array if v.score_per_role[role] is not None],
+                          key=lambda e: e.score_per_role[role], reverse=self.reverse)],
+                         key=lambda x: x[1], reverse=self.reverse)
         return ordered
 
     def get_tiers(self):

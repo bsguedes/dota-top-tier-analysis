@@ -4,8 +4,8 @@ import math
 def item_cost():
     return {
         'ward_observer': 75,
-        'ward_sentry': 100,
-        'dust': 180,
+        'ward_sentry': 50,
+        'dust': 90,
         'smoke_of_deceit': 50,
         'gem': 900
     }

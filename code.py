@@ -12,6 +12,7 @@ from tier import TierItem
 from roles import Roles
 from constants import *
 from datetime import timedelta, date
+from fantasy_data import FantasyData
 import csv
 
 
@@ -91,7 +92,7 @@ class Parser:
                         team_is_radiant = player_list[0][1]
                         for player in content['players']:
                             if (not player['isRadiant'] and team_is_radiant) or \
-                               (not team_is_radiant and player['isRadiant']):
+                                    (not team_is_radiant and player['isRadiant']):
                                 player['account_id'] *= 10
                         matches.append({'id': match_id, 'content': content, 'date': fix_time(content['start_time'])})
         return sorted(matches, key=lambda e: e['date'])
@@ -100,7 +101,14 @@ class Parser:
     def clear_content(content):
         content['chat'] = None
         content['cosmetics'] = None
+        content['draft_timings'] = None
+        content['objectives'] = None
+        content['picks_bans'] = None
         for player in content['players']:
+            player['ability_targets'] = None
+            player['ability_upgrades_arr'] = None
+            player['ability_uses'] = None
+            player['benchmarks'] = None
             player['damage'] = None
             player['damage_inflictor'] = None
             player['damage_inflictor_received'] = None
@@ -129,6 +137,22 @@ class Parser:
             lst.append(r)
         return lst
 
+    def heroes_role_for_player(self, player_id):
+        role_summary = {r: [] for _, r in roles().items()}
+        for hero_desc in self.hero_statistics:
+            for player_desc in hero_desc['played_by']:
+                if player_desc['id'] == player_id:
+                    for role, role_desc in player_desc['roles'].items():
+                        if role_desc['matches'] >= self.min_matches_with_hero:
+                            role_summary[role].append({
+                                'hero_name': hero_desc['name'],
+                                'hero_id': hero_desc['id'],
+                                'details': role_desc
+                            })
+        for role, data in role_summary.items():
+            role_summary[role] = sorted(data, key=lambda e: -e['details']['rating'])
+        return role_summary
+
     def first_blood_win_rate(self):
         first_bloods = len([1 for x, y in self.match_summary.items() if y['first_blood']])
         matches = len([1 for x, y in self.match_summary.items() if y['first_blood'] is not None])
@@ -139,7 +163,7 @@ class Parser:
             'first_bloods': first_bloods,
             'matches': matches,
             'wr_if_first_blood': win_rate(win_fb, first_bloods),
-            'wr_if_not_first_blood': win_rate(win_nfb, matches-first_bloods),
+            'wr_if_not_first_blood': win_rate(win_nfb, matches - first_bloods),
             'wins_if_first_blood': win_fb,
             'wins_if_no_first_blood': win_nfb
         }
@@ -221,7 +245,7 @@ class Parser:
                         counts[s]['wins'] += 1
             min_count = min(counts.keys())
             max_count = max(counts.keys())
-            for i in range(min_count, max_count+1):
+            for i in range(min_count, max_count + 1):
                 if i not in counts:
                     counts[i] = {'wins': 0, 'matches': 0, 'wr': 0.0}
                 else:
@@ -309,8 +333,10 @@ class Parser:
                         p['tf_max_damage'] = 0
                         p['tf_max_healing'] = 0
                     else:
-                        p['tf_max_damage'] = max([tf['players'][team_fight_index]['damage'] for tf in obj['teamfights']])
-                        p['tf_max_healing'] = max([tf['players'][team_fight_index]['healing'] for tf in obj['teamfights']])
+                        p['tf_max_damage'] = max(
+                            [tf['players'][team_fight_index]['damage'] for tf in obj['teamfights']])
+                        p['tf_max_healing'] = max(
+                            [tf['players'][team_fight_index]['healing'] for tf in obj['teamfights']])
                     match_summary[match_id]['player_desc'][p['account_id']] = {'hero': self.heroes[p['hero_id']],
                                                                                'total_gold': p['total_gold'],
                                                                                'kills': p['kills'],
@@ -326,7 +352,7 @@ class Parser:
 
                     match_summary[match_id]['start_time'] = obj['start_time']
                     match_summary[match_id]['is_radiant'] = p['isRadiant']
-                    gold_adv = [] if obj['radiant_gold_adv'] is None else obj['radiant_gold_adv']                  
+                    gold_adv = [] if obj['radiant_gold_adv'] is None else obj['radiant_gold_adv']
                     gold_adv = gold_adv if p['isRadiant'] else -1 * gold_adv
                     obj['comeback'] = -1 * min(gold_adv + [0]) if 'comeback' not in obj else obj['comeback']
                     obj['throw'] = max(gold_adv + [0]) if 'throw' not in obj else obj['throw']
@@ -375,13 +401,13 @@ class Parser:
                             lane_players[lane_string]['losses'] += 1
             match_summary[match_id]['has_abandon'] = sum([o['abandons'] for o in obj['players']]) > 0
             match_summary[match_id]['duration'] = obj['duration']
-            duration_index = min(len(self.win_rate_length_hist)-1, max(0, int((obj['duration'] / 60) / 5) - 4))
+            duration_index = min(len(self.win_rate_length_hist) - 1, max(0, int((obj['duration'] / 60) / 5) - 4))
             if match_summary[match_id]['win']:
                 self.win_rate_length_hist[duration_index]['wins'] += 1
             else:
                 self.win_rate_length_hist[duration_index]['losses'] += 1
             match_summary[match_id]['items'] = items.evaluate_items([x for x in obj['players'] if
-                                                                    x['account_id'] in account_ids])
+                                                                     x['account_id'] in account_ids])
             match_summary[match_id]['barracks'] = obj[
                 'barracks_status_radiant' if match_summary[match_id]['is_radiant'] else 'barracks_status_dire']
             match_summary[match_id]['towers'] = obj[
@@ -459,7 +485,7 @@ class Parser:
                 })
         self.match_summary = match_summary
 
-        self.gold_variance = [sum(x)/len(x) if len(x) > 0 else 0 for x in self.gold_variance]
+        self.gold_variance = [sum(x) / len(x) if len(x) > 0 else 0 for x in self.gold_variance]
         while self.gold_variance[-1] == 0:
             self.gold_variance.pop(-1)
 
@@ -640,7 +666,7 @@ class Parser:
             five_player[k['key']]['wr'] = k['wr'] * 100
             self.five_player_compositions.append(five_player[k['key']])
             print('5-player team: %s win rate: %.2f %% (%i matches)' % (
-                   five_player[k['key']]['players'], k['wr'] * 100, k['matches']))
+                five_player[k['key']]['players'], k['wr'] * 100, k['matches']))
 
         print('')
         comp_matches = dict()
@@ -667,7 +693,7 @@ class Parser:
         hero_positions = {k: {p: {'wins': 0, 'matches': 0} for i, p in roles().items()} for k, v in
                           self.heroes.items()}
         player_hero_position = {r: {(a, b): {'wins': 0, 'matches': 0}
-                                for _, a in self.players.items() for b, _ in self.heroes.items()
+                                    for _, a in self.players.items() for b, _ in self.heroes.items()
                                     } for _, r in roles().items()}
         for mid, v in match_summary.items():
             if 'roles' in v:
@@ -711,7 +737,7 @@ class Parser:
         for pid, v in player_positions.items():
             pp = player_positions[pid]
             ppp = {a: '%i (%.2f %%)' % (
-                   b, win_rate(player_win_pos[pid][a], player_positions[pid][a]))
+                b, win_rate(player_win_pos[pid][a], player_positions[pid][a]))
                    for a, b in pp.items()}
             print('%s positions: %s' % (inv_p[pid], ppp))
             self.player_roles[pid] = [
@@ -798,7 +824,7 @@ class Parser:
         couples = {
             (inv_p[x[0]], inv_p[x[1]]):
                 0 if couples_matches[x[0]][x[1]] == 0 else couples_win[x[0]][x[1]] / couples_matches[x[0]][x[1]]
-                for x in list(itertools.combinations(self.players.values(), 2))
+            for x in list(itertools.combinations(self.players.values(), 2))
         }
         for _, pid in self.players.items():
             self.player_pairs[pid] = []
@@ -900,6 +926,10 @@ class Parser:
                         value = sum([v for k, v in p[parameter].items()])
                     elif rule == 'bool':
                         value = 1 if p[parameter] else 0
+                    elif rule == 'deaths_per_15min':
+                        s = p['deaths']
+                        fifteen_minutes = p['duration'] / 60 / 15
+                        value = 1 if s / fifteen_minutes < 1 else 0
                     elif rule == 'time_kill_assist':
                         s = p['kills'] + p['assists']
                         value = 0 if s == 0 else p['duration'] / s
@@ -914,6 +944,23 @@ class Parser:
                             sen_gold = max(pch['ward_sentry'], pch['ward_dispenser']) * costs['ward_sentry']
                             value = obs_gold + sen_gold + costs['dust'] * pch['dust'] + costs['gem'] * pch['gem']
                             value = value + costs['smoke_of_deceit'] * pch['smoke_of_deceit']
+                        elif rule == 'utility_items':
+                            amount = 0
+                            lst = ['blink', 'spirit_vessel', 'crimson_guard', 'vladmir', 'ultimate_scepter',
+                                   'shivas_guard', 'assault', 'guardian_greaves', 'solar_crest', 'lotus_orb',
+                                   'helm_of_the_overlord', 'heavens_halberd', 'pipe']
+                            for i in lst:
+                                if i in p[parameter] and p[parameter][i] is not None:
+                                    amount += 1
+                            value = amount
+                        elif rule == 'support_items':
+                            amount = 0
+                            lst = ['holy_locket', 'spirit_vessel', 'blink', 'glimmer_cape',
+                                   'ultimate_scepter', 'force_staff', 'guardian_greaves', 'aether_lens']
+                            for i in lst:
+                                if i in p[parameter] and p[parameter][i] is not None:
+                                    amount += 1
+                            value = amount
                         else:
                             value = (p[parameter][rule]
                                      if rule in p[parameter] and p[parameter][rule] is not None else 0)
@@ -939,11 +986,11 @@ class Parser:
                     matches_played[inv_p[p['account_id']]] += 1
 
         for name, pid in self.players.items():
-            averages[name] = totals[name]/matches_played[name] if matches_played[name] > 0 else 0
+            averages[name] = totals[name] / matches_played[name] if matches_played[name] > 0 else 0
             for role in role_list():
                 average_per_role[name][role] = totals_per_role[name][role] / \
-                                              matches_per_role[name][role] if \
-                                              matches_per_role[name][role] > self.min_matches_with_hero else None
+                                               matches_per_role[name][role] if \
+                    matches_per_role[name][role] > self.min_matches_with_hero else None
 
         results_avg = []
         if has_avg:
@@ -982,7 +1029,7 @@ class Parser:
         total_matches = {n: 0 for n, pid in self.players.items()}
         for name, _ in self.players.items():
             content = open('players/%s_matches.json' % name, 'r').read()
-            obj = json.loads(content)            
+            obj = json.loads(content)
             total_matches[name] = 0
             for o in obj:
                 m = gmtime(int(fix_time(o['start_time']))).tm_mon
@@ -1010,7 +1057,7 @@ class Parser:
                         m = gmtime(fix_time(int(o['start_time']))).tm_mon
                         y = gmtime(fix_time(int(o['start_time']))).tm_year
                         if ((last_days is not None
-                                and (calendar.timegm(gmtime()) - fix_time(int(o['start_time']))) < last_days * 86400)
+                             and (calendar.timegm(gmtime()) - fix_time(int(o['start_time']))) < last_days * 86400)
                                 or (last_days is None and month is not None and y in self.years and m == month)
                                 or (last_days is None and month is None and y in self.years)
                                 and (not ranked_only or o['lobby_type'] in [5, 6, 7])):
@@ -1038,14 +1085,15 @@ class Parser:
         for i in range(5):
             self.matches_by_party_size.append(len({k: v for k, v in matches.items() if len(v) == i + 1}))
             print('Matches played by party of size %i: %s' % (i + 1, self.matches_by_party_size[i]))
-        
-        print('')                    
+
+        print('')
         sorted_matches = sorted(total_matches.items(), key=lambda kv: kv[1])
         sorted_matches.reverse()
 
         for name, match_count in sorted_matches:
             with_team = len([i for i, v in matches.items() if len(v) >= 2 and name in [x[0] for x in v]])
-            with_party = len([i for i, v in matches.items() if len(v) >= self.min_party_size and name in [x[0] for x in v]])
+            with_party = len(
+                [i for i, v in matches.items() if len(v) >= self.min_party_size and name in [x[0] for x in v]])
             percentage_with_team = with_team / match_count if match_count > 0 else 0
             self.match_summary_by_player.append(
                 {
@@ -1081,7 +1129,8 @@ class Parser:
                         for el in self.player_roles[pid]:
                             if player_hero[el['role']]['matches'] >= self.min_matches_with_hero:
                                 player_hero_role_scores[(inv_r[el['role']], pid, hid)] = el['rating'] * \
-                                                                                       player_hero[el['role']]['rating']
+                                                                                         player_hero[el['role']][
+                                                                                             'rating']
                             else:
                                 player_hero_role_scores[(inv_r[el['role']], pid, hid)] = 0
         print("Rating time %.2f seconds." % (time.time() - start))
@@ -1165,10 +1214,10 @@ class Parser:
             if player_name not in players:
                 players[player_name] = 0
             players[player_name] += item['current_value']
-        return sorted([TierItem(name, v, '%s fantasy cards are worth %d ₭ on PnKasino' % (name, v)) for
+        return sorted([TierItem(name, v, '%s fantasy cards are worth %d ƒ on PnKasino' % (name, v)) for
                        name, v in players.items()], key=lambda e: e.score, reverse=True)
 
-    def fantasy_worth(self, fantasy_scores):
+    def coins_worth(self, fantasy_scores):
         player_names = [k for k, _ in self.players.items()]
         player_scores = {}
         for item in fantasy_scores:
@@ -1176,6 +1225,26 @@ class Parser:
             if player_name in player_names:
                 player_scores[player_name] = item['worth']
         return sorted([TierItem(name, v, '%s\'s net worth on PnKasino is %d ₭' % (name, v)) for
+                       name, v in player_scores.items()], key=lambda e: e.score, reverse=True)
+
+    def achievements(self, fantasy_scores):
+        player_names = [k for k, _ in self.players.items()]
+        player_scores = {}
+        for item in fantasy_scores:
+            player_name = item['real_name']
+            if player_name in player_names:
+                player_scores[player_name] = item['achievements']
+        return sorted([TierItem(name, v, '%s\'s hero pool size on PnKasino is %d heroes' % (name, v)) for
+                       name, v in player_scores.items()], key=lambda e: e.score, reverse=True)
+
+    def fantasy_worth(self, fantasy_scores):
+        player_names = [k for k, _ in self.players.items()]
+        player_scores = {}
+        for item in fantasy_scores:
+            player_name = item['real_name']
+            if player_name in player_names:
+                player_scores[player_name] = item['fcoins']
+        return sorted([TierItem(name, v, '%s\'s net worth on PnKasino is %d ƒ' % (name, v)) for
                        name, v in player_scores.items()], key=lambda e: e.score, reverse=True)
 
     def discord(self, ids, data, avg=False):
@@ -1226,7 +1295,7 @@ class Parser:
                     'name': player['name'],
                     'mmr': player['mmr_var']
                 })
-        return sorted(mmr_list, key=lambda e:-e['mmr'])
+        return sorted(mmr_list, key=lambda e: -e['mmr'])
 
     def versatility(self, values):
         ver_factor = 20
@@ -1282,13 +1351,13 @@ class Parser:
                 'lane': match_data['roles']['composition']
             } for match_id, match_data in self.match_summary.items() if 'roles' in match_data]
 
-    def calculate_fantasy_score(self, fantasy_values, fantasy_scores):
+    def calculate_fantasy_score(self, fantasy_values, fantasy_scores, fantasy_data):
         inv_r = {v: k for k, v in roles().items()}
         for player_data in fantasy_scores:
             for position, data in player_data['team'].items():
                 pos = position.replace('_', ' ')
                 if data['card'] in fantasy_values and pos in fantasy_values[data['card']]:
-                    data['points'] = fantasy_values[data['card']][pos] / 500
+                    data['points'] = fantasy_data.get_score_for_player(pos, data['card'])
                     if player_data['silver'] == inv_r[pos]:
                         p = roles()[player_data['silver']]
                         name = data['card']
@@ -1337,19 +1406,20 @@ class Parser:
             'Kiddy': {},
             'Xupito': {},
             'JohnMirolho': {},
-            'tiago': {}
+            'tiago': {},
+            'Roshan': {}
         }
         tier_silver = {player: {} for player, _ in tier_fantasy.items()}
         tier_gold = {player: {} for player, _ in tier_fantasy.items()}
         fantasy_roles = ['hard carry', 'mid', 'offlane', 'support', 'hard support']
         fantasy_categories = ['hard carry', 'mid', 'offlane', 'support', 'hard support', 'xp_per_min', 'gold_per_min',
                               'stuns', 'hero_healing', 'damage_taken', 'tower_damage', 'kills', 'assists', 'obs_placed',
-                              'last_hits', 'stuns', 'observer_kills', 'multi_kills', 'kill_streaks',
-                              'courier_kills', 'creeps_stacked']
-        silver = ['last_hits', 'kills', 'damage_taken', 'stuns', 'observer_kills']
-        silver_weights = [0.00033333, 0.00625, 0.0000025, 0.001, 0.008]
-        gold = ['multi_kills', 'kill_streaks', 'assists', 'courier_kills', 'creeps_stacked']
-        gold_weights = [0.625, 0.625, 0.00625, 0.25, 0.033333]
+                              'hero_damage', 'last_hits', 'stuns', 'observer_kills', 'multi_kills', 'kill_streaks',
+                              'courier_kills', 'creeps_stacked', 'deaths', 'camps_stacked', 'purchase']
+        silver = ['tower_damage', 'kills', 'damage_taken', 'stuns', 'observer_kills']
+        silver_weights = [0.000005, 0.00625, 0.0000025, 0.001, 0.008]
+        gold = ['deaths', 'hero_damage', 'purchase', 'assists', 'camps_stacked']
+        gold_weights = [0.33333333, 0.000002, 0.08333333, 0.00666667, 0.0666667]
 
         for player, _ in tier_fantasy.items():
             tier_fantasy[player] = {category: {} for category in fantasy_categories}
@@ -1364,17 +1434,39 @@ class Parser:
             'hard support': [0, 0, 0, 0, 5],
             'xp_per_min': [2, 3, 2, 1, 1],
             'gold_per_min': [4, 3, 2, 1, 1],
-            'stuns': [1, 1, 3, 3, 2],
-            'hero_healing': [0, 0, 1, 2, 3],
+            'stuns': [1, 1, 3, 4, 2],
+            'hero_healing': [0, 0, 1, 2, 4],
             'damage_taken': [1, 1, 3, 2, 1],
+            'hero_damage': [3, 2, 1, 0, 0],
             'tower_damage': [3, 2, 2, 1, 1],
-            'kills': [4, 4, 3, 2, 1],
+            'kills': [3, 4, 2, 2, 1],
             'assists': [1, 2, 2, 3, 4],
             'obs_placed': [1, 1, 1, 3, 4]
         }
 
+        fantasy_properties = {
+            'hard carry': {'header': 'win rate', 'unit': '%', 'multiplier': 1, 'decimal': 1},
+            'mid': {'header': 'win rate', 'unit': '%', 'multiplier': 1, 'decimal': 1},
+            'offlane': {'header': 'win rate', 'unit': '%', 'multiplier': 1, 'decimal': 1},
+            'support': {'header': 'win rate', 'unit': '%', 'multiplier': 1, 'decimal': 1},
+            'hard support': {'header': 'win rate', 'unit': '%', 'multiplier': 1, 'decimal': 1},
+            'xp_per_min': {'header': 'xpm', 'unit': '', 'multiplier': 1, 'decimal': 0},
+            'gold_per_min': {'header': 'gpm', 'unit': '', 'multiplier': 1, 'decimal': 0},
+            'stuns': {'header': 'stuns', 'unit': 's', 'multiplier': 1, 'decimal': 1},
+            'hero_healing': {'header': 'healing', 'unit': 'k', 'multiplier': 1000, 'decimal': 1},
+            'damage_taken': {'header': 'dmg taken', 'unit': 'k', 'multiplier': 1000, 'decimal': 1},
+            'hero_damage': {'header': 'hero dmg', 'unit': 'k', 'multiplier': 1000, 'decimal': 1},
+            'tower_damage': {'header': 'tower dmg', 'unit': 'k', 'multiplier': 1000, 'decimal': 1},
+            'kills': {'header': 'kills', 'unit': '', 'multiplier': 1, 'decimal': 1},
+            'assists': {'header': 'assists', 'unit': '', 'multiplier': 1, 'decimal': 1},
+            'obs_placed': {'header': 'wards', 'unit': '', 'multiplier': 1, 'decimal': 1}
+        }
+
         fantasy_count = {category: {role: 0 for role in fantasy_roles} for category in fantasy_categories}
         fantasy_players = [player for player, _ in tier_fantasy.items()]
+        fantasy_data = FantasyData()
+        for role in fantasy_roles:
+            fantasy_data.add_role(role)
 
         for t in tiers:
             category = t[1].parameter
@@ -1390,24 +1482,63 @@ class Parser:
                         if tier_item.name in fantasy_players:
                             if role not in tier_gold[tier_item.name][category]:
                                 tier_gold[tier_item.name][category][role] = 0
-                            if t[1].unit not in ['double kills', 'triple kills', 'kills']:
+                            if t[1].parameter == 'deaths':
+                                if t[1].rule == 'deaths_per_15min':
+                                    tier_gold[tier_item.name][category][role] += tier_item.totals_per_role[role]
+                            elif t[1].parameter == 'purchase':
+                                if t[1].rule == 'utility_items':
+                                    tier_gold[tier_item.name][category][role] += tier_item.totals_per_role[role]
+                            else:
                                 tier_gold[tier_item.name][category][role] += tier_item.totals_per_role[role]
             if category in fantasy_categories and not tier.is_max:
                 if category in fantasy_roles:
                     i = 0
+                    fantasy_data.add_category(category, category)
+                    fantasy_data.add_category_properties(category, category, max(fantasy_weights[category]),
+                                                         fantasy_properties[category])
+                    last_score = None
                     for tier_item in tier.scores_array:
                         if tier_item.name in fantasy_players:
+                            desc = next(p for p in self.player_descriptor if p['name'] == tier_item.name)
+                            role_desc = next(r for r in desc['roles'] if r['role'] == category)
+                            if role_desc['matches'] <= self.min_matches_with_hero:
+                                continue
+                            if tier_item.score == last_score:
+                                i -= 1
                             tier_fantasy[tier_item.name][category][category] = i
+                            fantasy_data.add_player_to_role(category, category, tier_item.name)
+                            fantasy_data.add_player_value(category, category, tier_item.name, tier_item.score)
+                            fantasy_data.add_player_matches(category, category, tier_item.name, role_desc['matches'])
+                            last_score = tier_item.score
                             i += 1
                     fantasy_count[category][category] = i
                 else:
-                    for role in fantasy_roles:
-                        i = 0
-                        for tier_item in tier.players_sorted_by_role(role):
-                            if tier_item in fantasy_players:
-                                tier_fantasy[tier_item][category][role] = i
-                                i += 1
-                        fantasy_count[category][role] = i
+                    if category in fantasy_weights:
+                        idx_role = 0
+                        for role, weight in zip(fantasy_roles, fantasy_weights[category]):
+                            if weight > 0:
+                                fantasy_data.add_category(role, category)
+                                fantasy_data.add_category_properties(role, category,
+                                                                     fantasy_weights[category][idx_role],
+                                                                     fantasy_properties[category])
+                            idx_role += 1
+                        for role in fantasy_roles:
+                            i = 0
+                            last_score = None
+                            for name, score in tier.players_sorted_by_role(role):
+                                if name in fantasy_players and category in fantasy_data.roles[role]:
+                                    desc = next(p for p in self.player_descriptor if p['name'] == name)
+                                    role_desc = next(r for r in desc['roles'] if r['role'] == role)
+                                    if role_desc['matches'] <= self.min_matches_with_hero:
+                                        continue
+                                    if score == last_score:
+                                        i -= 1
+                                    tier_fantasy[name][category][role] = i
+                                    fantasy_data.add_player_to_role(role, category, name)
+                                    fantasy_data.add_player_value(role, category, name, score)
+                                    last_score = score
+                                    i += 1
+                            fantasy_count[category][role] = i
 
         BASE = 100
         POND = 4 if len(self.years) == 1 else 3
@@ -1415,22 +1546,28 @@ class Parser:
 
         for idx_role in range(5):
             for category in fantasy_categories:
-                for _, data in tier_fantasy.items():
+                for player, data in tier_fantasy.items():
                     if "value_%s" % idx_role not in data:
                         data["value_%s" % idx_role] = 0
-                    if category in data and category in fantasy_weights:
+                    if category in data and category in fantasy_weights and category in fantasy_data.roles[
+                        fantasy_roles[idx_role]]:
                         role_name = fantasy_roles[idx_role]
                         w = (1 + fantasy_weights[category][idx_role] * POND / 100.0)
                         b = fantasy_weights[category][idx_role] * BASE
-                        if role_name in data[category]:
-                            points = b * w ** int(fantasy_count[category][role_name] / 2 - data[category][role_name])
+                        if role_name in data[category] and player in fantasy_data.roles[role_name][category]['players']:
+                            points = b * w ** (fantasy_count[category][role_name] / 2 - data[category][role_name])
+                            fantasy_data.add_player_fantasy_score(role_name, category, player, (points / 500.0))
+                            fantasy_data.add_player_relative_position(role_name, category, player,
+                                                                      data[category][role_name])
                             data["value_%s" % idx_role] += points
 
         fantasy_values = {}
 
         for player, d in tier_fantasy.items():
-            fantasy_values[player] = {fantasy_roles[int(c[6])]: int(v / 10) * ADJUST * 10
-                                      for c, v in d.items() if 'value' in c}
+            player_scores = {}
+            for r in fantasy_roles:
+                player_scores[r] = fantasy_data.get_score_for_player(r, player)
+            fantasy_values[player] = {role: int(score * 50) * ADJUST * 10 for role, score in player_scores.items()}
             for role, _ in fantasy_values[player].items():
                 desc = next(p for p in self.player_descriptor if p['name'] == player)
                 role_desc = next(r for r in desc['roles'] if r['role'] == role)
@@ -1457,7 +1594,7 @@ class Parser:
                 if fantasy_roles[i] in tier_gold[player][gold[i]]:
                     data['gold'][fantasy_roles[i]] = tier_gold[player][gold[i]][fantasy_roles[i]] * gold_weights[i]
 
-        return fantasy_values
+        return fantasy_values, fantasy_data
 
     def calculate_streaks(self, pid):
         matches = self.match_summary

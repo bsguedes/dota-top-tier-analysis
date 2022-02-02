@@ -126,7 +126,9 @@ MELEE_HEROES = [
     'Undying',
     'Ursa',
     'Wraith King',
-    'Void Spirit'
+    'Void Spirit',
+    'Marci',
+    'Dawnbreaker'
 ]
 
 UNDEAD_HEROES = [
@@ -174,7 +176,10 @@ FEMALE_HEROES = [
     'Death Prophet',
     'Winter Wyvern',
     'Dark Willow',
-    'Snapfire'
+    'Snapfire',
+    'Hoodwink',
+    'Dawnbreaker',
+    'Marci'
 ]
 
 
