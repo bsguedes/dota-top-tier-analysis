@@ -54,12 +54,12 @@ class Roles:
 
         hc_points = {p: 0 for p in rest_of_players}
         targets = [p for p in team_players if result_roles[1] != p['account_id']]
-        params = ['last_hits', 'hero_damage', 'kills', 'total_gold']
-        weights = [2, 1, 0, 4]
+        params = ['last_hits', 'hero_damage', 'kills', 'total_gold', 'level']
+        weights = [2, 1, 0, 8, 4]
         for player in targets:
             pid = player['account_id']
             if pid in safe_players:
-                hc_points[pid] += 208
+                hc_points[pid] += 216
             for param, w in zip(params, weights):
                 if player[param] == max(targets, key=lambda e: e[param])[param]:
                     hc_points[pid] += 100 + w
@@ -93,18 +93,19 @@ class Roles:
         remaining = [p for p in rest_of_players if p not in result_roles]
         hs_points = {p: 0 for p in remaining}
         targets = [p for p in team_players if p['account_id'] in remaining]
-        params = ['last_hits', 'sen_placed', 'obs_placed', 'total_gold']
-        order = [-1, 1, 1, -1]
-        weights = [0, 1, 2, 4]
+        params = ['last_hits', 'sen_placed', 'obs_placed', 'total_gold', 'stuns']
+        order = [-1, 1, 1, -1, -1]
+        weights = [0, 4, 8, 1, 2]
 
         for player in targets:
             pid = player['account_id']
             if player['lane_role'] == hc_lane:
-                hs_points[pid] += 108
+                hs_points[pid] += 316
             for param, w, o in zip(params, weights, order):
                 if player[param] == max(targets, key=lambda e: o * e[param])[param]:
                     hs_points[pid] += 100 + w
         ordered = sorted(hs_points.items(), key=lambda k: -k[1])
+        print(ordered)
         result_roles[4] = ordered[0][0]
         result_roles[3] = ordered[1][0]
 

@@ -104,25 +104,43 @@ class Parser:
         content['draft_timings'] = None
         content['objectives'] = None
         content['picks_bans'] = None
+        content['all_word_counts'] = None
+        content['my_word_counts'] = None
+        content['replay_url'] = None
         for player in content['players']:
             player['ability_targets'] = None
             player['ability_upgrades_arr'] = None
             player['ability_uses'] = None
+            player['actions'] = None
             player['benchmarks'] = None
+            player['buyback_log'] = None
+            player['connection_log'] = None
             player['damage'] = None
             player['damage_inflictor'] = None
             player['damage_inflictor_received'] = None
             player['damage_targets'] = None
+            player['gold_reasons'] = None
+            player['hero_hits'] = None
             player['killed'] = None
+            player['killed_by'] = None
             player['kills_log'] = None
             player['lane_pos'] = None
+            player['max_hero_hit'] = None
             player['cosmetics'] = None
+            player['permanent_buffs'] = None
+            player['xp_reasons'] = None
             player['objectives'] = None
+            player['first_purchase_time'] = None
+            player['item_win'] = None
+            player['item_usage'] = None
             player['teamfights'] = None
+            player['times'] = None
             player['sen_left_log'] = None
             player['sen_log'] = None
+            player['sen'] = None
             player['obs_left_log'] = None
             player['obs_log'] = None
+            player['obs'] = None
         return content
 
     def bounties(self):
@@ -358,6 +376,8 @@ class Parser:
                     obj['throw'] = max(gold_adv + [0]) if 'throw' not in obj else obj['throw']
                     match_summary[match_id]['comeback_throw'] = obj['comeback'] if p['win'] > 0 else obj['throw']
                     match_summary[match_id]['our_gold_lead'] = []
+                    match_summary[match_id]['party_size'] = len([x for x, y in self.players.items()
+                                                                 if y in match_summary[match_id]['players']])
                     gold_radiant = [p['gold_t'] for p in obj['players'][0:5]]
                     gold_dire = [p['gold_t'] for p in obj['players'][5:]]
                     if not any(g is None for g in gold_radiant):
@@ -451,7 +471,8 @@ class Parser:
                             match_summary[match_id]['enemy_ranks'].append(p['rank_tier'])
                         if p['account_id'] not in rivals_names:
                             rivals_names[p['account_id']] = []
-                        rivals_names[p['account_id']].append(p['personaname'])
+                        if 'personaname' in p:
+                            rivals_names[p['account_id']].append(p['personaname'])
                 else:
                     match_summary[match_id]['our_team_heroes'].append(self.heroes[p['hero_id']])
         for wd, o in self.win_rate_by_weekday.items():
@@ -531,11 +552,16 @@ class Parser:
         self.win_rate = win_rate(len([x for x, y in match_summary.items() if y['win']]), len(matches))
         print('%s Win Rate: %.2f %%' % (self.team_name, self.win_rate))
 
-        list_comebacks = {m: v['comeback_throw'] for m, v in match_summary.items() if v['win'] > 0}
-        list_throws = {m: v['comeback_throw'] for m, v in match_summary.items() if v['win'] == 0}
-        list_longest = {m: (v['duration'], v['win']) for m, v in match_summary.items()}
-        list_fast_wins = {m: v['duration'] for m, v in match_summary.items() if v['win'] > 0 and not v['has_abandon']}
-        list_fast_loss = {m: v['duration'] for m, v in match_summary.items() if v['win'] == 0 and not v['has_abandon']}
+        list_comebacks = {m: v['comeback_throw'] for m, v in match_summary.items() if v['win'] > 0
+                          and v['party_size'] >= self.min_party_size}
+        list_throws = {m: v['comeback_throw'] for m, v in match_summary.items() if v['win'] == 0
+                       and v['party_size'] >= self.min_party_size}
+        list_longest = {m: (v['duration'], v['win']) for m, v in match_summary.items()
+                        if v['party_size'] >= self.min_party_size}
+        list_fast_wins = {m: v['duration'] for m, v in match_summary.items() if v['win'] > 0 and not v['has_abandon']
+                          and v['party_size'] >= self.min_party_size}
+        list_fast_loss = {m: v['duration'] for m, v in match_summary.items() if v['win'] == 0 and not v['has_abandon']
+                          and v['party_size'] >= self.min_party_size}
         self.top_comebacks = [
             {'match': m, 'gold': g,
              'players': ', '.join([x for x, y in self.players.items() if y in match_summary[m]['players']])}
@@ -629,11 +655,13 @@ class Parser:
             if len(v['rivals']) > 0:
                 for rival in v['rivals']:
                     if rival not in rivals:
-                        rivals[rival] = {'id': rival, 'matches': 0, 'wins': 0, 'wr': 0,
-                                         'name': max(set(rivals_names[rival]), key=rivals_names[rival].count)}
-                    rivals[rival]['matches'] += 1
-                    if v['win']:
-                        rivals[rival]['wins'] += 1
+                        rival_set = set(rivals_names[rival])
+                        if len(rival_set) > 0:
+                            rivals[rival] = {'id': rival, 'matches': 0, 'wins': 0, 'wr': 0,
+                                             'name': max(rival_set, key=rivals_names[rival].count)}
+                            rivals[rival]['matches'] += 1
+                            if v['win']:
+                                rivals[rival]['wins'] += 1
         for _, v in rivals.items():
             v['wr'] = win_rate(v['wins'], v['matches'])
         self.rivals = sorted([v for _, v in rivals.items() if v['matches'] > 1],
@@ -1076,6 +1104,9 @@ class Parser:
                 if len(radiant_team) >= 2 and len(dire_team) >= 2:
                     split_matches[match_id + 0.1] = radiant_team
                     split_matches[match_id + 0.2] = dire_team
+                    duplicates.append(match_id)
+            else:
+                if len(players_list) > len(set(x[0] for x in players_list)):
                     duplicates.append(match_id)
         for match in duplicates:
             matches.pop(match)
@@ -1564,6 +1595,8 @@ class Parser:
                             fantasy_data.add_player_relative_position(role_name, category, player,
                                                                       data[category][role_name])
                             data["value_%s" % idx_role] += points
+
+        fantasy_data.clean_up()
 
         fantasy_values = {}
 

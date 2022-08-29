@@ -58,3 +58,13 @@ class FantasyData:
 
     def player_in_role(self, role, player):
         return player in self.roles[role][role]['players']
+
+    def clean_up(self):
+        for role_name, role_data in self.roles.items():
+            keys_to_remove = []
+            last_category = self.get_categories_at_role(role_name)[-1][0]
+            for player_name, player_data in role_data[role_name]['players'].items():
+                if player_name not in role_data[last_category]['players']:
+                    keys_to_remove.append(player_name)
+            for player_name in keys_to_remove:
+                del role_data[role_name]['players'][player_name]

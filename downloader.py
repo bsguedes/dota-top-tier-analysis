@@ -33,6 +33,7 @@ def download_player_data(players, replacements, override=True):
     for name, pid in players.items():
         file_name = 'players/%s_matches.json' % name
         if override or not os.path.isfile(file_name):
+            time.sleep(0.5)
             start = time.time()
             url = 'https://api.opendota.com/api/players/%s/matches?project=start_time' % pid
             r = requests.get(url, allow_redirects=True)
@@ -46,6 +47,7 @@ def download_player_data(players, replacements, override=True):
                 file_name = 'players/%s_matches_%i.json' % (name, i)
                 if override or not os.path.isfile(file_name):
                     start = time.time()
+                    time.sleep(0.5)
                     url = 'https://api.opendota.com/api/players/%s/matches?project=start_time' % pid
                     r = requests.get(url, allow_redirects=True)
                     print('Downloaded %s replacement data: %.3f seconds' % (name, time.time() - start))
@@ -98,4 +100,3 @@ def download_matches(unique_matches, override=False, download_again=False):
             matches_to_parse += 1
             print("Should re-parse match %i on OpenDota" % match_id)
     return matches_to_parse
-

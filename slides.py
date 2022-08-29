@@ -1282,10 +1282,10 @@ class Slides:
                                            Inches(row_width - 0.1))
                     Slides.text_box(slide, c['name'], left + column_width * i, top + row_width * j + 0.2,
                                     width=player_size, font_size=12, alignment=PP_ALIGN.CENTER, bold=True)
-                    Slides.text_box(slide, "%i ₭" % c['current_value'], left + column_width * i,
+                    Slides.text_box(slide, "%i ƒ" % c['current_value'], left + column_width * i,
                                     top + row_width * j + spacing - 0.23,
                                     width=player_size, font_size=16, alignment=PP_ALIGN.CENTER, bold=True)
-                    Slides.text_box(slide, "%i ₭" % c['old_value'], left + column_width * i,
+                    Slides.text_box(slide, "%i ƒ" % c['old_value'], left + column_width * i,
                                     top + row_width * j + spacing + 0.07,
                                     width=player_size, font_size=11, alignment=PP_ALIGN.CENTER, bold=False)
                     if c['variation'] != 0:

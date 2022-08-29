@@ -16,7 +16,7 @@ PNK = 'PnK'
 BLAZING_DOTA = 'Blazing Dota'
 TEAM_NAME = PNK
 ALL_TIME_YEARS = [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022]
-CURRENT_MONTH = 1
+CURRENT_MONTH = 6
 CURRENT_YEAR = 2022
 
 # Modes
@@ -33,7 +33,7 @@ BEST_TEAM = None
 # BEST_TEAM = ['Zé', 'Nuvah', 'Chaos', 'Older', 'Alidio']
 
 # PnK monthly parameters: 3, 3, 3, 2
-# PnK year parameters: 30, 10, 3, 3
+# PnK year parameters: 30, 10, 3, 3c
 # PnK all-time parameters: 50, 15, 3, 4
 
 pnk_parameters = [[4, 4, 3, 2], [30, 10, 3, 5], [50, 15, 3, 10]]
@@ -225,6 +225,7 @@ categories = [
     Category(5, 'multi_kills', unit='rampages', text='rampages', rule='5', has_max=False, avg_format='%.3f'),
     Category(5, 'purchase', unit='bkbs', text='BKBs purchased', rule='black_king_bar', has_max=False),
     Category(3, 'purchase', unit='dusts', text='dusts purchased', rule='dust', avg_format='%.3f'),
+    Category(3, 'purchase', unit='MS', text='mage slayers purchased', rule='mage_slayer', avg_format='%.3f'),
     Category(3, 'purchase', unit='smokes', text='smokes purchased', rule='smoke_of_deceit', avg_format='%.3f'),
     Category(2, 'purchase', unit='gems', text='gems of true sight purchased', rule='gem', avg_format='%.3f'),
     Category(8, 'purchase', unit='gold', text='gold in support items', rule='support_gold'),
@@ -385,9 +386,10 @@ if __name__ == '__main__':
             s.add_divider_slide("%s Fantasy Game" % TEAM_NAME, 'Fantasy Game based on Player Performance')
             s.add_fantasy_ranking(fantasy_scores)
             for role in ['hard carry', 'mid', 'offlane', 'support', 'hard support']:
-                s.add_fantasy_slide(fantasy_values, role, fantasy_data_object)
-                s.add_fantasy_details(fantasy_data_object, role)
-                s.add_fantasy_data(fantasy_data, role)
+                pass
+              #  s.add_fantasy_slide(fantasy_values, role, fantasy_data_object)
+              #  s.add_fantasy_details(fantasy_data_object, role)
+              #  s.add_fantasy_data(fantasy_data, role)
 
         if MODE == 0:
             s.add_divider_slide("%s Match Details" % TEAM_NAME, 'With players and positions per match')
